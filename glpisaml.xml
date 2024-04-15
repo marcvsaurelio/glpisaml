@@ -22,10 +22,10 @@
         </en>
     </long>
 </description>
-<homepage>https://github.com/DonutsNL/glpisaml</homepage>
-<download>https://github.com/DonutsNL/glpisaml/releases/</download>
-<issues>https://github.com/DonutsNL/glpisaml/issues</issues>
-<readme>https://github.com/DonutsNL/glpisaml/blob/main/README.md</readme>
+<homepage>https://codeberg.org/QuinQuies/glpisaml/wiki</homepage>
+<download>https://codeberg.org/QuinQuies/glpisaml/releases/</download>
+<issues>https://codeberg.org/QuinQuies/glpisaml/issues</issues>
+<readme>https://codeberg.org/QuinQuies/glpisaml/src/branch/main/README.md</readme>
 <authors>
     <author>Chris Gralike</author>
 </authors>
@@ -33,7 +33,7 @@
     <version>
         <num>1.1.0</num>
         <compatibility>~10.0.0</compatibility>
-        <download_url>https://github.com/DonutsNL/glpisaml/releases/download/v1.1.0-pre/glpisaml-1.1.0.zip</download_url>
+        <download_url>https://codeberg.org/QuinQuies/glpisaml/releases/download/v1.1.0/glpisaml.zip</download_url>
     </version>
 </versions>
 <langs>
