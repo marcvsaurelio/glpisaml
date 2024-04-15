@@ -2,7 +2,7 @@
 <name>glpisaml</name>
 <key>sso</key>
 <state>Unstable</state>
-<logo></logo>
+<logo>https://codeberg.org/QuinQuies/glpisaml/raw/branch/main/donut.png</logo>
 <description>
     <short>
         <en>GLPI plugin that allows you to configure SAML to authenticate and authorize users from the UI.</en>
