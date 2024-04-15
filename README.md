@@ -12,8 +12,9 @@ PRERELEASE
 
 # Support
 Want to support my work?
-Star my repo and contribute to my stargazer achievement. 
-Want to do more, I just love coffee: https://www.buymeacoffee.com/donutsnl
+- Star my repo and contribute to my stargazer achievement. 
+- Want to do more, I just love coffee: https://www.buymeacoffee.com/donutsnl
+- Consider to donate codeberg.org to keep the open source movement going.
 
 # Contribute, ideas and help?
 Join my (and hopefully our in the future) discord at: [https://discord.gg/35tkHxHg](https://discord.gg/yKZB7VQUk6)
@@ -22,13 +23,13 @@ Have coding experience (or are learning to code) and want to add meaningfull cha
 **Coding:**
 - [Follow PSR where possible](https://www.php-fig.org/psr/)
 - Use a decent IDE and consider using plugins like:
-    -Code lenses (intelephense);
-    -PSR4 compliant namespace resolver;
-    -Composer integration;
-    -Xdebug profiler;
-    -SonarLint;
-    -Twig language support;
-    -tip: devsense PHP All-in-one.
+- Code lenses (intelephense);
+- PSR4 compliant namespace resolver;
+- Composer integration;
+- Xdebug profiler;
+- SonarLint;
+- Twig language support;
+- tip: devsense PHP All-in-one.
 
 # Credits
 Special credits go to:
