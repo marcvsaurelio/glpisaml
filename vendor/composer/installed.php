@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'donutsnl/glpisaml',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'ae062e9bed0b337d56b6e982bca7d2c9c15b10a4',
+        'type' => 'glpi-plugin',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        'donutsnl/glpisaml' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'ae062e9bed0b337d56b6e982bca7d2c9c15b10a4',
+            'type' => 'glpi-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'onelogin/php-saml' => array(
+            'pretty_version' => '4.1.0',
+            'version' => '4.1.0.0',
+            'reference' => 'b22a57ebd13e838b90df5d3346090bc37056409d',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../onelogin/php-saml',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'robrichards/xmlseclibs' => array(
+            'pretty_version' => '3.1.1',
+            'version' => '3.1.1.0',
+            'reference' => 'f8f19e58f26cdb42c54b214ff8a820760292f8df',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../robrichards/xmlseclibs',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);
