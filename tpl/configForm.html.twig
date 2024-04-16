@@ -93,6 +93,11 @@
                    aria-controls="logging" 
                    aria-selected="false"><b>{{ header_logging }} {{ logging_warning }}</b></a>
             </li>
+            {% if inputfields.debug.value == true %}
+            <li class="nav-link">
+                <div>Id: {{ inputfields.id.value }} - Created: {{ inputfields.date_creation.value }} - Updated: {{ inputfields.date_mod.value }}</div>
+            </li>
+            {% endif %}
         </ul>
         <div class="tab-content flex-fill glpisaml" id="myTabContent">
             <!-- ################################################################################-->

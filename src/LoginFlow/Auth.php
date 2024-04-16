@@ -54,10 +54,10 @@ use GlpiPlugin\Glpisaml\LoginFlow\User;
  */
 class Auth extends glpiAuth
 {
-    public function loadUser(array $attributes)
+    public function loadUser(array $userFields)
     {
         // Get or Jit create user or exit on error.
-        $this->user = (new User())->getOrCreateUser($attributes);
+        $this->user = (new User())->getOrCreateUser($userFields);
 
         // Setting this property actually authorizes the login for the user.
         $this->auth_succeded = (bool)$this->user->fields;

@@ -59,6 +59,7 @@ use OneLogin\Saml2\Response;
 use GlpiPlugin\Glpisaml\Config;
 use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
+use GlpiPlugin\Glpisaml\LoginFlow\User;
 use GlpiPlugin\Glpisaml\LoginFlow\Auth as glpiAuth;
 
 
@@ -80,11 +81,12 @@ class LoginFlow
      * @see https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
      * @see https://learn.microsoft.com/en-us/entra/identity-platform/reference-saml-tokens
      */
-    public const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Not used usually equal to email
-    public const SCHEMA_SURNAME              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';         // Used in user creation JIT
-    public const SCHEMA_FIRSTNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';       // Used in user creation JIT
-    public const SCHEMA_GIVENNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT
-    public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used for user lookup and creation JIT
+    public const SCHEMA_NAMEID               = 'NameId';                                                                // Used as primairy if it contains valid email.
+    public const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Entra claim not used
+    public const SCHEMA_SURNAME              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';         // Used in user creation JIT - Optional
+    public const SCHEMA_FIRSTNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';       // Used in user creation JIT - Optional
+    public const SCHEMA_GIVENNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT - Optional
+    public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used as Fallback in  JIT for missing email in NameId.
     public const SCHEMA_TENANTID             = 'http://schemas.microsoft.com/identity/claims/tenantid';                 // Entra claim not used
     public const SCHEMA_OBJECTID             = 'http://schemas.microsoft.com/identity/claims/objectidentifier';         // Entra claim not used
     public const SCHEMA_DISPLAYNAME          = 'http://schemas.microsoft.com/identity/claims/displayname';              // Entra claim not used
@@ -143,7 +145,8 @@ class LoginFlow
             $this->performSamlSSO($state);
         }
 
-        // Evaluate database state, do we need to force logoff a user?
+        // Evaluate database state, do we need to force logoff a user, 
+        // but only after user has been logged in.
 
 
         // else
@@ -201,14 +204,13 @@ class LoginFlow
     {
         global $CFG_GLPI;
 
-        // Validate samlResponse and returns attributes.
-        // validation will print and exit on errors.
-        // replace with a object in the future for injection into GlpiAuth.
-        $attributes = $this->validateSamlResponse($response);
+        // Validate samlResponse and returns provided Saml attributes (claims).
+        // validation will print and exit on errors because user information is required.
+        $userFields = $this->getUserInputFieldsFromSamlClaim($response);
 
         // Try to populate GLPI Auth using provided attributes;
         try {
-            $auth = (new GlpiAuth())->loadUser($attributes);
+            $auth = (new GlpiAuth())->loadUser($userFields);
         } catch (Throwable $e) {
             $this->printError($e->getMessage(), 'doSamlLogin');
         }
@@ -224,69 +226,130 @@ class LoginFlow
         Html::redirect($CFG_GLPI['url_base'].'/');
     }
 
-     /**
-     * Validates the received samlResponse and evaluates if all
-     * required attributes are present and correctly formatted
+    /**
+     * This function figures out what the samlResponse provided claims are and
+     * how to best populate the GLPI userObject or triggers an error if
+     * essential claims are missing from the samlResponse body.
+     * Maybe move this method to the userObject in the future.
      *
-     * @param   Response    SamlResponse to be evaluated.
-     * @return  array       with user attributes
-     * @since               1.0.0
+     * @param    Response  Response object with the samlRespons attributes.
+     * @return   array     user->add input fields array with properties.
      */
-    private function validateSamlResponse(Response $response): array
-    {
-        // Validate nameId
-        if(!$attributes['NameId'] = $response->getNameId()) {
-            $this->printError(__('NameId is missing in response'));
-        } else {
-            // NameId should be formatted as an email address.
-            if(!filter_var($attributes['NameId'], FILTER_VALIDATE_EMAIL)){
-                $this->printError(__('nameId should be formatted as a valid emailaddress'),
-                                     'validateSamlResponse',
-                                      var_export($attributes, true));
+
+     public function getUserInputFieldsFromSamlClaim(Response $response): array     //NOSONAR - Complexity by design.
+     {
+        // Validate nameId clain from provided samlResponse.
+        // These claims sometimes need to be configured manually
+        // at the Identity provider. NameId is required and should be
+        // formatted as an valid email. Others properties are nice to
+        // have and will make the user properties more complete.
+        if(!$user[User::NAME] = $response->getNameId()) {
+            $this->printError(__('NameId attribute is missing in samlResponse', PLUGIN_NAME),
+                              'getUserInputFieldsFromSamlClaim',
+                              var_export($response, true));
+        }
+           
+        // Get additional claims from the samlResponse.
+        if(!$claims[LoginFlow::USERDATA] = $response->getAttributes()) {
+            $claims = '';
+        }
+
+        // If the string #EXT# if found, a guest account is used thats not
+        // transformed properly by entra. In this case write an error and exit!
+        // https://github.com/derricksmith/phpsaml/issues/135
+        if(strstr($user[User::NAME], '#EXT#@')){
+            $this->printError(__('Detected a default guest user in samlResponse, make sure nameid,
+                                name are populated using user.mail instead of the uset.principalname.<br>
+                                You can use the debug saml dumps to validate and compare the claims passed.<br>
+                                They should contain the original email addresses.<br>
+                                Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization', PLUGIN_NAME),
+                                'getUserInputFieldsFromSamlClaim',
+                                var_export($response, true));
+        }
+
+        // Figure out what username to set.
+        // Can we use the NameId as username
+        if(!filter_var($user[User::NAME], FILTER_VALIDATE_EMAIL)){
+            // See if we can fall back using the email address in the claim (if any).
+            if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS])) {
+                // Validate the emailadress in the claim. If its valid we continue processing it.
+                if(!filter_var($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS], FILTER_VALIDATE_EMAIL)){
+                    $this->printError(__('SamlResponse should have at least 1 valid email set via NameId or as appended emailaddress claim.', PLUGIN_NAME),
+                                      'getUserInputFieldsFromSamlClaim',
+                                      var_export($response, true));
+                }
+                // Set the emailaddress claim as the username and email.
+                $user[User::NAME]   = $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0];
+                $user[User::EMAIL]  = [$claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0]];
+            }else{
+                // No emailaddress found in the samlResponse.
+                // We need at least one valid emailaddress from the NameId or a emailaddress claim.
+                // to search for a user or create one via JIT.
+                $this->printError(__('SamlResponse should have at least 1 valid email set via NameId or as appended emailaddress claim.', PLUGIN_NAME),
+                                  'getUserInputFieldsFromSamlClaim',
+                                  var_export($response, true));
             }
-            // If the string #EXT# if found, a guest account is used thats not
-            // transformed properly. Write an error and exit!
-            // https://github.com/derricksmith/phpsaml/issues/135
-            if(strstr($attributes['NameId'], '#EXT#@')){
-                $this->printError(__('Detected an inproperly transformed guest claims, make sure nameid,
-                                   name are populated using user.mail instead of the uset.principalname.<br>
-                                   You can use the debug saml dumps to validate and compare the claims passed.<br>
-                                   They should contain the original email addresses.<br>
-                                   Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization', PLUGIN_NAME), 'validateSamlResponse', var_export($attributes, true));
+        }else{
+            // The NameId property can be used for the username and emailaddress.
+            // because $user[User::NAME] is allready set and contains a valid emailaddress.
+            // This means we can focus on the email claim.
+            // First check if an additional email claim was provided.
+            if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0])){
+                // If the provided emailaddress is different from the NameId then use the
+                // additionally provided emailaddress as primairy emailaddress.
+                if($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0] != $user[User::NAME]){
+                    // Validate it is a valid emailaddress
+                    if(filter_var($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS], FILTER_VALIDATE_EMAIL)){
+                        $user[User::EMAIL] = [$claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0]];
+                    }else{
+                        //fall back to the provided NameId emailaddress
+                        $user[User::EMAIL] = [$user[User::NAME]];
+                    }
+                // Fall back to the provided NameId emailaddress
+                }else{
+                    $user[User::EMAIL] = [$user[User::NAME]];
+                }
+            // Fall back to the provided NameId emailaddress
+            }else{
+                $user[User::EMAIL] = [$user[User::NAME]];
             }
         }
 
-        // Get userdata from the response
-        if(!$attributes['userData'] = $response->getAttributes()) {
-            $this->printError(__('No userdata received in samlResponse!'),
-            'validateSamlResponse',
-             var_export($attributes, true));
+        // Do we have a valid firstname in the claim fields?
+        // This field is optional, nice to have.
+        if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME][0]) ||
+           isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_GIVENNAME][0]) ){
+                $user[User::FIRSTNAME] = (isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME][0]))
+                    ? $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME][0]
+                    : $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_GIVENNAME][0];
         }else{
-            // Validate required Claims are present in the response.
-            // Firstname / Givenname
-            if(!array_key_exists(self::SCHEMA_FIRSTNAME, $attributes['userData']) &&
-               !array_key_exists(self::SCHEMA_GIVENNAME, $attributes['userData']) ){
-                $this->printError(__('Make sure either firstname ['.self::SCHEMA_FIRSTNAME.'] or givenname ['.self::SCHEMA_GIVENNAME.'] claim is present.'),
-                'validateSamlResponse',
-                 var_export($attributes, true));
-            }
-            // Emailaddress
-            if(!array_key_exists(self::SCHEMA_SURNAME, $attributes['userData'])){
-                $this->printError(__('Make sure Surname ['.self::SCHEMA_SURNAME.'] claim is present in samlResponse.'),
-                'validateSamlResponse',
-                 var_export($attributes, true));
-            }
-            // Emailaddress
-            if(!array_key_exists(self::SCHEMA_EMAILADDRESS, $attributes['userData'])){
-                $this->printError(__('Make sure email ['.self::SCHEMA_EMAILADDRESS.'] claim is present in samlResponse.'),
-                'validateSamlResponse',
-                 var_export($attributes, true));
+            // try a fallback for users not using the valid schema's but keywords
+            if(isset($claims[LoginFlow::USERDATA]['firstname'][0]) ||
+               isset($claims[LoginFlow::USERDATA]['givenname'][0]) ){
+                $user[User::FIRSTNAME] = (isset($claims[LoginFlow::USERDATA]['firstname'][0]))
+                    ? $claims[LoginFlow::USERDATA]['firstname'][0]
+                    : $claims[LoginFlow::USERDATA]['givenname'][0];
             }
         }
-        return $attributes;
+
+        // Do we have a valid surname to provision.
+        // This field is optional, nice to have.
+        if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_SURNAME][0])){
+            $user[User::REALNAME] = $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_SURNAME][0];
+        }
+
+        // Set additional userfields for user creation (if needed)
+        // These fields are used for user->add($input);
+        $user[User::COMMENT] = __('Created by phpSaml Just-In-Time user creation on:'.date('Y-M-D H:i:s'));
+        $password = bin2hex(random_bytes(20));
+        $user[User::PASSWORD]   = $password;
+        $user[User::PASSWORDN]  = $password;
+
+        // Return the userArray.
+        return $user;
     }
 
-     /**
+    /**
      * Responsible to generate a login screen with Idp buttons
      * using available idp configurations.
      *

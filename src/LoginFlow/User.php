@@ -65,26 +65,26 @@ use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 class User
 {
     // Common user/group/profile constants
-    public const USERID    = 'id';
-    public const NAME       = 'name';
-    public const REALNAME   = 'realname';
-    public const FIRSTNAME  = 'firstname';
-    public const EMAIL      = '_useremails';
-    public const COMMENT    = 'comment';
-    public const PASSWORD   = 'password';
-    public const PASSWORDN  = 'password2';
-    public const DELETED    = 'is_deleted';
-    public const ACTIVE     = 'is_active';
-    public const RULEOUTPUT = 'output';
-    public const USERSID    = 'users_id';
-    public const GROUPID    = 'groups_id';
-    public const GROUP_DEFAULT = 'specific_groups_id';
-    public const IS_DYNAMIC = 'is_dynamic';
-    public const PROFILESID = 'profiles_id';
-    public const PROFILE_DEFAULT = '_profiles_id_default';
-    public const PROFILE_RECURSIVE = 'is_recursive';
-    public const ENTITY_ID  = 'entities_id';
-    public const ENTITY_DEFAULT = '_entities_id_default';
+    public const USERID             = 'id';
+    public const NAME               = 'name';
+    public const REALNAME           = 'realname';
+    public const FIRSTNAME          = 'firstname';
+    public const EMAIL              = '_useremails';
+    public const COMMENT            = 'comment';
+    public const PASSWORD           = 'password';
+    public const PASSWORDN          = 'password2';
+    public const DELETED            = 'is_deleted';
+    public const ACTIVE             = 'is_active';
+    public const RULEOUTPUT         = 'output';
+    public const USERSID            = 'users_id';
+    public const GROUPID            = 'groups_id';
+    public const GROUP_DEFAULT      = 'specific_groups_id';
+    public const IS_DYNAMIC         = 'is_dynamic';
+    public const PROFILESID         = 'profiles_id';
+    public const PROFILE_DEFAULT    = '_profiles_id_default';
+    public const PROFILE_RECURSIVE  = 'is_recursive';
+    public const ENTITY_ID          = 'entities_id';
+    public const ENTITY_DEFAULT     = '_entities_id_default';
 
 
     /**
@@ -94,40 +94,34 @@ class User
      * @return  glpiUser    GlpiUser object with populated fields.
      * @since               1.0.0
      */
-    public function getOrCreateUser(array $attributes): glpiUser    //NOSONAR Complexity by design
+    public function getOrCreateUser(array $userFields): glpiUser    //NOSONAR Complexity by design
     {
+        // At this point the userFields should be present and validated (textually) by loginFlow.
+
         // Load GLPI user object
         $user = new glpiUser();
         
         // Verify if user exists in database.
-        if(!$user->getFromDBbyName($attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_NAME]['0'])          &&
-           !$user->getFromDBbyEmail($attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS]['0']) ){
+        if(!$user->getFromDBbyName($userFields[User::NAME])              &&      // Try to locate by name->NameId.
+           !$user->getFromDBbyEmail($userFields[User::NAME])             ){      // Try to locate by email->emailaddress.
             
             // Get current state
             if(!$state = new Loginstate()){
                 throw new Exception(__('Could not load loginState from database!', PLUGIN_NAME)); //NOSONAR
             }
-            // Fetch the correct configEntity
+
+            // Fetch the correct configEntity using our current state.
             if(!$configEntity = new ConfigEntity($state->getIdpId())){
                 throw new Exception(__('Could not load ConfigEntity from database!', PLUGIN_NAME)); //NOSONAR
             }
+
             // Are we allowed to perform JIT user creation?
             if($configEntity->getField(ConfigEntity::USER_JIT)){
 
-                 // Grab the correct firstname
-                 $firstname = (isset($attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME])) ? $attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME][0]
-                                                                                                     : $attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_GIVENNAME][0];
-                 // Populate the input fields.
-                 $password = bin2hex(random_bytes(20));
-                 $input = [self::NAME        => $attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_NAME][0],
-                           self::REALNAME    => $attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_SURNAME][0],
-                           self::FIRSTNAME   => $firstname,
-                           self::EMAIL       => [$attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0]],
-                           self::COMMENT     => __('Created by phpSaml Just-In-Time user creation on:'.date('Y-M-D H:i:s')),
-                           self::PASSWORD    => $password,
-                           self::PASSWORDN   => $password];
-
-                if(!$id = $user->add(Sanitizer::sanitize($input))){
+                // Build the input array using the provided attributes (claims)
+                // from the samlResponse. maybe use this method in the future
+                // to also validate provided claims in one go.
+                if(!$id = $user->add(Sanitizer::sanitize($userFields))){
                     LoginFlow::showLoginError(__("Your SSO login was succesfull but there is no matching GLPI user account and
                                                   we failed to create one dynamically using Just In Time usercreation. Please
                                                   request a GLPI administrator to review the logs and correct the problem or
@@ -135,7 +129,7 @@ class User
                     // PHP0405-no return by design.
                 }else{
                     $ruleCollection = new RuleSamlCollection();
-                    $matchInput = [self::EMAIL => $input[self::EMAIL]];
+                    $matchInput = [self::EMAIL => $userFields[self::EMAIL]];
                     // Uses a hook to call $this->updateUser() if a rule was found.
                     $ruleCollection->processAllRules($matchInput, [self::USERSID => $id], []);
                 }
@@ -143,12 +137,12 @@ class User
                 // Return freshly created user!
                 $user = new glpiUser();
                 if($user->getFromDB($id)){
-                    Session::addMessageAfterRedirect('Dynamically created GLPI user for:'.$attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_NAME][0]);
+                    Session::addMessageAfterRedirect('Dynamically created GLPI user for:'.$userFields[User::EMAIL]['0']);
                     return $user;
                 }
             }else{
                 $idpName = $configEntity->getField(ConfigEntity::NAME);
-                $email   = $attributes[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS]['0'];
+                $email   = $userFields[User::EMAIL]['0'];
                 LoginFlow::showLoginError(__("Your SSO login was succesfull but there is no matching GLPI user account. In addition the Just-in-time user creation
                                               is disabled for: $idpName. Please contact your GLPI administrator and request an account to be created matching the
                                               provided email claim: $email or login using a local user account.", PLUGIN_NAME));
@@ -174,7 +168,6 @@ class User
         }
     }
 
-    
     public function updateUserRights(array $params): void
     {
         $update = $params[self::RULEOUTPUT];

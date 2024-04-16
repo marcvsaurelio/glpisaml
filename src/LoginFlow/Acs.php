@@ -137,7 +137,7 @@ class Acs extends LoginFlow
                                   __('Assert saml', PLUGIN_NAME));
             }
 
-            // Only add extended logging with debug
+            // Only add extended logging with debug not to dump sensitive samlResponse data.
             // https://github.com/DonutsNL/glpisaml/issues/12
             $this->debug = ($configEntity->getField(ConfigEntity::DEBUG)) ? true : false;
 
@@ -149,7 +149,7 @@ class Acs extends LoginFlow
             }
 
             // Get settings for the Response.
-            try { $samlSettings = new Settings($configEntity->getPhpSamlConfig()); } catch(Throwable $e){
+            try { $samlSettings = new Settings($configEntity->getPhpSamlConfig()); } catch(Throwable $e) {
                 $extended = ($this->debug) ? self::EXTENDED_HEADER.
                              self::ERRORS.var_export($samlSettings->getErrors(), true)."\n\n".
                              self::STATE_OBJ.var_export($this->state, true)."\n\n".
@@ -162,13 +162,12 @@ class Acs extends LoginFlow
 
             // process the samlResponse.
             try { $response = new Response($samlSettings, $samlResponse['SAMLResponse']); } catch(Throwable $e) {
+                $extended = '';
                 if($this->debug){
                     $extended = self::EXTENDED_HEADER.
                                 self::ERRORS.var_export($samlSettings->getErrors(), true)."\n\n".
                                 self::STATE_OBJ.var_export($this->state, true)."\n\n".
                                 self::EXTENDED_FOOTER;
-                } else {
-                    $extended = '';
                 }
                 $this->printError($e->getMessage(),
                                   __('Saml::Response->init'),
