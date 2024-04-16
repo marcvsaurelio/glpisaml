@@ -17,7 +17,7 @@ Want to support my work?
 - Consider to donate codeberg.org to keep the open source movement going.
 
 # Contribute, ideas and help?
-Join my (and hopefully our in the future) discord at: [https://discord.gg/35tkHxHg](https://discord.gg/yKZB7VQUk6)
+Join my (and hopefully our in the future) discord at: https://discord.gg/KyMdkqJcGz
 Have coding experience (or are learning to code) and want to add meaningfull changes and additions? First start from your own repository by forking this repository and then create pull requests. Deal with any feedback you receive and see your pullrequest being merged. If you have proven to be consistant, then request access to the repository as contributor and help me build a great tool for people to enjoy. Just want to share your idea, then please create an issue outlining the issue or your idea.
 
 **Coding:**

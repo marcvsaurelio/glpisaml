@@ -118,6 +118,7 @@ class LoginFlow
         }
 
         // Capture the post of regular login and verify if the domain is SSO enabled.
+        // https://codeberg.org/QuinQuies/glpisaml/issues/3
         foreach($_POST as $key => $value){
             if(strstr($key, 'fielda')){
                 // TODO validate domain and perform SSO if matched.
@@ -168,32 +169,35 @@ class LoginFlow
             $samlConfig = $configEntity->getPhpSamlConfig();
         }
 
-        // Initialize the OneLogin phpSaml auth object
-        // using the requested phpSaml configuration from
-        // the glpisaml config database. Catch all throwable errors
-        // and exceptions.
-        try { $auth = new samlAuth($samlConfig); } catch (Throwable $e) {
-            $this->printError($e->getMessage(), 'Saml::Auth->init', var_export($auth->getErrors(), true));
-        }
-        
-        // Perform a login request with the loaded glpiSaml
-        // configuration. Catch all throwable errors and exceptions
-        try { $auth->login($CFG_GLPI["url_base"]); } catch (Throwable $e) {
-            $this->printError($e->getMessage(), 'Saml::Auth->login', var_export($auth->getErrors(), true));
-        }
+        // Validate if the IDP configuration is enabled
+        // https://codeberg.org/QuinQuies/glpisaml/issues/4
+        if($configEntity->isActive()){
+            // Initialize the OneLogin phpSaml auth object
+            // using the requested phpSaml configuration from
+            // the glpisaml config database. Catch all throwable errors
+            // and exceptions.
+            try { $auth = new samlAuth($samlConfig); } catch (Throwable $e) {
+                $this->printError($e->getMessage(), 'Saml::Auth->init', var_export($auth->getErrors(), true));
+            }
+            
+            // Perform a login request with the loaded glpiSaml
+            // configuration. Catch all throwable errors and exceptions
+            try { $auth->login($CFG_GLPI["url_base"]); } catch (Throwable $e) {
+                $this->printError($e->getMessage(), 'Saml::Auth->login', var_export($auth->getErrors(), true));
+            }
+        } // Do nothing, ignore the samlSSORequest.
     }
 
     /**
-     * Called by the Acs class if the received response was valid
-     * to handle the samlLogin or invalidate the login if
-     * there are deeper issues with the response, for instance
-     * important claims are missing.
+     * Called by the src/LoginFlow/Acs class if the received response was valid
+     * to handle the samlLogin or invalidate the login if there are deeper issues 
+     * with the response, for instance important claims are missing.
      *
      * @param   Response    SamlResponse from Acs.
      * @return  void
      * @since               1.0.0
      */
-    protected function doSamlLogin(Response $response): void
+    protected function performSamlLogin(Response $response): void
     {
         global $CFG_GLPI;
 

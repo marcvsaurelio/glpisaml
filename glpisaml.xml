@@ -15,10 +15,9 @@
             for maximum compatibility and maintainability. It implements composer for quick 3rd party 
             library updates if conditions requires it. It follows the PSR best-practices where 
             possible. It allows you to configure bypasses and rights rules on user creation.
-            Find the documentation documentation in our wiki at: https://github.com/DonutsNL/glpisaml/wiki
-
-            Want to help build a helpfull GLPI community, join at our discord get and offer support and insight at: 
-            https://discord.gg/4KFW7DWwxp
+            Find the documentation documentation in our wiki at: https://github.com/DonutsNL/glpisaml/wiki. Want 
+            to help us build a helpfull GLPI community, join at our discord get and offer 
+            support and insight at: https://discord.gg/KyMdkqJcGz
         </en>
     </long>
 </description>

@@ -180,7 +180,7 @@ class Acs extends LoginFlow
             // figure out how to capture these throws, throwable doesnt
             // capture it properly.
             if (is_object($response) && @$response->isValid()){
-                    $this->doSamlLogin($response);
+                    $this->performSamlLogin($response);
             } else {
                 $extended = ($this->debug) ? self::EXTENDED_HEADER.
                              self::ERRORS.var_export($response->getError(), true)."\n\n".
