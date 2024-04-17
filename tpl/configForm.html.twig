@@ -93,11 +93,6 @@
                    aria-controls="logging" 
                    aria-selected="false"><b>{{ header_logging }} {{ logging_warning }}</b></a>
             </li>
-            {% if inputfields.debug.value == true %}
-            <li class="nav-link">
-                <div>Id: {{ inputfields.id.value }} - Created: {{ inputfields.date_creation.value }} - Updated: {{ inputfields.date_mod.value }}</div>
-            </li>
-            {% endif %}
         </ul>
         <div class="tab-content flex-fill glpisaml" id="myTabContent">
             <!-- ################################################################################-->
@@ -112,7 +107,7 @@
                                     <sup style="color:red;">*</sup><b> {{ inputfields.name.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.name.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.name.formexplain }}</div>
                                     {% if inputfields.name.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.name.errors }}</div>
                                     {% endif %}
@@ -127,7 +122,7 @@
                                     <sup style="color:red;">*</sup><b> {{ inputfields.conf_domain.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.conf_domain.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.conf_domain.formexplain }}</div>
                                     {% if inputfields.conf_domain.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.conf_domain.errors }}</div>
                                     {% endif %}
@@ -143,7 +138,7 @@
                                     <sup style="color:red;">*</sup><b>{{ inputfields.conf_icon.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.conf_icon.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.conf_icon.formexplain }}</div>
                                     {% if inputfields.conf_icon.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.conf_icon.errors }}</div>
                                     {% endif %}
@@ -159,7 +154,7 @@
                                     <b>{{ inputfields.comment.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.comment.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.comment.formexplain }}</div>
                                     {% if inputfields.comment.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.comment.errors }}</div>
                                     {% endif %}
@@ -175,7 +170,7 @@
                                     <b>{{ inputfields.is_active.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.is_active.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.is_active.formexplain }}</div>
                                     {% if inputfields.is_active.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.is_active.errors }}</div>
                                     {% endif %}
@@ -201,7 +196,7 @@
                                     <b>{{ inputfields.debug.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.debug.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.debug.formexplain }}</div>
                                     {% if inputfields.debug.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.debug.errors }}</div>
                                     {% endif %}
@@ -235,7 +230,7 @@
                                     <b>{{ inputfields.compress_requests.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.compress_requests.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.compress_requests.formexplain }}</div>
                                     {% if inputfields.compress_requests.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.compress_requests.errors }}</div>
                                     {% endif %}
@@ -261,7 +256,7 @@
                                     <b>{{ inputfields.compress_responses.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.compress_responses.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.compress_responses.formexplain }}</div>
                                     {% if inputfields.compress_responses.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.compress_requests.errors }}</div>
                                     {% endif %}
@@ -287,7 +282,7 @@
                                     <b>{{ inputfields.proxied.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.proxied.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.proxied.formexplain }}</div>
                                     {% if inputfields.proxied.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.proxied.errors }}</div>
                                     {% endif %}
@@ -313,7 +308,7 @@
                                     <b>{{ inputfields.validate_xml.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.validate_xml.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.validate_xml.formexplain }}</div>
                                     {% if inputfields.validate_xml.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.validate_xml.errors }}</div>
                                     {% endif %}
@@ -340,7 +335,7 @@
                                     <b>{{ inputfields.validate_destination.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.validate_destination.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.validate_destination.formexplain }}</div>
                                     {% if inputfields.validate_destination.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.validate_destination.errors }}</div>
                                     {% endif %}
@@ -367,7 +362,7 @@
                                     <b>{{ inputfields.lowercase_url_encoding.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.lowercase_url_encoding.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.lowercase_url_encoding.formexplain }}</div>
                                     {% if inputfields.lowercase_url_encoding.errors == true %}
                                         <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.lowercase_url_encoding.errors }}</div>
                                     {% endif %}
@@ -401,7 +396,7 @@
                                 <b>{{ inputfields.sp_certificate.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.sp_certificate.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.sp_certificate.formexplain }}</div>
                                 <div><textarea class="textareas" name="{{ inputfields.sp_certificate.field }}" style="position:relative;" spaceholder="" title="{{ inputfields.sp_certificate.formtitle}}">{{ inputfields.sp_certificate.value|raw }}</textarea></div>
                                 {% if inputfields.sp_certificate.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.sp_certificate.errors }}</div>
@@ -427,7 +422,7 @@
                                 <b>{{ inputfields.sp_private_key.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.sp_private_key.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.sp_private_key.formexplain }}</div>
                                 <textarea name="{{ inputfields.sp_private_key.field }}" id="{{ inputfields.sp_private_key.field }}" spaceholder="" title="{{ inputfields.sp_private_key.formtitle}}">{{ inputfields.sp_private_key.value|raw }}</textarea>
                                 {% if inputfields.sp_private_key.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.sp_private_key.errors }}</div>
@@ -443,7 +438,7 @@
                                 <b>{{ inputfields.sp_nameid_format.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.sp_nameid_format.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.sp_nameid_format.formexplain }}</div>
                                 {% if inputfields.sp_nameid_format.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.sp_nameid_format.errors }}</div>
                                 {% endif %}
@@ -473,7 +468,7 @@
                                 <b>{{ inputfields.idp_entity_id.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.idp_entity_id.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.idp_entity_id.formexplain }}</div>
                                 <input class="w-100" type="text" name="{{ inputfields.idp_entity_id.field }}" id="{{ inputfields.idp_entity_id.field }}" spaceholder="" title="" value="{{ inputfields.idp_entity_id.value }}">
                                 {% if inputfields.idp_entity_id.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.idp_entity_id.errors }}</div>
@@ -489,7 +484,7 @@
                                 <b>{{ inputfields.idp_single_sign_on_service.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.idp_single_sign_on_service.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.idp_single_sign_on_service.formexplain }}</div>
                                 <input class="w-100" type="text" name="{{ inputfields.idp_single_sign_on_service.field }}" id="{{ inputfields.idp_single_sign_on_service.field }}" spaceholder="" title="" value="{{ inputfields.idp_single_sign_on_service.value }}">
                                 {% if inputfields.idp_single_sign_on_service.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.idp_single_sign_on_service.errors }}</div>
@@ -505,7 +500,7 @@
                                 <b>{{ inputfields.idp_single_logout_service.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.idp_single_logout_service.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.idp_single_logout_service.formexplain }}</div>
                                 <input class="w-100" type="text" name="{{ inputfields.idp_single_logout_service.field }}" id="{{ inputfields.idp_single_logout_service.field }}" spaceholder="" title="" value="{{ inputfields.idp_single_logout_service.value }}">
                                 {% if inputfields.idp_single_logout_service.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.idp_single_logout_service.errors }}</div>
@@ -521,7 +516,7 @@
                                 <b>{{ inputfields.idp_certificate.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.idp_certificate.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.idp_certificate.formexplain }}</div>
                                 <textarea name="{{ inputfields.idp_certificate.field }}" cols="80" rows="10" id="{{ inputfields.idp_certificate.field }}" spaceholder="" title="{{ inputfields.idp_certificate.formtitle}}">{{ inputfields.idp_certificate.value|raw }}</textarea>
                                 {% if inputfields.idp_certificate.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.idp_certificate.errors }}</div>
@@ -546,7 +541,7 @@
                                 <b>{{ inputfields.requested_authn_context.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.requested_authn_context.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.requested_authn_context.formexplain }}</div>
                                 <select id="keep-order" multiple="multiple" aria-label="multiple select" name="{{ inputfields.requested_authn_context.field }}[]">
                                     {% for key, authn in inputOptionsAuthnContext %}
                                             {%set selected = false %}
@@ -572,7 +567,7 @@
                                 <b>{{ inputfields.requested_authn_context_comparison.formtitle }}</b>
                             </div>
                             <div class="card-body">
-                                <div class="explain explanation">{{ inputfields.requested_authn_context_comparison.formexplain }}</div>
+                                <div class="text-muted explanation">{{ inputfields.requested_authn_context_comparison.formexplain }}</div>
                                 <select name="{{ inputfields.requested_authn_context_comparison.field }}" id="{{ inputfields.requested_authn_context_comparison.field }}" title="{{ inputfields.requested_authn_context_comparison.field }}">
                                         {% for key, authnc in inputOptionsAuthnCompare %}
                                             {% if inputfields.requested_authn_context_comparison.value == key %}
@@ -604,7 +599,7 @@
                                     <b>{{ inputfields.enforce_sso.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.enforce_sso.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.enforce_sso.formexplain }}</div>
 
                                     <select name="{{ inputfields.enforce_sso.field }}" 
                                             id="{{ inputfields.enforce_sso.field }}" 
@@ -634,7 +629,7 @@
                                     <b>{{ inputfields.strict.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.strict.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.strict.formexplain }}</div>
 
                                     <select name="{{ inputfields.strict.field }}" id="{{ inputfields.strict.field }}" title="{{ inputfields.strict.formtitle }}">
                                     {% for key, yesno in inputOptionsBool %}
@@ -661,7 +656,7 @@
                                     <b>{{ inputfields.user_jit.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.user_jit.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.user_jit.formexplain }}</div>
 
                                     <select name="{{ inputfields.user_jit.field }}" id="{{ inputfields.user_jit.field }}" title="{{ inputfields.user_jit.formtitle }}">
                                     {% for key, yesno in inputOptionsBool %}
@@ -688,7 +683,7 @@
                                     <b>{{ inputfields.security_nameidencrypted.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.security_nameidencrypted.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.security_nameidencrypted.formexplain }}</div>
                             
                                     <select name="{{ inputfields.security_nameidencrypted.field }}" id="{{ inputfields.security_nameidencrypted.field }}" title="{{ inputfields.security_nameidencrypted.formtitle }}">
                                     {% for key, yesno in inputOptionsBool %}
@@ -715,7 +710,7 @@
                                     <b>{{ inputfields.security_authnrequestssigned.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.security_authnrequestssigned.formexplain }}</div>    
+                                    <div class="text-muted explanation">{{ inputfields.security_authnrequestssigned.formexplain }}</div>    
 
                                     <select name="{{ inputfields.security_authnrequestssigned.field }}" id="{{ inputfields.security_authnrequestssigned.field }}" title="{{ inputfields.security_authnrequestssigned.formtitle }}">
                                     {% for key, yesno in inputOptionsBool %}
@@ -742,7 +737,7 @@
                                     <b>{{ inputfields.security_logoutrequestsigned.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.security_logoutrequestsigned.formexplain }}</div>    
+                                    <div class="text-muted explanation">{{ inputfields.security_logoutrequestsigned.formexplain }}</div>    
 
                                     <select name="{{ inputfields.security_logoutrequestsigned.field }}" id="{{ inputfields.security_logoutrequestsigned.field }}" title="{{ inputfields.security_logoutrequestsigned.formtitle }}">
                                     {% for key, yesno in inputOptionsBool %}
@@ -769,7 +764,7 @@
                                     <b>{{ inputfields.security_logoutresponsesigned.formtitle }}</b>
                                 </div>
                                 <div class="card-body">
-                                    <div class="explain explanation">{{ inputfields.security_logoutresponsesigned.formexplain }}</div>
+                                    <div class="text-muted explanation">{{ inputfields.security_logoutresponsesigned.formexplain }}</div>
 
                                     <select name="{{ inputfields.security_logoutresponsesigned.field }}" id="{{ inputfields.security_logoutresponsesigned.field }}" title="{{ inputfields.security_logoutrequestsigned.formtitle }}">
                                     {% for key, yesno in inputOptionsBool %}
@@ -805,22 +800,24 @@
             </div>
         </div>
     </div>
-    <div class="itil-footer m-2">
-        <div class="header">
-        <div class="form-buttons col-lg d-flex justify-content-between ms-auto ms-lg-0">
-            <div>
-                <button class="btn btn-primary" type="submit" name="update" title="Save">
+    <div class="card itil-footer" style="margin-top:10px;">
+        <div class="form-buttons col-lg d-flex ms-auto ms-lg-0 flex-row-reverse p-1 ">
+            <div class="m-1">
+                <button class="btn btn-primary " type="submit" name="update" title="Save">
                     <i class="far fa-save"></i>
                     <span class="d-none d-xl-block">{{ submit }}</span>
                     </button>
             </div>
-            <div>
-                <button class="btn btn-outline-danger" type="submit" name="delete" title="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Put in trashbin">
+            <div class="m-1">
+                <button class="btn btn-ghost-danger" type="submit" name="delete" title="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Put in trashbin">
                     <i class="ti ti-trash"></i>
                     <span class="d-none d-xl-block">{{ delete }}</span>
                     </button>
             </div>
-        </div>
+            {% if inputfields.debug.value == true %}
+            <div class="m-1 align-middle text-muted pull-left pt-2">
+                    ROWID: {{ inputfields.id.value }} | CREATED DATE: {{ inputfields.date_creation.value }} | LAST UPDATED: {{ inputfields.date_mod.value }}
+            {% endif %}
         </div>
     </div>
 </div>

@@ -6,6 +6,13 @@
     font-style: italic;
 }
 
+/* overwritten by twig template with hide if debug is disabled */
+.explanation {
+    text-align: justify;
+    text-justify: inter-word;
+    padding-bottom: 15px;
+}
+
 .glpisaml textarea {
     -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box;

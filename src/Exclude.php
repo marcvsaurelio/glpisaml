@@ -79,7 +79,7 @@ class Exclude extends CommonDropdown
      */
     public static function getTypeName($nb = 0) : string
     {
-        return __('SAML Excludes', PLUGIN_NAME);
+        return __('Excluded paths', PLUGIN_NAME);
     }
 
     /**
@@ -105,27 +105,6 @@ class Exclude extends CommonDropdown
     }
 
     /**
-     * getMenuContent() : array | bool -
-     * Method called by pre_item_add hook validates the object and passes
-     * it to the RegEx Matching then decides what to do.
-     *
-     * @return mixed             boolean|array
-     */
-    public static function getMenuContent()
-    {
-        $menu = [];
-        if (Config::canUpdate()) {
-            $menu['title'] = self::getMenuName();
-            $menu['page']  = '/' . PLUGIN_GLPISAML_WEBDIR . '/front/exclude.php';
-            $menu['icon']  = self::getIcon();
-        }
-        if (count($menu)) {
-          return $menu;
-        }
-        return false;
-    }
-
-    /**
      * getIcon() : string -
      * Sets icon for object.
      *
@@ -134,6 +113,17 @@ class Exclude extends CommonDropdown
     public static function getIcon() : string
     {
         return 'fa-regular fa-eye-slash';
+    }
+
+    /**
+     * @see CommonGLPI::getAdditionalMenuLinks()
+     * CommonDropdown doesnt seem to implement this,
+     * just keep it for the future. Hopefully it will be
+     * added in the future?
+     **/
+    public static function getAdditionalMenuLinks() {
+        $links[__('SAML providers', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/config.php';
+        return $links;
     }
 
     /**

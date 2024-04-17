@@ -133,15 +133,26 @@ class Config extends CommonDBTM
     }
 
     /**
+     * Added links for user convenience
+     * @see CommonGLPI::getAdditionalMenuLinks()
+     * @see https://codeberg.org/QuinQuies/glpisaml/issues/8
+     **/
+    public static function getAdditionalMenuLinks() {
+        $links[__('Excluded paths', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/exclude.php';
+        $links[__('JIT rules', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/rulesaml.php';
+        return $links;
+    }
+
+    /**
      * Provides search options for DBTM.
      * Do not rely on this, @see CommonDBTM::searchOptions instead.
      *
      * @return array  $tab  - returns searchOptions
      * @see                 - https://glpi-developer-documentation.readthedocs.io/en/master/devapi/search.html
+     * @see                 - https://codeberg.org/QuinQuies/glpisaml/issues/9
      */
     function rawSearchOptions(): array                          //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
     {
-        // https://codeberg.org/QuinQuies/glpisaml/issues/9
         $tab = parent::rawSearchOptions();
         $tab[] = [
             'id'                 => '1',
@@ -202,7 +213,7 @@ class Config extends CommonDBTM
                 }
                 // Build tab array
                 $tab[] = [
-                    'id'                 => ($first) ? $first : $index,
+                    'id'                 => $index,
                     'table'              => self::getTable(),
                     'field'              => $field[ConfigItem::FIELD],
                     'name'               => __(str_replace('_', ' ', ucfirst($field[ConfigItem::FIELD]))),

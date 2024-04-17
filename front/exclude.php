@@ -53,7 +53,7 @@ $plugin = new Plugin();
 if($plugin->isInstalled(PLUGIN_NAME) ||
    $plugin->isActivated(PLUGIN_NAME) ){
     if (Exclude::canCreate()) {
-        Html::header(__('SAML Excludes'), $_SERVER['PHP_SELF'], "plugins", Exclude::class);
+        Html::header(__('SAML Excludes'), $_SERVER['PHP_SELF'], "config", "commondropdown", Exclude::class);
         Search::show(Exclude::class);
         Html::footer();
     }else{

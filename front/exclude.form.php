@@ -39,7 +39,7 @@
  * ------------------------------------------------------------------------
  **/
 
-use Glpi\Plugin;
+use Plugin;
 use GlpiPlugin\Glpisaml\Exclude;
 
 include '../../../inc/includes.php';                            //NOSONAR - Cant be included with USE.
@@ -47,5 +47,15 @@ include '../../../inc/includes.php';                            //NOSONAR - Cant
 // Check the rights
 Session::checkRight("config", UPDATE);
 
-$dropdown = new Exclude();
-include GLPI_ROOT . "/front/dropdown.common.form.php";          //NOSONAR - Cant be included with USE.
+// Check if plugin is activated...
+$plugin = new Plugin();
+if($plugin->isInstalled(PLUGIN_NAME) &&
+   $plugin->isActivated(PLUGIN_NAME) ){
+    // If plugin is enabled, allow loading of the component.
+    $dropdown = new Exclude();
+    include GLPI_ROOT . "/front/dropdown.common.form.php";          //NOSONAR - Cant be included with USE.
+}else{
+    Html::displayNotFoundError();
+}
+
+

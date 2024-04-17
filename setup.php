@@ -69,15 +69,17 @@ define('PLUGIN_GLPISAML_CONF_FORM', '/front/config.form.php');                  
 define('PLUGIN_GLPISAML_CONFCSS_PATH', 'tpl/css/configForm.css');                               // Location of the config CSS
 
 /**
- * Init hooks of the plugin.
+ * Default GLPI Plguin Init function.
  * @return void
+ * @see https://glpi-developer-documentation.readthedocs.io/en/master/plugins/requirements.html
+ * @see https://codeberg.org/QuinQuies/glpisaml/issues/8
  */
 function plugin_init_glpisaml() : void                                                          //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
 {
     global $PLUGIN_HOOKS;                                                                       //NOSONAR
     $plugin = new Plugin();
 
-    // INCLUDE LOCALIZED COMPOSER AUTLOAD
+    // INCLUDE PLUGIN VENDOR AUTOLOADER
     include_once(__DIR__. '/vendor/autoload.php');                                              //NOSONAR - intentional include_once to load composer autoload;
 
     // CSRF
@@ -94,7 +96,7 @@ function plugin_init_glpisaml() : void                                          
         if (Session::haveRight('config', UPDATE)) {
             $PLUGIN_HOOKS['config_page'][PLUGIN_NAME]       = PLUGIN_GLPISAML_CONF_PATH;      //NOSONAR
         }
-        $PLUGIN_HOOKS['menu_toadd'][PLUGIN_NAME]['plugins'] = [Config::class, Exclude::class];
+        $PLUGIN_HOOKS['menu_toadd'][PLUGIN_NAME]['config']  = [Config::class];
         $PLUGIN_HOOKS[Hooks::ADD_CSS][PLUGIN_NAME][]        = PLUGIN_GLPISAML_CONFCSS_PATH;
 
         // Register and hook the saml rules
