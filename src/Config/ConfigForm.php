@@ -229,6 +229,7 @@ class ConfigForm    //NOSONAR complexity by design.
 
     private function generateForm(ConfigEntity $configEntity)
     {
+        global $CFG_GLPI;
         $fields = $configEntity->getFields();
         // Get warnings tabs
         $tplVars  = [];
@@ -253,6 +254,10 @@ class ConfigForm    //NOSONAR complexity by design.
             'available'                 =>  __('Available', 'phpsaml'),
             'selected'                  =>  __('Selected', 'phpsaml'),
             'inputfields'               =>  $fields,
+            'entityID'                  =>  $CFG_GLPI['url_base'].'/',
+            'acsUrl'                    =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/acs.php",
+            'metaUrl'                   =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/meta.php",
+            'LatestVersion'             =>  '',
             'inputOptionsBool'          =>  [ 1                                 => __('Yes', PLUGIN_NAME),
                                               0                                 => __('No', PLUGIN_NAME)],
             'inputOptionsNameFormat'    =>  [Saml2Const::NAMEID_UNSPECIFIED     => __('Unspecified', PLUGIN_NAME),

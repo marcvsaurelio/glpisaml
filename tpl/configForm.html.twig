@@ -9,8 +9,19 @@
         if (lastTab) {
             $('[href="' + lastTab + '"]').tab('show');
         }
-        
     });
+    // Clipboard function
+    function copyClip(key) {
+        // Get the text field
+        var copyText = document.getElementById(key);
+        // Select the text field
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // For mobile devices
+        // Copy the text inside the text field
+        navigator.clipboard.writeText(copyText.value);
+        // Alert the copied text
+        alert("Succesfully copied the value: " + copyText.value + " to your clipboard.");
+    }
 </script>
 <!-- Show config support or not -->
 {% if inputfields.debug.value == false %}
@@ -99,6 +110,7 @@
             <!-- General details -->
             <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
                 <div class="card-body">
+
                     <!-- name field -->
                     <div class="row g-2">
                         <div class="col-md-5 p-2">
@@ -388,6 +400,27 @@
             <!-- Service provider details -->
             <div class="tab-pane fade" id="provider" role="tabpanel" aria-labelledby="provider-tab">
                 <div class="card-body">
+                    
+                    <div class="col-md-9 p-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <b>SP Information</b>
+                            </div>
+                            <div class="card-body text-muted ">
+                                <p class="spinfo"><a href='https://codeberg.org/QuinQuies/glpisaml/wiki/Config+-+Service+provider+configuration.-'
+                                    target='_blank'>💁 Find additional information about the service provider configuration options here</a><br><br>
+                                    <a class='btn' onclick="copyClip('EntityId')">Entity Id</a>
+                                    <input type="text" id="EntityId" value="{{ entityID }}" disabled><br/>
+
+                                    <a class='btn' onclick="copyClip('MetaUrl')">Meta Url</a>
+                                    <input type="text" id="MetaUrl" value="{{ metaUrl }}?id={{ inputfields.id.value }}" disabled><br/>
+                                    
+                                    <a class='btn' onclick="copyClip('AcsUrl')">ACS Url</a>
+                                    <input type="text" id="AcsUrl" value="{{ acsUrl }}" disabled><br/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- sp_certificate -->
                     <div class="col-md-9 p-2">
@@ -460,6 +493,18 @@
             <!-- Identity provider details -->
             <div class="tab-pane fade" id="idp" role="tabpanel" aria-labelledby="idp-tab">
                 <div class="card-body">
+
+                    <div class="col-md-9 p-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <b>IDP Information</b>
+                            </div>
+                            <div class="card-body">
+                                <p><a href='https://codeberg.org/QuinQuies/glpisaml/wiki/Config+-+Identity+provider.-'
+                                      target='_blank'>💁 Find additional information about the identity provider configuration options here</a></p>
+                            </div>
+                        </div>
+                    </div>
 
                      <!-- idp_entity_id -->
                      <div class="col-md-9 p-2">
