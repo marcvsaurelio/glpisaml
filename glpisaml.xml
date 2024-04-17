@@ -1,6 +1,6 @@
 <root>
 <name>glpisaml</name>
-<key>sso</key>
+<key>glpisaml</key>
 <state>Unstable</state>
 <logo>https://codeberg.org/QuinQuies/glpisaml/raw/branch/main/donut.png</logo>
 <description>

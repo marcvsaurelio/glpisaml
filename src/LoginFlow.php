@@ -145,7 +145,7 @@ class LoginFlow
             $this->performSamlSSO($state);
         }
 
-        // Evaluate database state, do we need to force logoff a user, 
+        // Evaluate database state, do we need to force logoff a user,
         // but only after user has been logged in.
 
 
@@ -193,7 +193,7 @@ class LoginFlow
 
     /**
      * Called by the src/LoginFlow/Acs class if the received response was valid
-     * to handle the samlLogin or invalidate the login if there are deeper issues 
+     * to handle the samlLogin or invalidate the login if there are deeper issues
      * with the response, for instance important claims are missing.
      *
      * @param   Response    SamlResponse from Acs.

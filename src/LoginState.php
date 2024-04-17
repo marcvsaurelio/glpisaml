@@ -300,13 +300,37 @@ class LoginState extends CommonDBTM
         return false;
     }
 
-    // get the glpi Username and set it in the state.
-    // If no user was identified, use remote IP as user.
+    /**
+     * Get the glpi Username and set it in the state.
+     * If no user was identified, use remote IP as user.
+     *
+     * @param   int      $idpId - identity of the IDP for which we are fetching the logging
+     * @return  array    Array with logging entries (if any) else empty array;
+     * @since   1.1.0
+     */
     private function setGlpiUserName(): void
     {
         // Use remote ip as username if session is anonymous.
         $remote = (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
         $this->state[self::USER_NAME] = (!empty($_SESSION[self::SESSION_GLPI_NAME_ACCESSOR])) ? $_SESSION[self::SESSION_GLPI_NAME_ACCESSOR] : $remote;
+    }
+
+    /**
+     * Gets the logging entries from the loginState database
+     * for presentation in the logging tab.
+     *
+     * @param   int      $idpId - identity of the IDP for which we are fetching the logging
+     * @return  array    Array with logging entries (if any) else empty array;
+     * @since   1.2.0
+     */
+    public function getLoggingEntries(int $idpId): array
+    {
+        global $DB;
+        // Should be a positive number.
+        if(is_numeric($idpId)){
+            $DB->request(['WHERE' => [self::IDP_ID => $idpId]]);
+        }
+        return [];
     }
 
     /**
