@@ -118,7 +118,7 @@ class Config extends CommonDBTM
      */
     public static function getTypeName($nb = 0): string
     {
-        return __('SAML ID Providers', PLUGIN_NAME);
+        return __('SAML Providers', PLUGIN_NAME);
     }
 
     /**
@@ -141,26 +141,55 @@ class Config extends CommonDBTM
      */
     function rawSearchOptions(): array                          //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
     {
-        // Lets not be as verbose GLPI objects.
-        $index = 1;
+        // https://codeberg.org/QuinQuies/glpisaml/issues/9
+        $tab = parent::rawSearchOptions();
+        $tab[] = [
+            'id'                 => '1',
+            'table'              => $this->getTable(),
+            'field'              => ConfigEntity::ID,
+            'name'               => __('ID'),
+            'massiveaction'      => false, // implicit field is id
+            'datatype'           => 'itemlink'
+        ];
+        $tab[] = [
+            'id'                 => '2',
+            'table'              => $this->getTable(),
+            'field'              => ConfigEntity::NAME,
+            'name'               => __('Name'),
+            'massiveaction'      => false,
+            'datatype'           => 'itemlink'
+        ];
+        $tab[] = [
+            'id'                 => '3',
+            'table'              => $this->getTable(),
+            'field'              => ConfigEntity::IDP_ENTITY_ID,
+            'name'               => __('Idp entity ID'),
+            'massiveaction'      => false,
+            'datatype'           => 'text'
+        ];
+        $tab[] = [
+            'id'                 => '4',
+            'table'              => $this->getTable(),
+            'field'              => ConfigEntity::IS_ACTIVE,
+            'name'               => __('Is active'),
+            'massiveaction'      => false,
+            'datatype'           => 'bool'
+        ];
+
+        // Lets not be as verbose as default GLPI objects when we dont need to.
+        // continue tabId index where we left off.
+        $index = 5;
         foreach((new ConfigEntity())->getFields() as $field)
         {
             $field['list'] = false;
            // skip the following fields
-            if($field[ConfigItem::FIELD] != 'id'             &&
-               $field[ConfigItem::FIELD] != 'is_deleted'     &&
-               $field[ConfigItem::FIELD] != 'date_creation'  &&
-               $field[ConfigItem::FIELD] != 'date_mod'       &&
-               $field[ConfigItem::FIELD] != 'is_active'      &&
-               $field[ConfigItem::FIELD] != 'comment'        ){
-
+            if($field[ConfigItem::FIELD] != ConfigEntity::ID            &&
+               $field[ConfigItem::FIELD] != ConfigEntity::NAME          &&
+               $field[ConfigItem::FIELD] != ConfigEntity::IDP_ENTITY_ID &&
+               $field[ConfigItem::FIELD] != ConfigEntity::IS_ACTIVE     &&
+               $field[ConfigItem::FIELD] != ConfigEntity::IS_DELETED    ){
                 // Remap DB fields to Search datatypes
-                if($field[ConfigItem::FIELD] == 'name' ){
-                    // Make sure the default field is 'name'
-                    $field[ConfigItem::TYPE] = 'itemlink';
-                    $field['list']  = true;
-                    $first = 0;
-                }elseif(strstr($field[ConfigItem::TYPE], 'varchar') ){
+                if(strstr($field[ConfigItem::TYPE], 'varchar') ){
                     $field[ConfigItem::TYPE] = 'string';
                 }elseif($field[ConfigItem::TYPE] == 'tinyint' ){
                     $field[ConfigItem::TYPE] = 'bool';
@@ -171,7 +200,6 @@ class Config extends CommonDBTM
                 }elseif(strstr($field[ConfigItem::TYPE], 'int') ){
                     $field[ConfigItem::TYPE] = 'number';
                 }
-
                 // Build tab array
                 $tab[] = [
                     'id'                 => ($first) ? $first : $index,
@@ -181,8 +209,9 @@ class Config extends CommonDBTM
                     'datatype'           => $field[ConfigItem::TYPE],
                     'list'               => $field['list'],
                 ];
+                // Only increase index if we processed an item.
+                $index++;
             }
-            $index++;
         }
         return $tab;
     }
@@ -196,9 +225,13 @@ class Config extends CommonDBTM
      */
     public static function getLoginButtons(int $length): array
     {
-        $l = (is_numeric($length)) ? $length : 255;
-        $tplvars = [];
+        // Get global DB object to query the configTable.
         global $DB;
+        // Define the array used to store the buttons (if any)
+        $tplvars = [];
+        // $length is used to strip the length of the button name to fit the button.
+        $length = (is_numeric($length)) ? $length : 255;
+        // Iterate throught the IDP config rows and generate the buttons for twig template.
         foreach( $DB->request(['FROM' => self::getTable()]) as $value)
         {
             // Only populate buttons that are considered valid by ConfigEntity;
@@ -206,9 +239,10 @@ class Config extends CommonDBTM
             if($configEntity->isValid() && $configEntity->isActive()){
                 $tplvars['buttons'][] = ['id'      => $value[ConfigEntity::ID],
                                         'icon'    => $value[ConfigEntity::CONF_ICON],
-                                        'name'    => sprintf("%.".$l."s", $value[ConfigEntity::NAME]) ];
+                                        'name'    => sprintf("%.".$length."s", $value[ConfigEntity::NAME]) ];
             }
         }
+        // Return the buttons (if any) else empty array.
         return $tplvars;
     }
 
@@ -282,6 +316,11 @@ class Config extends CommonDBTM
     public static function uninstall(Migration $migration): void
     {
         $table = self::getTable();
+        // Make this smarter in the future. Never create a backup
+        // when the source table is empty and an existing table is
+        // populated! Allow user to restore from backup table. Current
+        // implementation will 'overwrite' the backup with an empty
+        // table if uninstall->reinstall->uninstall is performed.
         $migration->backupTables([$table]);
         Session::addMessageAfterRedirect("🆗 backup: $table.");
         $migration->dropTable($table);

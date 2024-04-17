@@ -235,7 +235,6 @@ class LoginFlow
      * @param    Response  Response object with the samlRespons attributes.
      * @return   array     user->add input fields array with properties.
      */
-
      public function getUserInputFieldsFromSamlClaim(Response $response): array     //NOSONAR - Complexity by design.
      {
         // Validate nameId clain from provided samlResponse.
@@ -274,9 +273,13 @@ class LoginFlow
             if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS])) {
                 // Validate the emailadress in the claim. If its valid we continue processing it.
                 if(!filter_var($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS], FILTER_VALIDATE_EMAIL)){
-                    $this->printError(__('SamlResponse should have at least 1 valid email set via NameId or as appended emailaddress claim.', PLUGIN_NAME),
-                                      'getUserInputFieldsFromSamlClaim',
-                                      var_export($response, true));
+                    $this->printError(__('SamlResponse should have at least 1 valid emailaddress for GLPI  to find
+                                          the corresponding GLPI user or create it (with JIT enabled). For this purpose make
+                                          sure either the IDP provided NameId property is populated with the emailaddress format,
+                                          or configure the IDP to add the users emailaddress in the samlResponse claims using
+                                          the designated schema property key:'.self::SCHEMA_EMAILADDRESS.' = "valid@userEmail.Address".', PLUGIN_NAME),
+                                         'getUserInputFieldsFromSamlClaim',
+                                          var_export($response, true));
                 }
                 // Set the emailaddress claim as the username and email.
                 $user[User::NAME]   = $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0];
@@ -285,9 +288,13 @@ class LoginFlow
                 // No emailaddress found in the samlResponse.
                 // We need at least one valid emailaddress from the NameId or a emailaddress claim.
                 // to search for a user or create one via JIT.
-                $this->printError(__('SamlResponse should have at least 1 valid email set via NameId or as appended emailaddress claim.', PLUGIN_NAME),
-                                  'getUserInputFieldsFromSamlClaim',
-                                  var_export($response, true));
+                $this->printError(__('SamlResponse should have at least 1 valid emailaddress for GLPI  to find
+                                      the corresponding GLPI user or create it (with JIT enabled). For this purpose make
+                                      sure either the IDP provided NameId property is populated with the emailaddress format,
+                                      or configure the IDP to add the users emailaddress in the samlResponse claims using
+                                      the designated schema property key:'.self::SCHEMA_EMAILADDRESS.' = "valid@userEmail.Address".', PLUGIN_NAME),
+                                     'getUserInputFieldsFromSamlClaim',
+                                      var_export($response, true));
             }
         }else{
             // The NameId property can be used for the username and emailaddress.
