@@ -150,20 +150,12 @@ class Config extends CommonDBTM
      * @return array  $tab  - returns searchOptions
      * @see                 - https://glpi-developer-documentation.readthedocs.io/en/master/devapi/search.html
      * @see                 - https://codeberg.org/QuinQuies/glpisaml/issues/9
+     * @see                 - https://codeberg.org/QuinQuies/glpisaml/issues/11
      */
     function rawSearchOptions(): array                          //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
     {
-        $tab = parent::rawSearchOptions();
         $tab[] = [
-            'id'                 => '1',
-            'table'              => $this->getTable(),
-            'field'              => ConfigEntity::ID,
-            'name'               => __('ID'),
-            'massiveaction'      => false, // implicit field is id
-            'datatype'           => 'itemlink'
-        ];
-        $tab[] = [
-            'id'                 => '2',
+            'id'                 => '1',                        // By GLPI convention Name field should have ID 1.
             'table'              => $this->getTable(),
             'field'              => ConfigEntity::NAME,
             'name'               => __('Name'),
@@ -171,7 +163,15 @@ class Config extends CommonDBTM
             'datatype'           => 'itemlink'
         ];
         $tab[] = [
-            'id'                 => '3',
+            'id'                 => '2',                        // By GLPI convention ID field should have ID 2.
+            'table'              => $this->getTable(),
+            'field'              => ConfigEntity::ID,
+            'name'               => __('ID'),
+            'massiveaction'      => false, // implicit field is id
+            'datatype'           => 'itemlink'
+        ];
+        $tab[] = [
+            'id'                 => '3',                        // If this was the glpi entities_id the id should by convention be ID `86`
             'table'              => $this->getTable(),
             'field'              => ConfigEntity::IDP_ENTITY_ID,
             'name'               => __('Idp entity ID'),
