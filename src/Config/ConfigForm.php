@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.0
+ *  @version    1.1.1
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -47,6 +47,8 @@ namespace GlpiPlugin\Glpisaml\Config;
 use Html;
 use Plugin;
 use Session;
+use Throwable;
+use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\Config as SamlConfig;
 use OneLogin\Saml2\Constants as Saml2Const;
 
@@ -227,6 +229,55 @@ class ConfigForm    //NOSONAR complexity by design.
         return (is_array($warnings)) ? $warnings : [];
     }
 
+    /**
+     * Validates the provided Phpsaml version against the git repository
+     * if $return is true method will return collected information in an array.
+     *
+     * version($dbConf, $return);
+     *
+     * @param string $compare       Version to compare
+     * @param bool $return          Return the outcomes
+     * @return array|void $outcomes Optional return
+     * @since                       1.2.1
+     */
+    private function version(): array
+    {
+        try {
+            if($feed = implode(file(PLUGIN_GLPISAML_ATOM_URL))){
+                if ($xmlArray = simplexml_load_string($feed)) {
+                    $link = (string) $xmlArray->channel->item->link[0];
+                    preg_match('/.*(v.+)/', $link, $version);
+                    if (is_array($version)) {
+                        $v = $version['1'];
+                        if ($v <> PLUGIN_GLPISAML_VERSION) {
+                            return ['gitVersion'        => $v,
+                                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                                    'gitUrl'            => $link,
+                                    'latest'            => false];
+                        } else {
+                            return ['gitVersion'        => $v,
+                                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                                    'gitUrl'            => $link,
+                                    'latest'            => true];
+                        }
+                    }
+                }
+            }
+            return ['gitVersion'        => 'Unavailable',
+                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                    'gitUrl'            => '#',
+                    'latest'            => false];
+
+        }catch(Throwable $e){
+            return ['gitVersion'        => "Unavailable with errors: $e",
+                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                    'gitUrl'            => '#',
+                    'latest'            => false];
+        }
+    }
+
+
+
     private function generateForm(ConfigEntity $configEntity)
     {
         global $CFG_GLPI;
@@ -254,10 +305,11 @@ class ConfigForm    //NOSONAR complexity by design.
             'available'                 =>  __('Available', 'phpsaml'),
             'selected'                  =>  __('Selected', 'phpsaml'),
             'inputfields'               =>  $fields,
+            'loggingfields'             =>  LoginState::getLoggingEntries($fields[ConfigEntity::ID]['value']),
             'entityID'                  =>  $CFG_GLPI['url_base'].'/',
             'acsUrl'                    =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/acs.php",
             'metaUrl'                   =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/meta.php",
-            'LatestVersion'             =>  '',
+            'LatestVersion'             =>  $this->version(),
             'inputOptionsBool'          =>  [ 1                                 => __('Yes', PLUGIN_NAME),
                                               0                                 => __('No', PLUGIN_NAME)],
             'inputOptionsNameFormat'    =>  [Saml2Const::NAMEID_UNSPECIFIED     => __('Unspecified', PLUGIN_NAME),

@@ -110,26 +110,38 @@ class LoginState extends CommonDBTM
     }
 
     /**
-     * Loads initial state into the $this->state property
+     * This function evaluates the state and is called after each click
+     * Keeping track of the session state is important to protect GLPI
+     * against all sorts of threats like SAML replays, invalid logins.
+     * In the future this table might offer a basis to limit login from
+     * sanctioned countries or the ammount of active sessions a user is
+     * allowed to have at any one time.
+     *
+     * The idea is NOT to implement this logic in GLPI and try to maintain
+     * all possible variations, but to allow any external SIEM tool to
+     * query this data using the GLPI API, do its policy logic using this data
+     * and intervene (with forced logoff) if a session is found not complient
+     * with company policies.
      * @since   1.0.0
      */
     private function getInitialState(): void
     {
-        // Evaluate if the call is excluded from saml auth
-        // populate state accordingly.
+        global $DB, $GLPI_CACHE;
         $this->state[self::EXCLUDED_PATH] = Exclude::isExcluded();
-        $this->getGlpiState();
-        $this->setGlpiUserName();
         $this->getLastActivity();
+        $this->setGlpiUserName();
         
-
-        global $DB;
         // See if we are a new or existing session.
-        if(!$sessionIterator = $DB->request(['FROM' => self::getTable(), 'WHERE' => [self::SESSION_NAME => session_name()]])){
+        // This will repopulare flags with database state which is leading.
+        if(!$sessionIterator = $DB->request(['FROM' => self::getTable(), 'WHERE' => [self::SESSION_ID => session_id()]])){
             throw new Exception('Could not fetch Login State from database');               //NOSONAR - We use generic Exceptions
         }
 
-        if($sessionIterator->numrows() == 1){
+        // We should never get more then one row, if we do
+        // just work with the last entry.
+        if($sessionIterator->numrows() > 0){
+            // Populate the username field based on actual values.
+            // Get all the relevant fields from the database
             foreach($sessionIterator as $sessionState)
             {
                 $this->state = array_merge($this->state,[
@@ -137,6 +149,7 @@ class LoginState extends CommonDBTM
                     self::USER_ID           => $sessionState[self::USER_ID],
                     self::SESSION_ID        => $sessionState[self::SESSION_ID],
                     self::SESSION_NAME      => $sessionState[self::SESSION_NAME],
+                    self::GLPI_AUTHED       => (bool) $sessionState[self::GLPI_AUTHED],
                     self::SAML_AUTHED       => (bool) $sessionState[self::SAML_AUTHED],
                     self::LOGIN_DATETIME    => $sessionState[self::LOGIN_DATETIME],
                     self::ENFORCE_LOGOFF    => $sessionState[self::ENFORCE_LOGOFF],
@@ -146,18 +159,37 @@ class LoginState extends CommonDBTM
                 ]);
             }
         }else{
+            // Populate the GLPI state first.
+            $this->getGlpiState();
+
+            // Populare the username field
+            $this->setGlpiUserName();
+
+            // See if we allready performed a login using saml
+            // The session_id is reset by session::init()
+            // so we need to check if the idpId
+            // was cached by loginFlow doAuth().
+            if($idpid = $GLPI_CACHE->get(self::IDP_ID)){
+                $GLPI_CACHE->delete(self::IDP_ID);
+                $samlAuthed = true;
+            }else{
+                $idpid = 0;
+                $samlAuthed = false;
+            }
+
             // Populate session using actuals
             $this->state = $this->state = array_merge($this->state,[
                 self::USER_ID           => 0,
                 self::SESSION_ID        => session_id(),
                 self::SESSION_NAME      => session_name(),
-                self::SAML_AUTHED       => false,
+                self::SAML_AUTHED       => $samlAuthed,
                 self::ENFORCE_LOGOFF    => 0,
                 self::EXCLUDED_PATH     => $this->state[self::EXCLUDED_PATH],
-                self::IDP_ID            => null,
+                self::IDP_ID            => $idpid,
                 self::DATABASE          => false,
             ]);
         }
+        // Write state to database.
         if(!$this->WriteStateToDb()){
             throw new Exception('Could not write database state to database');          //NOSONAR - We use generic Exceptions
         }
@@ -199,7 +231,7 @@ class LoginState extends CommonDBTM
 
     /**
      * Gets glpi state from the SESSION superglobal and
-     * updates the state array accordingly.
+     * updates the state array accordingly for initial state.
      *
      * @since   1.0.0
      */
@@ -210,7 +242,6 @@ class LoginState extends CommonDBTM
         // Id_Accessor: Populated with session_id() in Session::class:107 after GLPI login;
         if (isset($_SESSION[self::SESSION_GLPI_NAME_ACCESSOR]) &&
             isset($_SESSION[self::SESSION_VALID_ID_ACCESSOR])  ){
-
             $this->state[self::GLPI_AUTHED] = true;
             $this->state[self::PHASE] = self::PHASE_GLPI_AUTH;
         } else {
@@ -227,6 +258,16 @@ class LoginState extends CommonDBTM
      */
     public function setPhase(int $phase): bool
     {
+        // figure out if we tried to use SAML for authentication
+        if($phase >= self::PHASE_SAML_ACS){
+            // Update the SAML_Authed flag as well
+            $this->state[self::SAML_AUTHED] = true;
+        }
+        // Process the session state
+        // Consideration Is there a valid scenario where we would
+        // update the session phase with a lower number than is initially present
+        // degrading the session essentially?
+        // would checking if the phase is always higher provide an additional layer of security?
         if($phase > 0 && $phase <= 8){
             $this->state[self::PHASE] = $phase;
             return ($this->update($this->state)) ? true : false;
@@ -316,21 +357,28 @@ class LoginState extends CommonDBTM
     }
 
     /**
-     * Gets the logging entries from the loginState database
+     * Gets the logging entries from the loginState database for given identity provider
      * for presentation in the logging tab.
      *
      * @param   int      $idpId - identity of the IDP for which we are fetching the logging
      * @return  array    Array with logging entries (if any) else empty array;
      * @since   1.2.0
      */
-    public function getLoggingEntries(int $idpId): array
+    public static function getLoggingEntries(int $idpId): array
     {
         global $DB;
+        // Create an empty logging array
+        $logging = [];
         // Should be a positive number.
         if(is_numeric($idpId)){
-            $DB->request(['WHERE' => [self::IDP_ID => $idpId]]);
+            // Fetch logging only for the given identity provider
+            foreach($DB->request(['FROM' => self::getTable(),
+                                  'WHERE' => [self::IDP_ID => $idpId],
+                                  'ORDER' => [self::LOGIN_DATETIME.' DESC']]) as $id => $row ){
+                $logging[$id] = $row;
+            }
         }
-        return [];
+        return $logging;
     }
 
     /**

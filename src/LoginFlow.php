@@ -106,6 +106,7 @@ class LoginFlow
      */
     public function doAuth(): bool
     {
+        global $GLPI_CACHE;
         // Get current state
         if(!$state = new Loginstate()){
             $this->printError(__('Could not load loginState from database!', PLUGIN_NAME));
@@ -115,9 +116,12 @@ class LoginFlow
         if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) {
             // Stop GLPI from processing cookiebased autologin.
             $_SESSION['noAUTO'] = 1;
-            $this->performGlpiLogOff();
             $this->performSamlLogOff();
+            $this->performGlpiLogOff();
         }
+
+        // Evaluate database state, do we need to force logoff a user,
+        // but only after user has been logged in.
 
         // Capture the post of regular login and verify if the domain is SSO enabled.
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
@@ -134,6 +138,10 @@ class LoginFlow
 
             // If we know the idp we register it in the login State
             $state->setIdpId(filter_var($_POST['phpsaml'], FILTER_SANITIZE_NUMBER_INT));
+
+            // Set the idpId in php session because its lost after login due to
+            // sessionId reset.
+            $GLPI_CACHE->set(LoginState::IDP_ID, filter_var($_POST['phpsaml'], FILTER_SANITIZE_NUMBER_INT));
             
             // Update the current phase in database. The state is verified by the Acs
             // while handling the received SamlResponse. Any other state will force Acs
@@ -144,10 +152,6 @@ class LoginFlow
             // Actually perform SSO
             $this->performSamlSSO($state);
         }
-
-        // Evaluate database state, do we need to force logoff a user,
-        // but only after user has been logged in.
-
 
         // else
         return false;
@@ -441,6 +445,8 @@ class LoginFlow
     protected function performSamlLogOff(): void
     {
         global $CFG_GLPI;
+        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
+        $state->setPhase(LoginState::PHASE_LOGOFF);
     }
 
 
