@@ -30,7 +30,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    Glpisaml
- *  @version    1.1.0
+ *  @version    1.1.1
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2023 by Chris Gralike
  *  @license    GPLv2+
