@@ -49,6 +49,7 @@ use Plugin;
 use Session;
 use Throwable;
 use GlpiPlugin\Glpisaml\LoginState;
+use Glpi\Application\View\TemplateRenderer;
 use GlpiPlugin\Glpisaml\Config as SamlConfig;
 use OneLogin\Saml2\Constants as Saml2Const;
 
@@ -295,6 +296,7 @@ class ConfigForm    //NOSONAR complexity by design.
             'delete'                    =>  __('Delete', PLUGIN_NAME),
             'close_form'                =>  Html::closeForm(false),
             'glpi_rootdoc'              =>  Plugin::getWebDir(PLUGIN_NAME, true).'/front/config.form.php',
+            'glpi_tpl_macro'            =>  '/components/form/fields_macros.html.twig',
             'title'                     =>  __('IDP configuration', PLUGIN_NAME),
             'header_general'            =>  __('General', PLUGIN_NAME),
             'header_security'           =>  __('Security', PLUGIN_NAME),
@@ -325,11 +327,15 @@ class ConfigForm    //NOSONAR complexity by design.
                                              'maximum'                      => __('Maximum', PLUGIN_NAME),
                                              'better'                       => __('Better', PLUGIN_NAME)],
         ]);
-        
+
+        // https://codeberg.org/QuinQuies/glpisaml/issues/12
+        return TemplateRenderer::getInstance()->render('@glpisaml/configForm.html.twig',  $tplVars);
         // Render twig template
-        $loader = new \Twig\Loader\FilesystemLoader(PLUGIN_GLPISAML_TPLDIR);
+        /*
+        $loader = new \Twig\Loader\FilesystemLoader(realpath($_SERVER['DOCUMENT_ROOT']).$CFG_GLPI['root_doc']); // This one might be tricky. A CFG_GLPI key with absolute path to docroot would be nice.
         $twig = new \Twig\Environment($loader);
-        $template = $twig->load('configForm.html.twig');
+        $template = $twig->load('/marketplace/glpisaml/tpl/configForm.html.twig');
         return $template->render($tplVars);
+        */
     }
 }

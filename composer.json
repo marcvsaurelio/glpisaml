@@ -24,5 +24,10 @@
             "aliases": {
             }
         }
+    },
+    "autoload": {
+        "psr-4": {
+            "glpisamltpl\\": "tpl/"
+        }
     }
 }

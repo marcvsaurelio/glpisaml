@@ -165,7 +165,7 @@ class ConfigItem    //NOSONAR
         // depending security options to false.
         return [self::FORMEXPLAIN => __('The base62 encoded x509 service providers private key. Should match the modulus of the
                                          provided X509 service provider certificate', PLUGIN_NAME),
-                self::FORMTITLE => __('SP Certificate private key', PLUGIN_NAME),
+                self::FORMTITLE => __('SP PRIVATE KEY', PLUGIN_NAME),
                 self::EVAL      => self::VALID,
                 self::VALUE     => $var,
                 self::FIELD     => __function__,
@@ -429,7 +429,7 @@ class ConfigItem    //NOSONAR
         return array_merge([self::FORMEXPLAIN   => __('If enabled it will enforce OneLogin PHPSAML to print status and error messages.
                                                        be aware that not all message\'s might be captured by GLPISAML and might therefor
                                                        not become visable.'),
-                            self::FORMTITLE     => __('PHPSAML DEBUG', PLUGIN_NAME),
+                            self::FORMTITLE     => __('DEBUG', PLUGIN_NAME),
                             self::FIELD         => __function__,
                             self::VALIDATOR     => __method__,],
                             self::handleAsBool($var, ConfigEntity::DEBUG));

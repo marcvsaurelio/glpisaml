@@ -1,3 +1,8 @@
+<!-- https://codeberg.org/QuinQuies/glpisaml/issues/13 
+{ % import glpi_tpl_macro as fields %}
+-->
+
+
 <script>
     // Remember tab state
     $(function() {
@@ -110,7 +115,6 @@
             <!-- General details -->
             <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
                 <div class="card-body">
-
                     <!-- name field -->
                     <div class="row g-2">
                         <div class="col-md-5 p-2">
@@ -207,6 +211,15 @@
                                 <div class="card-header">
                                     <b>{{ inputfields.debug.formtitle }}</b>
                                 </div>
+                                {{ fields.sliderField(
+                                     inputfields.debug.field,
+                                     inputfields.debug.value,
+                                     inputfields.debug.formtitle,
+                                    {
+                                       inputOptionsBool
+                                    }
+                                 ) }}
+                                <!--
                                 <div class="card-body">
                                     <div class="text-muted explanation">{{ inputfields.debug.formexplain }}</div>
                                     {% if inputfields.debug.errors == true %}
@@ -224,6 +237,7 @@
                                     {% endfor %}
                                     </select>
                                 </div>
+                                -->
                             </div>
                         </div>
                     </div>
