@@ -6,7 +6,6 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'glpisamltpl\\' => array($baseDir . '/tpl'),
     'RobRichards\\XMLSecLibs\\' => array($vendorDir . '/robrichards/xmlseclibs/src'),
     'OneLogin\\' => array($vendorDir . '/onelogin/php-saml/src'),
 );

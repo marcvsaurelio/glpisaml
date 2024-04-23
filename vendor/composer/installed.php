@@ -3,7 +3,7 @@
         'name' => 'donutsnl/glpisaml',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'facf2b3b73ae9ce220c35ce82dc075b9c05b5102',
+        'reference' => 'f9c5bd3be7dacf6800196c0cd0392662556d94b9',
         'type' => 'glpi-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'donutsnl/glpisaml' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'facf2b3b73ae9ce220c35ce82dc075b9c05b5102',
+            'reference' => 'f9c5bd3be7dacf6800196c0cd0392662556d94b9',
             'type' => 'glpi-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

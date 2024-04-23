@@ -7,10 +7,6 @@ namespace Composer\Autoload;
 class ComposerStaticInitbc84c6ad8d67d560c4b8fa2171682159
 {
     public static $prefixLengthsPsr4 = array (
-        'g' => 
-        array (
-            'glpisamltpl\\' => 12,
-        ),
         'R' => 
         array (
             'RobRichards\\XMLSecLibs\\' => 23,
@@ -22,10 +18,6 @@ class ComposerStaticInitbc84c6ad8d67d560c4b8fa2171682159
     );
 
     public static $prefixDirsPsr4 = array (
-        'glpisamltpl\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/tpl',
-        ),
         'RobRichards\\XMLSecLibs\\' => 
         array (
             0 => __DIR__ . '/..' . '/robrichards/xmlseclibs/src',
