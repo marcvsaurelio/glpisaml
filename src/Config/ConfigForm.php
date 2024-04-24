@@ -289,6 +289,14 @@ class ConfigForm    //NOSONAR complexity by design.
        
         // Get AuthN context as array
         $fields[ConfigEntity::AUTHN_CONTEXT][ConfigItem::VALUE] = $configEntity->getRequestedAuthnContextArray();
+
+        // get the logging but only if the object allready exists
+        // https://codeberg.org/QuinQuies/glpisaml/issues/15#issuecomment-1785284
+        if(is_numeric($fields[ConfigEntity::ID]['value'])){
+            $logging = LoginState::getLoggingEntries($fields[ConfigEntity::ID]['value']);
+        }else{
+            $logging = [];
+        }
        
         // Define static field translations
         $tplVars = array_merge($tplVars, [
@@ -307,7 +315,7 @@ class ConfigForm    //NOSONAR complexity by design.
             'available'                 =>  __('Available', 'phpsaml'),
             'selected'                  =>  __('Selected', 'phpsaml'),
             'inputfields'               =>  $fields,
-            'loggingfields'             =>  LoginState::getLoggingEntries($fields[ConfigEntity::ID]['value']),
+            'loggingfields'             =>  $logging,
             'entityID'                  =>  $CFG_GLPI['url_base'].'/',
             'acsUrl'                    =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/acs.php",
             'metaUrl'                   =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/meta.php",
