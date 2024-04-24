@@ -114,7 +114,8 @@ class LoginFlow
         }
 
         // Check if the logout button was pressed and handle request!
-        if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) {
+        // https://codeberg.org/QuinQuies/glpisaml/issues/18
+        if ( isset($_SERVER['REQUEST_URI']) && ( strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) ){
             // Stop GLPI from processing cookiebased autologin.
             $_SESSION['noAUTO'] = 1;
             $this->performSamlLogOff();

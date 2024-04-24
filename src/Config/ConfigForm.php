@@ -290,7 +290,7 @@ class ConfigForm    //NOSONAR complexity by design.
         // Get AuthN context as array
         $fields[ConfigEntity::AUTHN_CONTEXT][ConfigItem::VALUE] = $configEntity->getRequestedAuthnContextArray();
 
-        // get the logging but only if the object allready exists
+        // get the logging entries, but only if the object allready exists
         // https://codeberg.org/QuinQuies/glpisaml/issues/15#issuecomment-1785284
         if(is_numeric($fields[ConfigEntity::ID]['value'])){
             $logging = LoginState::getLoggingEntries($fields[ConfigEntity::ID]['value']);

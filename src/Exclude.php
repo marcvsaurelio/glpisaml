@@ -244,12 +244,19 @@ class Exclude extends CommonDropdown
     {
         //https://github.com/derricksmith/phpsaml/issues/159
         // Dont perform auth on CLI, asserter service and manually excluded files.
-        if (PHP_SAPI == 'cli'                                            ||
-            strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false         ||         // dont process acs
-            strpos($_SERVER['REQUEST_URI'], 'common.tabs.php') !== false ||         // dont process common.tabs
-            strpos($_SERVER['REQUEST_URI'], 'dashboard.php') !== false   ||         // dont process dashboard
-            Exclude::ProcessExcludes()                                   ){
-             return $_SERVER['REQUEST_URI'];
+        if (PHP_SAPI == 'cli'){
+            // https://codeberg.org/QuinQuies/glpisaml/issues/18#issuecomment-1785444
+            // $_SERVER['REQUEST_URI'] obviously isnt populated in 'CLI' mode.
+            if( isset($_SERVER['REQUEST_URI'])                               &&         // Make sure REQ URI is available
+              ( strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false         ||         // dont process acs
+                strpos($_SERVER['REQUEST_URI'], 'common.tabs.php') !== false ||         // dont process common.tabs
+                strpos($_SERVER['REQUEST_URI'], 'dashboard.php') !== false   ||         // dont process dashboard
+                Exclude::ProcessExcludes()                                   ))
+            {
+                return $_SERVER['REQUEST_URI'];
+            } else {
+                return 'CLI';
+            }
         }else{
              return false;
         }

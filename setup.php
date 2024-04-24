@@ -41,9 +41,7 @@
  **/
 
 // This file is included into the GLPI Plugin base class.
-
-use Plugin;
-use Session;
+// https://codeberg.org/QuinQuies/glpisaml/issues/18
 use Glpi\Plugin\Hooks;
 use GlpiPlugin\Glpisaml\Config;
 use GlpiPlugin\Glpisaml\Exclude;

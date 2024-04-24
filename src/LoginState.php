@@ -225,7 +225,8 @@ class LoginState extends CommonDBTM
      */
     private function getLastActivity(): void
     {
-        $this->state[self::LOCATION] = $_SERVER['REQUEST_URI'];
+        // https://codeberg.org/QuinQuies/glpisaml/issues/18
+        $this->state[self::LOCATION] = (isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI';
         $this->state[self::LAST_ACTIVITY] = date('Y-m-d H:i:s');
     }
 
@@ -352,7 +353,9 @@ class LoginState extends CommonDBTM
     private function setGlpiUserName(): void
     {
         // Use remote ip as username if session is anonymous.
-        $remote = (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+        // https://codeberg.org/QuinQuies/glpisaml/issues/18
+        $altUser = (isset($_SERVER['REMOTE_ADDR'])) ? $_SERVER['REMOTE_ADDR'] : 'CLI';
+        $remote = (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $altUser;
         $this->state[self::USER_NAME] = (!empty($_SESSION[self::SESSION_GLPI_NAME_ACCESSOR])) ? $_SESSION[self::SESSION_GLPI_NAME_ACCESSOR] : $remote;
     }
 
