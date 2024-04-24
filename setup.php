@@ -66,7 +66,7 @@ define('PLUGIN_GLPISAML_SLO_PATH', '/front/slo.php');                           
 define('PLUGIN_GLPISAML_META_PATH', '/front/meta.php');                                         // Location where to get metadata about sp.
 define('PLUGIN_GLPISAML_CONF_PATH', '/front/config.php');                                       // Location of the config page
 define('PLUGIN_GLPISAML_CONF_FORM', '/front/config.form.php');                                  // Location of config form
-define('PLUGIN_GLPISAML_CONFCSS_PATH', 'tpl/css/configForm.css');                               // Location of the config CSS
+define('PLUGIN_GLPISAML_CONFCSS_PATH', 'templates/css/configForm.css');                               // Location of the config CSS
 
 /**
  * Default GLPI Plguin Init function.

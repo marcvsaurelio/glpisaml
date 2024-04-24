@@ -330,12 +330,5 @@ class ConfigForm    //NOSONAR complexity by design.
 
         // https://codeberg.org/QuinQuies/glpisaml/issues/12
         return TemplateRenderer::getInstance()->render('@glpisaml/configForm.html.twig',  $tplVars);
-        // Render twig template
-        /*
-        $loader = new \Twig\Loader\FilesystemLoader(realpath($_SERVER['DOCUMENT_ROOT']).$CFG_GLPI['root_doc']); // This one might be tricky. A CFG_GLPI key with absolute path to docroot would be nice.
-        $twig = new \Twig\Environment($loader);
-        $template = $twig->load('/marketplace/glpisaml/tpl/configForm.html.twig');
-        return $template->render($tplVars);
-        */
     }
 }

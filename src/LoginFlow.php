@@ -56,6 +56,7 @@ use Toolbox;
 use Throwable;
 use OneLogin\Saml2\Auth as samlAuth;
 use OneLogin\Saml2\Response;
+use Glpi\Application\View\TemplateRenderer;
 use GlpiPlugin\Glpisaml\Config;
 use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
@@ -109,7 +110,7 @@ class LoginFlow
         global $GLPI_CACHE;
         // Get current state
         if(!$state = new Loginstate()){
-            $this->printError(__('Could not load loginState from database!', PLUGIN_NAME));
+            $this->printError(__('Could not load loginState', PLUGIN_NAME));
         }
 
         // Check if the logout button was pressed and handle request!
@@ -371,18 +372,15 @@ class LoginFlow
     public function showLoginScreen(): void
     {
         // Fetch the global DB object;
-        $tplvars = Config::getLoginButtons(12);
+        $tplVars = Config::getLoginButtons(12);
 
         // Define static translatable elements
-        $tplvars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
-        $tplvars['header']     = __('Login with external provider', PLUGIN_NAME);
-        $tplvars['noconfig']   = __('No valid or enabled saml configuration found', PLUGIN_NAME);
+        $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
+        $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
+        $tplVars['noconfig']   = __('No valid or enabled saml configuration found', PLUGIN_NAME);
 
-        // Render twig template
-        $loader = new \Twig\Loader\FilesystemLoader(PLUGIN_GLPISAML_TPLDIR);
-        $twig = new \Twig\Environment($loader);
-        $template = $twig->load('loginScreen.html.twig');
-        echo $template->render($tplvars);
+        // https://codeberg.org/QuinQuies/glpisaml/issues/12
+        TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);
     }
 
     /**
@@ -396,17 +394,15 @@ class LoginFlow
     {
         global $CFG_GLPI;
         // Define static translatable elements
-        $tplvars['header']      = __('⚠️ we are unable to log you in', PLUGIN_NAME);
-        $tplvars['error']       = htmlentities($errorMsg);
-        $tplvars['returnPath']  = $CFG_GLPI["root_doc"] .'/';
-        $tplvars['returnLabel'] = __('Return to GLPI', PLUGIN_NAME);
+        $tplVars['header']      = __('⚠️ we are unable to log you in', PLUGIN_NAME);
+        $tplVars['error']       = htmlentities($errorMsg);
+        $tplVars['returnPath']  = $CFG_GLPI["root_doc"] .'/';
+        $tplVars['returnLabel'] = __('Return to GLPI', PLUGIN_NAME);
         // print header
         Html::nullHeader("Login",  $CFG_GLPI["root_doc"] . '/');
         // Render twig template
-        $loader = new \Twig\Loader\FilesystemLoader(PLUGIN_GLPISAML_TPLDIR);
-        $twig = new \Twig\Environment($loader);
-        $template = $twig->load('loginError.html.twig');
-        echo $template->render($tplvars);
+        // https://codeberg.org/QuinQuies/glpisaml/issues/12
+        echo TemplateRenderer::getInstance()->render('@glpisaml/loginError.html.twig',  $tplVars);
         // print footer
         Html::nullFooter();
         // This function always needs to exit to prevent accidental
@@ -417,7 +413,6 @@ class LoginFlow
 
 
     // LOGOUT FLOW EITHER REQUESTED BY GLPI OR REQUESTED BY THE IDP (SLO) OR FORCED BY ADMIN
-
     /**
      * Makes sure user is logged out of GLPI
      * @return void
@@ -475,25 +470,19 @@ class LoginFlow
         }
 
         // Define static translatable elements
-        $tplvars['header']      = __('⚠️ An error occured', PLUGIN_NAME);
-        $tplvars['leading']     = __("We are sorry, something went terribly wrong while processing your $action request!", PLUGIN_NAME);
-        $tplvars['error']       = $errorMsg;
-        $tplvars['returnPath']  = $CFG_GLPI["root_doc"] .'/';
-        $tplvars['returnLabel'] = __('Return to GLPI', PLUGIN_NAME);
-
+        $tplVars['header']      = __('⚠️ An error occured', PLUGIN_NAME);
+        $tplVars['leading']     = __("We are sorry, something went terribly wrong while processing your $action request!", PLUGIN_NAME);
+        $tplVars['error']       = $errorMsg;
+        $tplVars['returnPath']  = $CFG_GLPI["root_doc"] .'/';
+        $tplVars['returnLabel'] = __('Return to GLPI', PLUGIN_NAME);
         // print header
         Html::nullHeader("Login",  $CFG_GLPI["root_doc"] . '/');
-
         // Render twig template
-        $loader = new \Twig\Loader\FilesystemLoader(PLUGIN_GLPISAML_TPLDIR);
-        $twig = new \Twig\Environment($loader);
-        $template = $twig->load('errorScreen.html.twig');
-        echo $template->render($tplvars);
-
+        echo TemplateRenderer::getInstance()->render('@glpisaml/errorScreen.html.twig',  $tplVars);
         // print footer
         Html::nullFooter();
         
-        // stop execution.
+        // make sure we stop execution.
         exit;
     }
 
