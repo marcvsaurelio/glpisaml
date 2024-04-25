@@ -1,6 +1,6 @@
 <root>
-<name>glpiSaml</name>
-<key>glpiSaml</key>
+<name>glpisaml</name>
+<key>glpisaml</key>
 <state>Stable</state>
 <logo>https://codeberg.org/QuinQuies/glpisaml/raw/branch/main/donut.png</logo>
 <description>
@@ -8,7 +8,7 @@
         <en>Enables you to configure SAML to authenticate and authorize users from the GLPI UI.</en>
     </short>
     <long>
-        <en>glpiSaml is written with GLPI10+ support in mind. It uses GLPI core components and best-practices
+        <en>Glpisaml is written with GLPI10+ support in mind. It uses GLPI core components and best-practices
             where possible for maximum compatibility and maintainability. It allows you to configure multiple 
             saml providers, create glpi users on the fly and apply rules to assign entities, groups and profiles.
             Find the documentation documentation (WIP) in our wiki at: https://github.com/DonutsNL/glpisaml/wiki. 
@@ -24,7 +24,7 @@
     <author>Chris Gralike</author>
 </authors>
 <versions>
-<version>
+    <version>
         <num>1.1.2</num>
         <compatibility>~10.0.0</compatibility>
         <download_url>https://codeberg.org/QuinQuies/glpisaml/releases/download/v1.1.2/glpisaml.zip</download_url>
@@ -45,15 +45,10 @@
 </langs>
 <license>GPLv3+</license>
 <tags>
-     <fr>
-         <tag>Management</tag>
-         <tag>Setup</tag>
-         <tag>Authentication</tag>
-      </fr>
-      <en>
-         <tag>Management</tag>
-         <tag>Setup</tag>
-         <tag>Authentication</tag>
-      </en>
+    <en>
+        <tag>Management</tag>
+        <tag>Setup</tag>
+        <tag>Authentication</tag>
+    </en>
 </tags>
 </root>
