@@ -318,7 +318,7 @@ class ConfigForm    //NOSONAR complexity by design.
             'loggingfields'             =>  $logging,
             'entityID'                  =>  $CFG_GLPI['url_base'].'/',
             'acsUrl'                    =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/acs.php",
-            'metaUrl'                   =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/meta.php",
+            'metaUrl'                   =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/meta.php?id=".$fields[ConfigEntity::ID][ConfigItem::VALUE],
             'LatestVersion'             =>  $this->version(),
             'inputOptionsBool'          =>  [ 1                                 => __('Yes', PLUGIN_NAME),
                                               0                                 => __('No', PLUGIN_NAME)],
