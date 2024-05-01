@@ -218,6 +218,7 @@ class LoginState extends CommonDBTM
      * manipulated by GLPI and does not offer a trustworthy point of
      * reference for our sessions. This function is designed to deal
      * with that.
+     * @see     https://codeberg.org/QuinQuies/glpisaml/issues/20
      *
      * @return  bool
      * @since   1.0.0
