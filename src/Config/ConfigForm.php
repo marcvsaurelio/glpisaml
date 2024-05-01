@@ -300,13 +300,11 @@ class ConfigForm    //NOSONAR complexity by design.
        
         // Define static field translations
         $tplVars = array_merge($tplVars, [
-            'submit'                    =>  __('Save', PLUGIN_NAME),
-            'delete'                    =>  __('Delete', PLUGIN_NAME),
+            'plugin'                    =>  PLUGIN_NAME,
             'close_form'                =>  Html::closeForm(false),
             'glpi_rootdoc'              =>  Plugin::getWebDir(PLUGIN_NAME, true).'/front/config.form.php',
             'glpi_tpl_macro'            =>  '/components/form/fields_macros.html.twig',
             'title'                     =>  __('IDP configuration', PLUGIN_NAME),
-            'header_general'            =>  __('General', PLUGIN_NAME),
             'header_security'           =>  __('Security', PLUGIN_NAME),
             'header_provider'           =>  __('Service provider', PLUGIN_NAME),
             'header_idp'                =>  __('Identity provider', PLUGIN_NAME),
