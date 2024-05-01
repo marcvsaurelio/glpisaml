@@ -121,9 +121,15 @@ class Acs extends LoginFlow
                               __("Unexpected assertion triggered by external source with address:{$_SERVER['REMOTE_ADDR']}\n").
                                  self::STATE_OBJ.var_export($this->state, true)."\n\n".
                                  self::EXTENDED_FOOTER."\n");
-        }else{
-            // Update the state in loginState (this should also prevent replays of the received samlResponse)
-            $this->state->setPhase(LoginState::PHASE_SAML_AUTH);
+        }
+
+        // Update the state to SAML AUTH, again to prevent replays of the received samlResponse that should only be offered
+        // once. Else force the user with previous error to retry the loginflow so we are absolutely sure its the user
+        // requesting the login. If it fails, give an error and redirect the user back.
+        if(!$this->state->setPhase(LoginState::PHASE_SAML_AUTH)) {
+            $this->printError(__('GLPI was not able to update the phase potentially breaking replay protection. therefor we stopped
+                                  processing the request. Sorry for the inconvenience.', PLUGIN_NAME),
+                              __('samlResponse assertion set phase'));
         }
 
         // Validate the samlResponse actually holds the expected result

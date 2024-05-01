@@ -639,6 +639,10 @@
                             data-bs-content="{{ inputfields.requested_authn_context.formexplain }}">?</span>
                             </div>
                             <div class="col-xxl-7  field-container">
+                                <!--
+                                @see: https://codeberg.org/QuinQuies/glpisaml/issues/14
+                                Todo: add nicer, userfriendly drag-drop element
+                                -->
                                 <select id="keep-order" multiple="multiple" aria-label="multiple select" name="{{ inputfields.requested_authn_context.field }}[]">
                                     {% for key, authn in inputOptionsAuthnContext %}
                                             {%set selected = false %}

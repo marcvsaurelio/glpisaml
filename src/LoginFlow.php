@@ -222,12 +222,12 @@ class LoginFlow
             $this->printError($e->getMessage(), 'doSamlLogin');
         }
 
-        // Update the current state
-        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
-        $state->setPhase(LoginState::PHASE_SAML_AUTH);
-
         // Populate Glpi session with Auth.
         Session::init($auth);
+
+        // Update the current state
+        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
+        $state->setPhase(LoginState::PHASE_GLPI_AUTH);
 
         // Redirect back to mainpage
         Html::redirect($CFG_GLPI['url_base'].'/');

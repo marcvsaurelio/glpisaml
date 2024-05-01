@@ -220,26 +220,24 @@ class LoginState extends CommonDBTM
      * with that.
      * @see     https://codeberg.org/QuinQuies/glpisaml/issues/20
      *
-     * @return  bool
-     * @since   1.0.0
+     * @return  string
+     * @since   1.1.3
      */
     private function getSamlSessionId(): string
     {
-        // GLPI will reset all values except those indexes
-        // designated to be saved in src/Session.php:94
+        // GLPI will reset all values except those indexes designated to be saved in src/Session.php:94
         // The way PHP generates the ID can be found here:
         // https://github.com/php/php-src/blob/d9bfe06194ae8f760cb43a3e7120d0503f327398/ext/session/session.c#L284
-        // We need to use $_SESSION['glpi_plugins'][OUR_KEY]
-        // in order to survive GLPI's Session::init().
-        // Lets use the initial session id for now and store that safely.
-        // This ID will no longer align with the php sessionId after Session::init(Auth);
+        // We need to use $_SESSION['glpi_plugins'][OUR_PLUGIN][OUR_KEY] in order to survive GLPI's Session::init().
+        // Lets use the initial session id for now and store that safely and reuse that.
+        // WARNING: This stored ID will no longer align with the php sessionId after Session::init(Auth) is invoked;
         $samlSessionId = session_id();
-        if(!isset($_SESSION['glpi_plugins'][self::SESSION_ID])){
+        if(!isset($_SESSION['glpi_plugins'][PLUGIN_NAME][self::SESSION_ID])){
             // Set it
-            $_SESSION['glpi_plugins'][self::SESSION_ID] = $samlSessionId;
+            $_SESSION['glpi_plugins'][PLUGIN_NAME][self::SESSION_ID] = $samlSessionId;
         }else{
             // Restore it
-            $samlSessionId = $_SESSION['glpi_plugins'][self::SESSION_ID];
+            $samlSessionId = $_SESSION['glpi_plugins'][PLUGIN_NAME][self::SESSION_ID];
         }
         return $samlSessionId;
     }
