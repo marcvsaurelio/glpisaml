@@ -315,10 +315,11 @@ class ConfigEntity extends ConfigItem
      * @param  array $ignoreFields fields to skip
      * @return array $fields with validated and corrected configuration
      */
-    public function getIdForDomain(string $email): int
+    public function getConfigDomain(): string
     {
-        // TODO Allow username email to be used to find correct idp config.
-        return 1;
+        return (key_exists(self::CONF_DOMAIN, $this->fields) &&
+                !empty($this->fields[self::CONF_DOMAIN])     &&
+                $this->fields[self::CONF_DOMAIN] != 'youruserdomain.tld') ? $this->fields[self::CONF_DOMAIN] : '';
     }
 
     /**

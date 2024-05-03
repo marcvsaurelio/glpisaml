@@ -247,7 +247,7 @@ class Config extends CommonDBTM
         {
             // Only populate buttons that are considered valid by ConfigEntity;
             $configEntity = new ConfigEntity($value[ConfigEntity::ID]);
-            if($configEntity->isValid() && $configEntity->isActive()){
+            if($configEntity->isValid() && $configEntity->isActive() && !$configEntity->getConfigDomain()){
                 $tplvars['buttons'][] = ['id'      => $value[ConfigEntity::ID],
                                         'icon'    => $value[ConfigEntity::CONF_ICON],
                                         'name'    => sprintf("%.".$length."s", $value[ConfigEntity::NAME]) ];
@@ -257,6 +257,38 @@ class Config extends CommonDBTM
         return $tplvars;
     }
 
+    /**
+     * Search saml configurations based on provided username@[domain.ext]
+     * and return the configuration ID of the matching saml configuration.
+     * @return  int     ConfigId
+     * @see             https://codeberg.org/QuinQuies/glpisaml/issues/3
+     */
+    public static function getConfigIdByEmailDomain(string $fielda): int
+    {
+        global $DB;
+        // Make sure we are dealing with a valid emailaddress.
+        if($upn = filter_var($fielda, FILTER_VALIDATE_EMAIL)){
+            // Domain portion of address is at index [1];
+            $domain = explode('@', $upn);
+            // Query the database for the given domain;
+            $req = $DB->request(['SELECT'   =>  ConfigEntity::ID,
+                                 'FROM'     =>  self::getTable(),
+                                 'WHERE'    =>  [ConfigEntity::CONF_DOMAIN => $domain[1]]]);
+            // If we got a result, cast it to int and return it
+            if($req->numrows() == 1){
+                foreach($req as $row){
+                    $id = (int) $row['id'];
+                }
+                return $id;
+            }else{
+                // If we found nothing, return 0
+                return 0;
+            }
+        }else{
+            // Username isnt an email, return 0
+            return 0;
+        }
+    }
 
     /**
      * Install table needed for Ticket Filter configuration dropdowns

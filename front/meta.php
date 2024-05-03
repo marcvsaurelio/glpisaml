@@ -61,6 +61,7 @@ if(isset($get['id']) && is_numeric($get['id'])){
 // If we have an ID then start building the metadata.
 if($id){
     try{
+        // ConfigEntity expects/validates datatype INT.
         $configEntity = new ConfigEntity($id);
         // Temporary blockage prevent exposure of IDP configurations.
         if($configEntity->getField(ConfigEntity::DEBUG)){
@@ -76,15 +77,17 @@ if($id){
                 );
             }
         }else{
+            // Dont expose anything meaningfull here, administor needs to toggle debug first.
             header('Content-Type: text/xml');
-            echo "<xml><Error>".__("Valid Idp configuration found but exposure is prevented by its configuration. Please enable the 'debug' flag to expose the requested IdP config using this meta file",PLUGIN_NAME)."</Error></xml>";
+            echo "<xml><Error>".__("If this is a valid ID. Please request your administrator to enable the 'debug' flag to expose the requested IdP config using this meta file",PLUGIN_NAME)."</Error></xml>";
         }
     } catch (Exception $e) {
-        echo $e->getMessage();
+        // Dont expose anything meaningfull here, an invalid id was used
+        header('Content-Type: text/xml');
+        echo "<xml><Error>".__("If this is a valid ID. Please request your administrator to enable the 'debug' flag to expose the requested IdP config using this meta file",PLUGIN_NAME)."</Error></xml>";
     }
 }else{
-    // This will definity break the IdP request
-    // and cause a nasty error. Its what misconfigure
-    // should do imo fail terribly
-    Html::displayNotFoundError();
+    // Dont expose anything meaningfull here. An invalid url was used.
+    header('Content-Type: text/xml');
+    echo "<xml><Error>".__("If this is a valid ID. Please request your administrator to enable the 'debug' flag to expose the requested IdP config using this meta file",PLUGIN_NAME)."</Error></xml>";
 }

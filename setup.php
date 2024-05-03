@@ -149,6 +149,11 @@ function plugin_glpisaml_check_prerequisites() : bool                           
             echo 'Run composer install --no-dev in the plugin directory<br>';
             return false;
     }
+    // https://codeberg.org/QuinQuies/glpisaml/issues/20#issuecomment-1800440
+    // Validate PHP is capable of writing session data to disk.
+    if (!is_writable(session_save_path())) {
+        echo 'Session path "'.session_save_path().'" is not writable for PHP!'; 
+    }
    return true;
 }
 

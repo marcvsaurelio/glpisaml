@@ -419,7 +419,8 @@
                         {% set clipboad %}
                             <span class='btn btn-ghost-info' onclick="copyClip('MetaUrl')" onkeydown="copyClip('MetaUrl')">Copy Meta Url to clipboard</span>
                             {% if inputfields.debug.value == false %}
-                                <span id="textHelper" class="form-text" style="color:rgb(180, 120, 8);">⚠️ Debug is disabled, metadata will only be exposed if 'debug' is enabled.</span>
+                                <span class="form-help" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true" data-bs-content="Debug is 
+                                disabled, metadata will only be exposed if 'debug' is enabled.">⚠️</span>
                             {% endif %}
                         {% endset %}
                         {{ fields.textField(
