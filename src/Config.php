@@ -233,6 +233,7 @@ class Config extends CommonDBTM
      * and active.
      * @return  array
      * @see                             - src/Loginflow/showLoginScreen()
+     * @since 1.0.0
      */
     public static function getLoginButtons(int $length): array
     {
@@ -262,6 +263,7 @@ class Config extends CommonDBTM
      * and return the configuration ID of the matching saml configuration.
      * @return  int     ConfigId
      * @see             https://codeberg.org/QuinQuies/glpisaml/issues/3
+     * @since 1.1.3
      */
     public static function getConfigIdByEmailDomain(string $fielda): int
     {

@@ -314,6 +314,7 @@ class ConfigEntity extends ConfigItem
      *
      * @param  array $ignoreFields fields to skip
      * @return array $fields with validated and corrected configuration
+     * @since 1.1.3
      */
     public function getConfigDomain(): string
     {
