@@ -313,6 +313,7 @@ class ConfigForm    //NOSONAR complexity by design.
             'available'                 =>  __('Available', 'phpsaml'),
             'selected'                  =>  __('Selected', 'phpsaml'),
             'inputfields'               =>  $fields,
+            'buttonsHiddenWarn'         =>  ($configEntity->getConfigDomain()) ? true : false,
             'loggingfields'             =>  $logging,
             'entityID'                  =>  $CFG_GLPI['url_base'].'/',
             'acsUrl'                    =>  Plugin::getWebDir(PLUGIN_NAME, true, true)."/front/acs.php",

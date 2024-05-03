@@ -1,4 +1,4 @@
-v1.1.3
+**v1.1.3**
 - Added logic to store the initial sessionId for reference in state table.
 - Altered error messages in `/front/meta.php` to be more generic less helpfull for added security
 - Added method `getConfigIdByEmailDomain` to `src/config.php` to get IDP ID based on given CONF_DOMAIN
@@ -11,3 +11,6 @@ v1.1.3
 - Added a test `popover` in the config screen with the `copy meta url button` to see if that cleans 
   the configuration further and how that would look and feel. Considering to leave it and see if 
   and how ppl respond to it.
+- Added logic to `generateForm` in `src\Config\ConfigForm.php` to detect if the login button will be hidden
+- Added errorhelpers to `templates/configForm.html.twig` to warn users the login button will be hidden.
+- Added errorhelpers to `templates/configForm.html.twig` to explain userdomain behaviour if configured.

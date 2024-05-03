@@ -309,8 +309,9 @@ class ConfigEntity extends ConfigItem
     }
 
     /**
-     * Searches the database for a given email domain and if found
-     * returns the Idp ID.
+     * Fetches the config domain from the populated config entity
+     * if the entity is anything else than the default 'youruserdomain.tld' or empty
+     * it returns that value or an empty string.
      *
      * @param  array $ignoreFields fields to skip
      * @return array $fields with validated and corrected configuration
