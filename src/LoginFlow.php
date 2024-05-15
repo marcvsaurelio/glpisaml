@@ -239,8 +239,32 @@ class LoginFlow
         $state->setPhase(LoginState::PHASE_GLPI_AUTH);
 
         // Redirect back to mainpage
-        Html::redirect($CFG_GLPI['url_base'].'/front/central.php');
+        // Html::redirect($CFG_GLPI['url_base'].'/front/central.php');
+        $this->doMetaRefresh($CFG_GLPI['url_base'].'/front/central.php');
+
     }
+
+    /**
+     * This is a 'nasty' hack to deal with the session cookie not being accessible on
+     * redirect with the php.ini:session.cookie_samesite='Strict'. Performing a meta
+     * refresh makes sure the cookie survives.
+     *
+     * @param    Response  Response object with the samlRespons attributes.
+     * @return   array     user->add input fields array with properties.
+     */
+    private function doMetaRefresh(string $location): void
+    {
+        echo <<<HTML
+        <html>
+        <head>
+            <meta http-equiv="refresh" content="0;URL='$location'"/>
+        </head>
+            <body></body>
+        </html>
+        HTML;
+        exit;
+    }
+
 
     /**
      * This function figures out what the samlResponse provided claims are and

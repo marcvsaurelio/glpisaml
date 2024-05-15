@@ -278,8 +278,6 @@ class LoginState extends CommonDBTM
             ]);
         }
         // Set the SESSION['valid_id'] with current sessionId for GLPI strict
-        // implementation.
-        $_SESSION['valid_id'] = $sessionId;
 
         return $sessionId;
     }

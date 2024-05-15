@@ -122,13 +122,20 @@ class ConfigItem    //NOSONAR
 
     protected function conf_domain(mixed $var): array //NOSONAR
     {
-        return [self::FORMEXPLAIN => __('Future use', PLUGIN_NAME),
+        $error = '';
+        return [self::FORMEXPLAIN => __('Setting this value with the expected domain.tld, for example:
+                                         with "google.com" will allow a user to trigger this IDP by
+                                         providing their whatever@[google.com] username in the default
+                                         GLPI username field. Setting this field to: youruserdomain.tld
+                                         or to nothing disables this feature. Be aware that in the
+                                         current implementation, configuring this field will hide
+                                         the IDP button from the login screen', PLUGIN_NAME),
                 self::FORMTITLE => __('USERDOMAIN', PLUGIN_NAME),
                 self::EVAL      => ($var) ? self::VALID : self::INVALID,
                 self::VALUE     => (string) $var,
                 self::FIELD     => __function__,
                 self::VALIDATOR => __method__,
-                self::ERRORS    => ($var) ? null : __('⭕ Configuration domain is a required field', PLUGIN_NAME)];
+                self::ERRORS    => ($error) ? null : $error];
     }
 
 
