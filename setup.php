@@ -58,13 +58,13 @@ define('PLUGIN_GLPISAML_WEBDIR', Plugin::getWebDir(PLUGIN_NAME, false));        
 define('PLUGIN_GLPISAML_SRCDIR', __DIR__ . '/src');                                             // Location of the main classes
 define('PLUGIN_GLPISAML_TPLDIR', __DIR__ . '/tpl');                                             // Location of the templates directory
 // Webpaths
-define('PLUGIN_GLPISAML_ATOM_URL', 'https://codeberg.org/QuinQuies/glpisaml/releases.rss');       // Location of the repository versions
+define('PLUGIN_GLPISAML_ATOM_URL', 'https://codeberg.org/QuinQuies/glpisaml/releases.rss');     // Location of the repository versions
 define('PLUGIN_GLPISAML_ACS_PATH', '/front/acs.php');                                           // Location of the assertion service.
 define('PLUGIN_GLPISAML_SLO_PATH', '/front/slo.php');                                           // Location to handle logout requests
 define('PLUGIN_GLPISAML_META_PATH', '/front/meta.php');                                         // Location where to get metadata about sp.
 define('PLUGIN_GLPISAML_CONF_PATH', '/front/config.php');                                       // Location of the config page
 define('PLUGIN_GLPISAML_CONF_FORM', '/front/config.form.php');                                  // Location of config form
-define('PLUGIN_GLPISAML_CONFCSS_PATH', 'templates/css/configForm.css');                               // Location of the config CSS
+define('PLUGIN_GLPISAML_CONFCSS_PATH', 'templates/css/configForm.css');                         // Location of the config CSS
 
 /**
  * Default GLPI Plguin Init function.
@@ -92,7 +92,7 @@ function plugin_init_glpisaml() : void                                          
 
         // Hook the configuration page
         if (Session::haveRight('config', UPDATE)) {
-            $PLUGIN_HOOKS['config_page'][PLUGIN_NAME]       = PLUGIN_GLPISAML_CONF_PATH;      //NOSONAR
+            $PLUGIN_HOOKS['config_page'][PLUGIN_NAME]       = PLUGIN_GLPISAML_CONF_PATH;        //NOSONAR
         }
         $PLUGIN_HOOKS['menu_toadd'][PLUGIN_NAME]['config']  = [Config::class];
         $PLUGIN_HOOKS[Hooks::ADD_CSS][PLUGIN_NAME][]        = PLUGIN_GLPISAML_CONFCSS_PATH;
