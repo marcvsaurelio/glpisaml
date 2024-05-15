@@ -14,3 +14,8 @@
 - Added logic to `generateForm` in `src\Config\ConfigForm.php` to detect if the login button will be hidden
 - Added errorhelpers to `templates/configForm.html.twig` to warn users the login button will be hidden.
 - Added errorhelpers to `templates/configForm.html.twig` to explain userdomain behaviour if configured.
+- Fixed issue https://codeberg.org/QuinQuies/glpisaml/issues/20
+- Added saml cookies to help plugin correctly track session on redirect with session.cookie_samesite = strict.
+- Added additional logic to `src/loginState.php` hardening the logic
+- Added meta redirect to deal with session.cookie_samesite = strict after Saml Redirect back to GLPI
+- Added additional explanaitions to config item in `src/Config/ConfigItem.php` 

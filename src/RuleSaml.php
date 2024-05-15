@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.2
+ *  @version    1.1.3
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -98,8 +98,7 @@ class RuleSaml extends Rule
         static $criterias = [];
 
         if (!count($criterias)) {
-            $criterias['common']             = __('Global criteria');
-            
+            $criterias['common']                    = __('Global criteria');
             $criterias['_useremails']['table']      = '';
             $criterias['_useremails']['field']      = '';
             $criterias['_useremails']['name']       = _n('Email', 'Emails', 1);

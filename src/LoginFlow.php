@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.2
+ *  @version    1.1.3
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -251,6 +251,7 @@ class LoginFlow
      *
      * @param    Response  Response object with the samlRespons attributes.
      * @return   array     user->add input fields array with properties.
+     * @since    1.1.3
      */
     private function doMetaRefresh(string $location): void
     {
@@ -274,6 +275,7 @@ class LoginFlow
      *
      * @param    Response  Response object with the samlRespons attributes.
      * @return   array     user->add input fields array with properties.
+     * @since    1.0.0
      */
      public function getUserInputFieldsFromSamlClaim(Response $response): array     //NOSONAR - Complexity by design.
      {
