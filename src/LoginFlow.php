@@ -239,7 +239,7 @@ class LoginFlow
         $state->setPhase(LoginState::PHASE_GLPI_AUTH);
 
         // Redirect back to mainpage
-        Html::redirect($CFG_GLPI['url_base'].'/');
+        Html::redirect($CFG_GLPI['url_base'].'/front/central.php');
     }
 
     /**

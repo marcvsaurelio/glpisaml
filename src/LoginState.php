@@ -225,21 +225,63 @@ class LoginState extends CommonDBTM
      */
     private function getSamlSessionId(): string
     {
+        global $DB;
         // GLPI will reset all values except those indexes designated to be saved in src/Session.php:94
         // The way PHP generates the ID can be found here:
         // https://github.com/php/php-src/blob/d9bfe06194ae8f760cb43a3e7120d0503f327398/ext/session/session.c#L284
         // We need to use $_SESSION['glpi_plugins'][OUR_PLUGIN][OUR_KEY] in order to survive GLPI's Session::init().
         // Lets use the initial session id for now and store that safely and reuse that.
         // WARNING: This stored ID will no longer align with the php sessionId after Session::init(Auth) is invoked;
-        $samlSessionId = session_id();
-        if(!isset($_SESSION['glpi_plugins'][PLUGIN_NAME][self::SESSION_ID])){
-            // Set it
-            $_SESSION['glpi_plugins'][PLUGIN_NAME][self::SESSION_ID] = $samlSessionId;
-        }else{
-            // Restore it
-            $samlSessionId = $_SESSION['glpi_plugins'][PLUGIN_NAME][self::SESSION_ID];
+        $sessionId = session_id();
+        // Set a name for our cookie.
+        $cname = '__PSML';
+        // If cookie wasnt set, set it.
+        if(!isset($_COOKIE[$cname])){
+            // Set our cookie with session ID.
+            setcookie($cname, $sessionId, [
+                'expires' => 0,
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'None',
+            ]);
+            // If the cookie array is not available
+            // set it so we can reference it in the
+            // next codeblocks.
+            if(empty($_COOKIE[$cname])){
+                $_COOKIE[$cname] = $sessionId;
+            }
         }
-        return $samlSessionId;
+        // Is the sessionId the same as whats stored in the Cookie?
+        // The first itteration these are always the same and so the
+        // database is always updated with the initial sessionId.
+        // If the cookie session is different, one of two things is
+        // true. Either we just performed a redirect and lost the
+        // session Cookie or Session::init was called. In both cases
+        // we need to update the sessionId stored in the state database.
+        if($_COOKIE[$cname] != $sessionId){
+            // Dont blindly trust the unencrypted cookiedata
+            $oldSessionId = htmlentities($_COOKIE[$cname]);
+            // Update the loginstate database with the new updated sessionId
+            if(!$DB->update(self::getTable(), [self::SESSION_ID =>  $sessionId], ['WHERE' => [self::SESSION_ID => $oldSessionId]])){
+                throw new Exception('Could not correctly update Login State from database');               //NOSONAR - We use generic Exceptions
+            }
+            // Also make sure we update the session Cookie.
+            // Unset the cookie
+            setcookie($cname, '', time() - 3600);
+            unset($_COOKIE[$cname]);
+            // Create a new cookie with the updated.
+            setcookie($cname, $sessionId, [
+                'expires' => 0,
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'None',
+            ]);
+        }
+        // Set the SESSION['valid_id'] with current sessionId for GLPI strict
+        // implementation.
+        $_SESSION['valid_id'] = $sessionId;
+
+        return $sessionId;
     }
 
     /**
