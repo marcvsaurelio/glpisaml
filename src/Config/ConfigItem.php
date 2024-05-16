@@ -131,11 +131,11 @@ class ConfigItem    //NOSONAR
                                          current implementation, configuring this field will hide
                                          the IDP button from the login screen', PLUGIN_NAME),
                 self::FORMTITLE => __('USERDOMAIN', PLUGIN_NAME),
-                self::EVAL      => ($var) ? self::VALID : self::INVALID,
+                self::EVAL      => self::VALID,
                 self::VALUE     => (string) $var,
                 self::FIELD     => __function__,
                 self::VALIDATOR => __method__,
-                self::ERRORS    => ($error) ? null : $error];
+                self::ERRORS    => (!$error) ? null : __('⭕ '.$error, PLUGIN_NAME)];
     }
 
 

@@ -18,4 +18,7 @@
 - Added saml cookies to help plugin correctly track session on redirect with session.cookie_samesite = strict.
 - Added additional logic to `src/loginState.php` hardening the logic
 - Added meta redirect to deal with session.cookie_samesite = strict after Saml Redirect back to GLPI
-- Added additional explanaitions to config item in `src/Config/ConfigItem.php` 
+- Added additional explanaitions to config item in `src/Config/ConfigItem.php`
+- Fixed issue https://codeberg.org/QuinQuies/glpisaml/issues/30
+- Added `is_deleted = 0` filter in `src/Config.php` method `getLoginButtons`
+- Fixed issue https://codeberg.org/QuinQuies/glpisaml/issues/31

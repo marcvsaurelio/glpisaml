@@ -244,7 +244,7 @@ class Config extends CommonDBTM
         // $length is used to strip the length of the button name to fit the button.
         $length = (is_numeric($length)) ? $length : 255;
         // Iterate throught the IDP config rows and generate the buttons for twig template.
-        foreach( $DB->request(['FROM' => self::getTable()]) as $value)
+        foreach( $DB->request(['FROM' => self::getTable(), 'WHERE' => ['is_deleted'  => 0]]) as $value)
         {
             // Only populate buttons that are considered valid by ConfigEntity;
             $configEntity = new ConfigEntity($value[ConfigEntity::ID]);
