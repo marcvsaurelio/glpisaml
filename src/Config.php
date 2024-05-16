@@ -350,6 +350,18 @@ class Config extends CommonDBTM
             $DB->doQuery($query) or die($DB->error());
             Session::addMessageAfterRedirect("🆗 Installed: $table.");
         }
+
+        // Alter column width for conf_domain
+        // https://codeberg.org/QuinQuies/glpisaml/issues/30
+        if($DB->tableExists($table)){
+            $migration->displayMessage("Updating table layout for $table");
+            $query = <<<SQL
+                ALTER TABLE $table
+                MODIFY COLUMN `conf_domain` text null;
+            SQL;
+            $DB->doQuery($query) or die($DB->error());
+            Session::addMessageAfterRedirect("🆗 Updated: $table layout.");
+        }
     }
 
     /**
