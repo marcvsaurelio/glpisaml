@@ -1,12 +1,6 @@
 <!-- https://codeberg.org/QuinQuies/glpisaml/issues/13 -->
 {% import glpi_tpl_macro as fields %}
 
-<!-- styling options for macro
-    'label_class': "",
-    'input_class': "",
-    'field_class' : ""
--->
-
 <script>
     // Remember tab state
     $(function() {
@@ -48,7 +42,7 @@
                    data-bs-target="#general" 
                    type="button" role="tab" 
                    aria-controls="general" 
-                   aria-selected="true"><b>{{ header_general }} {{ general_warning }}</b></a>
+                   aria-selected="true"><b>{{ __("General") }} {{ general_warning }}</b></a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" 
@@ -122,34 +116,15 @@
                                 {% if inputfields.name.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.name.errors }}</div>
                                 {% endif %}
+                                {% if buttonsHiddenWarn == true %}
+                                    <div id="textHelper" class="form-text" style="color:rgb(180, 120, 8)">⚠️ Userdomain is configured. The login button will be hidden from the loginscreen. Clear the Userdomain to make the button visable again.</div>
+                                {% endif %}
                             {% endset %}
 
                             {{ fields.textField(
                                 inputfields.name.field, 
                                 inputfields.name.value, 
                                 inputfields.name.formtitle ~ helper, 
-                                {
-                                    'add_field_html': error_helper,
-                                }
-                            ) }}
-                        </div>
-
-                        <!-- domain field -->
-                        <div>
-                            {% set helper %}
-                                <span class="form-help" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true"
-                                data-bs-content="{{ inputfields.conf_domain.formexplain }}">?</span>
-                            {% endset %}
-                            {% set error_helper %}
-                                {% if inputfields.conf_domain.errors == true %}
-                                    <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.conf_domain.errors }}</div>
-                                {% endif %}
-                            {% endset %}
-
-                            {{ fields.textField(
-                                inputfields.conf_domain.field, 
-                                inputfields.conf_domain.value, 
-                                inputfields.conf_domain.formtitle ~ helper, 
                                 {
                                     'add_field_html': error_helper,
                                 }
@@ -166,11 +141,42 @@
                                 {% if inputfields.conf_icon.errors == true %}
                                     <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.conf_icon.errors }}</div>
                                 {% endif %}
+                                {% if buttonsHiddenWarn == true %}
+                                    <div id="textHelper" class="form-text" style="color:rgb(180, 120, 8)">⚠️ Userdomain is configured. The login button will be hidden from the loginscreen. Clear the Userdomain to make the button visable again.</div>
+                                {% endif %}
                             {% endset %}
                             {{ fields.textField(
                                 inputfields.conf_icon.field, 
                                 inputfields.conf_icon.value, 
                                 inputfields.conf_icon.formtitle ~ helper, 
+                                {
+                                    'add_field_html': error_helper,
+                                }
+                            ) }}
+                        </div>
+
+                        <!-- domain field -->
+                        <div>
+                            {% set helper %}
+                                <span class="form-help" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true"
+                                data-bs-content="{{ inputfields.conf_domain.formexplain }}">?</span>
+                            {% endset %}
+                            {% set error_helper %}
+                                {% if inputfields.conf_domain.errors == true %}
+                                    <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.conf_domain.errors }}</div>
+                                {% endif %}
+                                {% if buttonsHiddenWarn == true %}
+                                    <div id="textHelper" class="form-text" style="color:rgb(3, 126, 26)">🔒 Userdomain is configured. Users can trigger a Saml Login by providing their {username}@{userdomain} in the glpi username
+                                                                                                           field and pressing the login button. The password field is ignored and can be left blank. This is a more secure option that
+                                                                                                           wont expose configured IDPs.
+                                    </div>
+                                {% endif %}
+                            {% endset %}
+
+                            {{ fields.textField(
+                                inputfields.conf_domain.field, 
+                                inputfields.conf_domain.value, 
+                                inputfields.conf_domain.formtitle ~ helper, 
                                 {
                                     'add_field_html': error_helper,
                                 }
@@ -425,7 +431,8 @@
                         {% set clipboad %}
                             <span class='btn btn-ghost-info' onclick="copyClip('MetaUrl')" onkeydown="copyClip('MetaUrl')">Copy Meta Url to clipboard</span>
                             {% if inputfields.debug.value == false %}
-                                <span id="textHelper" class="form-text" style="color:rgb(180, 120, 8);">⚠️ Debug is disabled, metadata will only be exposed if 'debug' is enabled.</span>
+                                <span class="form-help" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true" data-bs-content="Debug is 
+                                disabled, metadata will only be exposed if 'debug' is enabled.">⚠️</span>
                             {% endif %}
                         {% endset %}
                         {{ fields.textField(
@@ -645,6 +652,10 @@
                             data-bs-content="{{ inputfields.requested_authn_context.formexplain }}">?</span>
                             </div>
                             <div class="col-xxl-7  field-container">
+                                <!--
+                                @see: https://codeberg.org/QuinQuies/glpisaml/issues/14
+                                Todo: add nicer, userfriendly drag-drop element
+                                -->
                                 <select id="keep-order" multiple="multiple" aria-label="multiple select" name="{{ inputfields.requested_authn_context.field }}[]">
                                     {% for key, authn in inputOptionsAuthnContext %}
                                             {%set selected = false %}
@@ -721,6 +732,9 @@
                         {% set error_helper %}
                             {% if inputfields.strict.errors == true %}
                                 <div id="textHelper" class="form-text" style="color:red;">{{ inputfields.strict.errors }}</div>
+                            {% endif %}
+                            {% if inputfields.strict.value == false %}
+                                        <div id="textHelper" class="form-text" style="color:rgb(180, 120, 8);">⚠️ Your environment is at risk, make sure strict is enabled!</div>
                             {% endif %}
                         {% endset %}
                         {{ fields.sliderField(
@@ -853,7 +867,7 @@
                         <!-- enforce SSO -->
                         <div class="col-md p-2">
                             <h2>Work in progress, logging is by no means complete but still usable</h2>
-                            <div>Phases: 1 = initial, 2=received_saml_response_acs, 3=performed_saml_auth, 4=performed_glpi_auth, 5=file_exclude, 6=forced_logoff, 7=timed_out, 8=manual_glpi_logout
+                            <div>Phases: 1 = initial, 2=send_saml_SSO_request, 3=performed_saml_auth, 4=performed_glpi_auth, 5=file_exclude, 6=forced_logoff, 7=timed_out, 8=manual_glpi_logout
                             </div>
                             <table class="table table-striped table-sm">
                                 <thead>
@@ -894,13 +908,13 @@
             <div class="m-1">
                 <button class="btn btn-primary " type="submit" name="update" title="Save">
                     <i class="far fa-save"></i>
-                    <span class="d-none d-xl-block">{{ submit }}</span>
+                    <span class="d-none d-xl-block">{{ __("Save") }}</span>
                     </button>
             </div>
             <div class="m-1">
                 <button class="btn btn-ghost-danger" type="submit" name="delete" title="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Put in trashbin">
                     <i class="ti ti-trash"></i>
-                    <span class="d-none d-xl-block">{{ delete }}</span>
+                    <span class="d-none d-xl-block">{{ __("Delete") }}</span>
                     </button>
             </div>
             {% if inputfields.debug.value == true %}

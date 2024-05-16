@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.2
+ *  @version    1.1.3
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -309,16 +309,19 @@ class ConfigEntity extends ConfigItem
     }
 
     /**
-     * Searches the database for a given email domain and if found
-     * returns the Idp ID.
+     * Fetches the config domain from the populated config entity
+     * if the entity is anything else than the default 'youruserdomain.tld' or empty
+     * it returns that value or an empty string.
      *
      * @param  array $ignoreFields fields to skip
      * @return array $fields with validated and corrected configuration
+     * @since 1.1.3
      */
-    public function getIdForDomain(string $email): int
+    public function getConfigDomain(): string
     {
-        // TODO Allow username email to be used to find correct idp config.
-        return 1;
+        return (key_exists(self::CONF_DOMAIN, $this->fields) &&
+                !empty($this->fields[self::CONF_DOMAIN])     &&
+                $this->fields[self::CONF_DOMAIN] != 'youruserdomain.tld') ? $this->fields[self::CONF_DOMAIN] : '';
     }
 
     /**

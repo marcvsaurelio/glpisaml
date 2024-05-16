@@ -33,7 +33,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.2
+ *  @version    1.1.3
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -233,6 +233,7 @@ class Config extends CommonDBTM
      * and active.
      * @return  array
      * @see                             - src/Loginflow/showLoginScreen()
+     * @since 1.0.0
      */
     public static function getLoginButtons(int $length): array
     {
@@ -243,11 +244,11 @@ class Config extends CommonDBTM
         // $length is used to strip the length of the button name to fit the button.
         $length = (is_numeric($length)) ? $length : 255;
         // Iterate throught the IDP config rows and generate the buttons for twig template.
-        foreach( $DB->request(['FROM' => self::getTable()]) as $value)
+        foreach( $DB->request(['FROM' => self::getTable(), 'WHERE' => ['is_deleted'  => 0]]) as $value)
         {
             // Only populate buttons that are considered valid by ConfigEntity;
             $configEntity = new ConfigEntity($value[ConfigEntity::ID]);
-            if($configEntity->isValid() && $configEntity->isActive()){
+            if($configEntity->isValid() && $configEntity->isActive() && !$configEntity->getConfigDomain()){
                 $tplvars['buttons'][] = ['id'      => $value[ConfigEntity::ID],
                                         'icon'    => $value[ConfigEntity::CONF_ICON],
                                         'name'    => sprintf("%.".$length."s", $value[ConfigEntity::NAME]) ];
@@ -257,6 +258,39 @@ class Config extends CommonDBTM
         return $tplvars;
     }
 
+    /**
+     * Search saml configurations based on provided username@[domain.ext]
+     * and return the configuration ID of the matching saml configuration.
+     * @return  int     ConfigId
+     * @see             https://codeberg.org/QuinQuies/glpisaml/issues/3
+     * @since 1.1.3
+     */
+    public static function getConfigIdByEmailDomain(string $fielda): int
+    {
+        global $DB;
+        // Make sure we are dealing with a valid emailaddress.
+        if($upn = filter_var($fielda, FILTER_VALIDATE_EMAIL)){
+            // Domain portion of address is at index [1];
+            $domain = explode('@', $upn);
+            // Query the database for the given domain;
+            $req = $DB->request(['SELECT'   =>  ConfigEntity::ID,
+                                 'FROM'     =>  self::getTable(),
+                                 'WHERE'    =>  [ConfigEntity::CONF_DOMAIN => $domain[1]]]);
+            // If we got a result, cast it to int and return it
+            if($req->numrows() == 1){
+                foreach($req as $row){
+                    $id = (int) $row['id'];
+                }
+                return $id;
+            }else{
+                // If we found nothing, return 0
+                return 0;
+            }
+        }else{
+            // Username isnt an email, return 0
+            return 0;
+        }
+    }
 
     /**
      * Install table needed for Ticket Filter configuration dropdowns
@@ -315,6 +349,19 @@ class Config extends CommonDBTM
             SQL;
             $DB->doQuery($query) or die($DB->error());
             Session::addMessageAfterRedirect("🆗 Installed: $table.");
+        }
+
+        // Alter column width for conf_domain
+        // https://codeberg.org/QuinQuies/glpisaml/issues/30
+        if($DB->tableExists($table)){
+            $migration->displayMessage("Updating table layout for $table");
+            $query = <<<SQL
+                ALTER TABLE $table
+                MODIFY COLUMN `conf_domain` varchar(255) null;
+            SQL;
+            $DB->doQuery($query) or die($DB->error());
+
+            Session::addMessageAfterRedirect("🆗 Updated: $table layout.");
         }
     }
 

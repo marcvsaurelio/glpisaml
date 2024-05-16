@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.2
+ *  @version    1.1.3
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -125,11 +125,20 @@ class LoginFlow
         // Evaluate database state, do we need to force logoff a user,
         // but only after user has been logged in.
 
-        // Capture the post of regular login and verify if the domain is SSO enabled.
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
+        // Capture the post of regular login and verify if the provided domain is SSO enabled.
+        // by evaluating the domain portion agains the configured userdomains.
+        // we need to itterate through the keys because of the added csrf token i.e.
+        // [fielda[csrf_token]] = value.
         foreach($_POST as $key => $value){
-            if(strstr($key, 'fielda')){
-                // TODO validate domain and perform SSO if matched.
+            // Test keys if fielda[token] is present in the POST.
+            if(strstr($key, 'fielda') && !empty($_POST[$key])){
+                // Pass the value of the username fielda to search idp
+                if($id = Config::getConfigIdByEmailDomain($_POST[$key])){
+                    // Set the POST phpsaml to our found ID this will trigger
+                    // the performSamlSSO method in the next codeblock.
+                    $_POST['phpsaml'] = $id;
+                }
             }
         }
 
@@ -149,12 +158,13 @@ class LoginFlow
             // while handling the received SamlResponse. Any other state will force Acs
             // into an error state. This is to prevent unexpected (possibly replayed)
             // samlResponses from being processed. to prevent playback attacks.
-            $state->setPhase(LoginState::PHASE_SAML_ACS);
+            if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
+                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow', PLUGIN_NAME));
+            }
 
             // Actually perform SSO
             $this->performSamlSSO($state);
         }
-
         // else
         return false;
     }
@@ -221,16 +231,41 @@ class LoginFlow
             $this->printError($e->getMessage(), 'doSamlLogin');
         }
 
-        // Update the current state
-        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
-        $state->setPhase(LoginState::PHASE_SAML_AUTH);
-
         // Populate Glpi session with Auth.
         Session::init($auth);
 
+        // Update the current state
+        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
+        $state->setPhase(LoginState::PHASE_GLPI_AUTH);
+
         // Redirect back to mainpage
-        Html::redirect($CFG_GLPI['url_base'].'/');
+        // Html::redirect($CFG_GLPI['url_base'].'/front/central.php');
+        $this->doMetaRefresh($CFG_GLPI['url_base'].'/front/central.php');
+
     }
+
+    /**
+     * This is a 'nasty' hack to deal with the session cookie not being accessible on
+     * redirect with the php.ini:session.cookie_samesite='Strict'. Performing a meta
+     * refresh makes sure the cookie survives.
+     *
+     * @param    Response  Response object with the samlRespons attributes.
+     * @return   array     user->add input fields array with properties.
+     * @since    1.1.3
+     */
+    private function doMetaRefresh(string $location): void
+    {
+        echo <<<HTML
+        <html>
+        <head>
+            <meta http-equiv="refresh" content="0;URL='$location'"/>
+        </head>
+            <body></body>
+        </html>
+        HTML;
+        exit;
+    }
+
 
     /**
      * This function figures out what the samlResponse provided claims are and
@@ -240,6 +275,7 @@ class LoginFlow
      *
      * @param    Response  Response object with the samlRespons attributes.
      * @return   array     user->add input fields array with properties.
+     * @since    1.0.0
      */
      public function getUserInputFieldsFromSamlClaim(Response $response): array     //NOSONAR - Complexity by design.
      {
@@ -363,8 +399,9 @@ class LoginFlow
     }
 
     /**
-     * Responsible to generate a login screen with Idp buttons
-     * using available idp configurations.
+     * Responsible to generate the login buttons to show in conjunction
+     * with the glpi loginfield (not enforced). Only shows if there are
+     * buttons to show. Else it will skip.
      *
      * @see https://github.com/DonutsNL/glpisaml/issues/7
      * @return  string  html form for the login screen
@@ -374,14 +411,16 @@ class LoginFlow
     {
         // Fetch the global DB object;
         $tplVars = Config::getLoginButtons(12);
+        // Only show the interface if we have buttons to show.
+        if(!empty($tplVars)){
+            // Define static translatable elements
+            $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
+            $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
+            $tplVars['noconfig']   = __('No SSO buttons enabled yet. Try your SSO username instead.', PLUGIN_NAME);
 
-        // Define static translatable elements
-        $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
-        $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
-        $tplVars['noconfig']   = __('No valid or enabled saml configuration found', PLUGIN_NAME);
-
-        // https://codeberg.org/QuinQuies/glpisaml/issues/12
-        TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);
+            // https://codeberg.org/QuinQuies/glpisaml/issues/12
+            TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);
+        }
     }
 
     /**
