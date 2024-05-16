@@ -357,9 +357,10 @@ class Config extends CommonDBTM
             $migration->displayMessage("Updating table layout for $table");
             $query = <<<SQL
                 ALTER TABLE $table
-                MODIFY COLUMN `conf_domain` text null;
+                MODIFY COLUMN `conf_domain` varchar(255) null;
             SQL;
             $DB->doQuery($query) or die($DB->error());
+
             Session::addMessageAfterRedirect("🆗 Updated: $table layout.");
         }
     }
