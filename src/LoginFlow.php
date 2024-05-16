@@ -423,35 +423,6 @@ class LoginFlow
         }
     }
 
-    /**
-     * Shows a login error with human readable message
-     *
-     * @see https://github.com/DonutsNL/glpisaml/issues/7
-     * @param   string   error message to show
-     * @since 1.0.0
-     */
-    public static function showLoginError($errorMsg): void
-    {
-        global $CFG_GLPI;
-        // Define static translatable elements
-        $tplVars['header']      = __('⚠️ we are unable to log you in', PLUGIN_NAME);
-        $tplVars['error']       = htmlentities($errorMsg);
-        $tplVars['returnPath']  = $CFG_GLPI["root_doc"] .'/';
-        $tplVars['returnLabel'] = __('Return to GLPI', PLUGIN_NAME);
-        // print header
-        Html::nullHeader("Login",  $CFG_GLPI["root_doc"] . '/');
-        // Render twig template
-        // https://codeberg.org/QuinQuies/glpisaml/issues/12
-        echo TemplateRenderer::getInstance()->render('@glpisaml/loginError.html.twig',  $tplVars);
-        // print footer
-        Html::nullFooter();
-        // This function always needs to exit to prevent accidental
-        // login with disabled or deleted users!
-        exit;
-    }
-
-
-
     // LOGOUT FLOW EITHER REQUESTED BY GLPI OR REQUESTED BY THE IDP (SLO) OR FORCED BY ADMIN
     /**
      * Makes sure user is logged out of GLPI
@@ -486,6 +457,35 @@ class LoginFlow
 
 
     // ERROR HANDLING
+
+    /**
+     * Shows a login error with human readable message
+     * @todo can this be merged with printError method?
+     *
+     * @see https://github.com/DonutsNL/glpisaml/issues/7
+     * @param   string   error message to show
+     * @since 1.0.0
+     */
+    public static function showLoginError($errorMsg): void
+    {
+        global $CFG_GLPI;
+        // Define static translatable elements
+        $tplVars['header']      = __('⚠️ we are unable to log you in', PLUGIN_NAME);
+        $tplVars['error']       = htmlentities($errorMsg);
+        $tplVars['returnPath']  = $CFG_GLPI["root_doc"] .'/';
+        $tplVars['returnLabel'] = __('Return to GLPI', PLUGIN_NAME);
+        // print header
+        Html::nullHeader("Login",  $CFG_GLPI["root_doc"] . '/');
+        // Render twig template
+        // https://codeberg.org/QuinQuies/glpisaml/issues/12
+        echo TemplateRenderer::getInstance()->render('@glpisaml/loginError.html.twig',  $tplVars);
+        // print footer
+        Html::nullFooter();
+        // This function always needs to exit to prevent accidental
+        // login with disabled or deleted users!
+        exit;
+    }
+
    
     /**
      * Prints a nice error message with 'back' button and

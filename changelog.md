@@ -22,3 +22,5 @@
 - Fixed issue https://codeberg.org/QuinQuies/glpisaml/issues/30
 - Added `is_deleted = 0` filter in `src/Config.php` method `getLoginButtons`
 - Fixed issue https://codeberg.org/QuinQuies/glpisaml/issues/31
+- Implemented https://codeberg.org/QuinQuies/glpisaml/issues/14
+- Added additional validations on certificate validation method in `src/Config/ConfigItem.php` method `parseX509Certificate` 

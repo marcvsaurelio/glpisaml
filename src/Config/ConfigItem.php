@@ -269,14 +269,18 @@ class ConfigItem    //NOSONAR
                 self::ERRORS    => ($error) ? $error : null,];
     }
 
-
+    // TODO: Im not yet happy with the structure and complexity. Should be simplified.
     protected function idp_certificate(mixed $var): array //NOSONAR
     {
         // Is a required field!
         $e = false;
         if(($certificate = self::parseX509Certificate($var)) &&
            (!array_key_exists('subject', $certificate))      ){
-            $e = __('⭕ Valid Idp X509 certificate is required! (base64 encoded)', PLUGIN_NAME);
+            if(array_key_exists('validations', $certificate)){
+                $e = $certificate['validations'];
+            }else{
+                $e = __('⭕ Valid Idp X509 certificate is required! (base64 encoded)', PLUGIN_NAME);
+            }
         }
 
         return [self::FORMEXPLAIN  => __('The Public Base64 encoded x509 certificate used by the IdP. Fingerprinting
@@ -555,36 +559,61 @@ class ConfigItem    //NOSONAR
                 self::ERRORS => $error];
     }
 
+    // TODO: Im not yet happy with the structure and complexity.
+    // Certificate string should have certain properties to be recognized correctly
+    // https://www.man7.org/linux/man-pages/man7/ascii.7.html
+    // https://datatracker.ietf.org/doc/rfc7468/ (2.  General Considerations)
+    // https://datatracker.ietf.org/doc/html/rfc1421 (<CR> <LF>)
     protected function parseX509Certificate(string $certificate): array|bool         //NOSONAR - Maybe fix complexity in the future
     {
         // Try to parse the reconstructed certificate.
         if (function_exists('openssl_x509_parse')) {
+            // Start with an empty array
             $validations = [];
+            // Try to parse the certificate using Openssl.
             if ($parsedCertificate = openssl_x509_parse($certificate)) {
+                // Create timeobject from current timestamp to calculate with
                 $n = new DateTimeImmutable('now');
+                // Create timeobject from validTo certificate property
                 $t = (array_key_exists('validTo', $parsedCertificate)) ? DateTimeImmutable::createFromFormat("ymdHisT", $parsedCertificate['validTo']) : '';
+                // Create timeobject from validFrom certificate property
                 $f = (array_key_exists('validFrom', $parsedCertificate)) ? DateTimeImmutable::createFromFormat("ymdHisT", $parsedCertificate['validFrom']) : '';
+                // Calculate if the current date is past the validTo certificate property
                 $aged = $n->diff($t);
-                $born = $f->diff($n);
-                $cn= $parsedCertificate['subject']['CN'];
+                // Format the age to days between.
                 $aged = $aged->format('%R%a');
+                // Calculate if the current date is before the validFrom certificate property.
+                $born = $f->diff($n);
+                // Format the born date to days between.
+                $born = $born->format('%R%a');
+                // Get the certificate's common name property.
+                $cn= $parsedCertificate['subject']['CN'];
+                // Validate if we got a negative sign in the calculated ValidTo days.
                 if(strpos($aged,'-') !== false){
                     $validations['validTo'] = __("⚠️ Warning, certificate with Common Name (CN): $cn is expired: $aged days", PLUGIN_NAME);
                 }
-                $born = $born->format('%R%a');
-                // Check issue date
+                // Validate if we got a negative sign in the calculated validFrom days.
                 if(strpos($born,'-') !== false){
                     $validations['validFrom'] = __("⚠️ Warning, certificate with Common Name (CN): $cn issued in the future ($born days)", PLUGIN_NAME);
                 }
                 $parsedCertificate['validations'] = $validations;
                 return $parsedCertificate;
             }else{
-                return ['validations'   => __('⚠️ No valid X509 certificate found')];
+                // Base64 encoded certificates should have these tags (see rfc7468 chap 2)
+                if(strpos($certificate, '-----BEGIN CERTIFICATE-----') === false ||
+                   strpos($certificate, '-----END CERTIFICATE-----') === false   ){
+                    return ['validations'   => __('⭕ Certificate must be wrapped in valid BEGIN CERTIFICATE and END CERTIFICATE tags', PLUGIN_NAME)];
+                }
+                // Certificates texts should not have SMTP special meaning characters only <LF> (see rfc1421 referenced by rfc7468)
+                if(strpos($certificate, chr(13)) === true){
+                    return ['validations'   => __('⭕ Certificate should not contain "carriage returns" [<CR>]', PLUGIN_NAME)];
+                }
             }
-        } else {
-            // Cant parse certificate OpenSSL not availble!
-            return false;
+            // Else return generic error.
+            return ['validations'   => __('⭕ No valid X509 certificate found', PLUGIN_NAME)];
         }
+        // Return message OpenSSL is not available.
+        return ['validations'   => __('⚠️ OpenSSL is not available, GLPI cant validate your certificate', PLUGIN_NAME)];
     }
 
     protected function validateCertKeyPairModulus(string $certificate, string $privateKey): bool         //NOSONAR - Maybe fix complexity in the future
