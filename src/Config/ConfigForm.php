@@ -277,8 +277,15 @@ class ConfigForm    //NOSONAR complexity by design.
         }
     }
 
-
-
+    /**
+     * Generates the HTML for the configform using the GLPI
+     * template renderer.
+     *
+     * @param ConfigEntity $configEntity    Field values to populate in form
+     * @return string ConfigForm            HTML
+     * @since                               1.0.0
+     * @see https://codeberg.org/QuinQuies/glpisaml/issues/17
+     */
     private function generateForm(ConfigEntity $configEntity)
     {
         global $CFG_GLPI;
@@ -304,14 +311,6 @@ class ConfigForm    //NOSONAR complexity by design.
             'close_form'                =>  Html::closeForm(false),
             'glpi_rootdoc'              =>  Plugin::getWebDir(PLUGIN_NAME, true).'/front/config.form.php',
             'glpi_tpl_macro'            =>  '/components/form/fields_macros.html.twig',
-            'title'                     =>  __('IDP configuration', PLUGIN_NAME),
-            'header_security'           =>  __('Security', PLUGIN_NAME),
-            'header_provider'           =>  __('Service provider', PLUGIN_NAME),
-            'header_idp'                =>  __('Identity provider', PLUGIN_NAME),
-            'header_logging'            =>  __('Logging', PLUGIN_NAME),
-            'header_transit'            =>  __('Transit', PLUGIN_NAME),
-            'available'                 =>  __('Available', 'phpsaml'),
-            'selected'                  =>  __('Selected', 'phpsaml'),
             'inputfields'               =>  $fields,
             'buttonsHiddenWarn'         =>  ($configEntity->getConfigDomain()) ? true : false,
             'loggingfields'             =>  $logging,

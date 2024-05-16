@@ -53,7 +53,7 @@
                    type="button" 
                    role="tab" 
                    aria-controls="transit" 
-                   aria-selected="true"><b>{{ header_transit }} {{ header_warning }}</b></a>
+                   aria-selected="true"><b>{{ __('Transit', plugin) }} {{ header_warning }}</b></a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" 
@@ -64,7 +64,7 @@
                    type="button" 
                    role="tab" 
                    aria-controls="provider" 
-                   aria-selected="false"><b>{{ header_provider }} {{ provider_warning }}</b></a>
+                   aria-selected="false"><b>{{ __('Service provider', plugin) }} {{ provider_warning }}</b></a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" 
@@ -75,7 +75,7 @@
                    type="button" 
                    role="tab" 
                    aria-controls="idp" 
-                   aria-selected="false"><b>{{ header_idp }} {{ idp_warning }}</b></a>
+                   aria-selected="false"><b>{{ __('Identity provider', plugin) }} {{ idp_warning }}</b></a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" 
@@ -86,7 +86,7 @@
                    type="button" 
                    role="tab" 
                    aria-controls="security" 
-                   aria-selected="false"><b>{{ header_security }} {{ security_warning }}</b></a>
+                   aria-selected="false"><b>{{ __('Security') }} {{ security_warning }}</b></a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" 
@@ -97,7 +97,7 @@
                    type="button" 
                    role="tab" 
                    aria-controls="logging" 
-                   aria-selected="false"><b>{{ header_logging }} {{ logging_warning }}</b></a>
+                   aria-selected="false"><b>{{ __('Log') }} {{ logging_warning }}</b></a>
             </li>
         </ul>
         <div class="tab-content flex-fill glpisaml" id="myTabContent">
