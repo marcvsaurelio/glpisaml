@@ -1,3 +1,12 @@
+**v1.1.4**
+- Aligned the menu icons and naming with TecLib's Oauth SSO Applications plugin in `src/Config.php`
+- Altered `name` in `setup.php:122` to reflect plugin name correctly with value `Glpisaml`
+- Altered `homepage` in `setup.php:125` to reflect correct GIT repository at `Codeberg.org`
+- Altered menu name `src/RuleSaml.php` method `getTitle()` return value to  `JIT import rules`.
+- Altered menu name `src/RuleSamlCollection.php` method `getTitle()` return value to `Jit import rules` 
+- Altered JIT button name in `src/Config.php:142` to match the RuleCollection menu name `Jit import rules` 
+- Added additional validation and warning to check if the example certificate `withlove.from.donuts.nl` is used in the configuration in `src/config/ConfigItem.php:599`.
+
 **v1.1.3**
 - Added logic to store the initial sessionId for reference in state table.
 - Altered error messages in `/front/meta.php` to be more generic less helpfull for added security

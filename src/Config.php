@@ -118,7 +118,7 @@ class Config extends CommonDBTM
      */
     public static function getTypeName($nb = 0): string
     {
-        return __('SAML Providers', PLUGIN_NAME);
+        return __('Saml SSO applications', PLUGIN_NAME);
     }
 
     /**
@@ -129,7 +129,7 @@ class Config extends CommonDBTM
      */
     public static function getIcon(): string
     {
-        return 'fa-regular fa-address-card';
+        return 'fa-fw fas fa-sign-in-alt';
     }
 
     /**
@@ -139,7 +139,7 @@ class Config extends CommonDBTM
      **/
     public static function getAdditionalMenuLinks() {
         $links[__('Excluded paths', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/exclude.php';
-        $links[__('JIT rules', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/rulesaml.php';
+        $links[__('JIT import rules', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/rulesaml.php';
         return $links;
     }
 

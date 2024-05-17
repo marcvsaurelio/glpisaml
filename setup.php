@@ -49,7 +49,7 @@ use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 
 // Setup constants
-define('PLUGIN_GLPISAML_VERSION', '1.1.3');                                                     // GLPI SAML version
+define('PLUGIN_GLPISAML_VERSION', '1.1.4');                                                     // GLPI SAML version
 define('PLUGIN_GLPISAML_MIN_GLPI', '10.0.0');                                                   // Min required GLPI version
 define('PLUGIN_GLPISAML_MAX_GLPI', '10.9.99');                                                  // Max GLPI compat version
 define('PLUGIN_NAME', 'glpisaml');                                                              // Plugin name
@@ -118,11 +118,11 @@ function plugin_init_glpisaml() : void                                          
 function plugin_version_glpisaml() : array                                                      //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
 {
     return [
-        'name'           => 'GLPI SAML',
+        'name'           => 'Glpisaml',
         'version'        => PLUGIN_GLPISAML_VERSION,
         'author'         => 'Chris Gralike',
         'license'        => 'GPLv2+',
-        'homepage'       => 'https://github.com/DonutsNL/Phpsaml2',
+        'homepage'       => 'https://codeberg.org/QuinQuies/glpisaml',
         'requirements'   => [
             'glpi' => [
             'min' => PLUGIN_GLPISAML_MIN_GLPI,

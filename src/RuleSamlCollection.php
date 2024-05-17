@@ -69,6 +69,6 @@ class RuleSamlCollection extends RuleCollection
      **/
     public function getTitle()
     {
-        return __('Saml import rules', PLUGIN_NAME);
+        return __('JIT import rules', PLUGIN_NAME);
     }
 }

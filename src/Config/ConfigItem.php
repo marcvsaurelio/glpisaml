@@ -596,6 +596,9 @@ class ConfigItem    //NOSONAR
                 if(strpos($born,'-') !== false){
                     $validations['validFrom'] = __("⚠️ Warning, certificate with Common Name (CN): $cn issued in the future ($born days)", PLUGIN_NAME);
                 }
+                if($cn == 'withlove.from.donuts.nl'){
+                    $validations['validFrom'] = __("⚠️ Warning, dont use the 'withlove.from.donuts.nl' example certificates. They dont offer any protection!", PLUGIN_NAME);
+                }
                 $parsedCertificate['validations'] = $validations;
                 return $parsedCertificate;
             }else{
