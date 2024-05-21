@@ -6,7 +6,7 @@
     <div class='row align-items-start' style="max-width: 300px; margin-top:40px;">
         {% for button in buttons %}
         <div class="col-sm-6">
-            <button action="submit" name="phpsaml" value="{{ button.id|abs }}" class="btn btn-light" style="width:125px; margin-bottom:30px;"> 
+            <button action="submit" name="{{ postfield }}" value="{{ button.id|abs }}" class="btn btn-light" style="width:125px; margin-bottom:30px;"> 
                 <div class="" style="cursor:pointer; margin:10px 0px 5px 0px;">
                     <div class="d-flex flex-column">
                         <i class="{{ button.icon|striptags }} fa-5x" ></i>

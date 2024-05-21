@@ -94,6 +94,7 @@ class LoginFlow
     public const SCHEMA_IDP                  = 'http://schemas.microsoft.com/identity/claims/identityprovider';         // Entra claim not used
     public const SCHEMA_AUTHMETHODSREF       = 'http://schemas.microsoft.com/claims/authnmethodsreferences';            // Entra claim not used
     public const USERDATA                    = 'userData';                                                              // userData array added by SAML to response.
+    public const POSTFIELD                   = 'samlIdpId';                                                             // https://codeberg.org/QuinQuies/glpisaml/issues/37
 
     // LOGIN FLOW AFTER PRESSING A IDP BUTTON.
 
@@ -141,18 +142,18 @@ class LoginFlow
                 if($id = Config::getConfigIdByEmailDomain($_POST[$key])){
                     // Set the POST phpsaml to our found ID this will trigger
                     // the performSamlSSO method in the next codeblock.
-                    $_POST['phpsaml'] = $id;
+                    $_POST[self::POSTFIELD] = $id;
                 }
             }
         }
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
-        if (isset($_POST['phpsaml'])         &&      // Must be set
-            is_numeric($_POST['phpsaml'])    &&      // Value must be numeric
-            strlen($_POST['phpsaml']) < 3    ){      // Should not exceed 999
+        if (isset($_POST[self::POSTFIELD])         &&      // Must be set
+            is_numeric($_POST[self::POSTFIELD])    &&      // Value must be numeric
+            strlen($_POST[self::POSTFIELD]) < 3    ){      // Should not exceed 999
 
             // If we know the idp we register it in the login State
-            $state->setIdpId(filter_var($_POST['phpsaml'], FILTER_SANITIZE_NUMBER_INT));
+            $state->setIdpId(filter_var($_POST[self::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
 
             // Update the current phase in database. The state is verified by the Acs
             // while handling the received SamlResponse. Any other state will force Acs
@@ -417,6 +418,7 @@ class LoginFlow
             $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
             $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
             $tplVars['noconfig']   = __('No SSO buttons enabled yet. Try your SSO username instead.', PLUGIN_NAME);
+            $tplVars['postfield']   = self::POSTFIELD;
 
             // https://codeberg.org/QuinQuies/glpisaml/issues/12
             TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);

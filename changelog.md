@@ -8,6 +8,7 @@
 - Added additional validation and warning to check if the example certificate `withlove.from.donuts.nl` is used in the configuration in `src/config/ConfigItem.php:599`.
 - Added `dashboard.php` to the default excludes to prevent the plugin being called multiple times on dashboard load.
 - Corrected spelling and typo's throughout the plugin files.
+- Addressed issue https://codeberg.org/QuinQuies/glpisaml/issues/36
 - Corrected and finished Excludes configuration. Excluded paths will now not be processed, but will be logged (for debugging purposes) in the `glpi_plugin_glpisaml_loginstates` table.
 
 **v1.1.3**
