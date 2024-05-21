@@ -86,7 +86,7 @@ class LoginState extends CommonDBTM
     public const EXCLUDED_ACTION            = 'excludedAction'; // Action to perform on Exclude.
     public const SAML_RESPONSE              = 'serverParams';   // Stores the Saml Response
     public const SAML_REQUEST               = 'requestParams';  // Stores the SSO request
-    public const PHASE                      = 'phase';          // Describes the current state GLPI, ACS, TIMEOUT, LOGGEDIN, LOGGEDOUT.
+    public const PHASE                      = 'phase';          // Describes the current state GLPI, ACS, TIMEOUT, LOGGED IN, LOGGED OUT.
     public const PHASE_INITIAL              = 1;                // Initial visit
     public const PHASE_SAML_ACS             = 2;                // Performed SAML IDP call expected back at ACS
     public const PHASE_SAML_AUTH            = 3;                // Successfully performed IDP auth
