@@ -212,7 +212,7 @@ class Exclude extends CommonDropdown
     }
 
     /**
-     * Process aexcluded from SAML auth return true if excluded.
+     * Process excluded from SAML auth return true if excluded.
      *
      * @return bool     On success
      * @since           1.1.0
@@ -237,16 +237,42 @@ class Exclude extends CommonDropdown
     }
 
     /**
+     * Validate object $excluded is excluded and get the configured action
+     * @param string $excluded String describing the object to be validated
+     * @param string $agent    Optional, the userAgent to be validated
+     * @return bool  Configured action, or false
+     * @since        1.1.4
+     */
+    public static function GetExcludeAction(string $excluded, $agent = false): bool    //NOSONAR - complexity by design
+    {
+        // Get all the excluded objects from the database
+        $excludes = self::getExcludes();
+        // Process configured excluded URIs and agents.
+        foreach($excludes as $exclude){
+            if (strpos($excluded, $exclude[Exclude::EXCLUDEPATH]) !== false) {
+                // Do we need to validate client agent?
+                if( $agent  && strpos($agent, $exclude[Exclude::CLIENTAGENT]) !== false ){ //NOSONAR - additional 'if branch' by design
+                    return ($exclude[Exclude::ACTION]) ? true : false;
+                }else{
+                    // return configured action true for bypass, false for auth.
+                    return ($exclude[Exclude::ACTION]) ? true : false;
+                }
+            } // Else Continue
+        }
+        return false;
+    }
+
+    /**
      * Combines database excludes with hardcoded excludes.
      * @since   1.0.0
      */
     public static function isExcluded(): string|bool
     {
         //https://github.com/derricksmith/phpsaml/issues/159
-        // Dont perform auth on CLI, asserter service and manually excluded files.
-        if (PHP_SAPI == 'cli'){
+        // Do not perform auth on CLI, asserter service and manually excluded files.
+        if (PHP_SAPI != 'cli'){
             // https://codeberg.org/QuinQuies/glpisaml/issues/18#issuecomment-1785444
-            // $_SERVER['REQUEST_URI'] obviously isnt populated in 'CLI' mode.
+            // $_SERVER['REQUEST_URI'] obviously isn't populated in 'CLI' mode.
             if( isset($_SERVER['REQUEST_URI'])                               &&         // Make sure REQ URI is available
               ( strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false         ||         // dont process acs
                 strpos($_SERVER['REQUEST_URI'], 'common.tabs.php') !== false ||         // dont process common.tabs
@@ -255,10 +281,15 @@ class Exclude extends CommonDropdown
             {
                 return $_SERVER['REQUEST_URI'];
             } else {
-                return 'CLI';
+                return false;
             }
         }else{
-             return false;
+            global $argv;
+            $command = '';
+            foreach ($argv as $value){
+                $command .= $value .' ';
+            }
+            return 'Saml auth skipped, CLI executed command: '.$command;
         }
     }
 
@@ -331,6 +362,14 @@ class Exclude extends CommonDropdown
             SQL;
             $DB->doQuery($query) or die($DB->error());
             Session::addMessageAfterRedirect("🆗 Inserted exclude defaults.");
+
+            // insert default excludes;
+            // https://codeberg.org/QuinQuies/glpisaml/issues/36
+            $query = <<<SQL
+            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
+            VALUES('Bypass dashboard.php', '', '1', '', 'dashboard.php');
+            SQL;
+            $DB->doQuery($query) or die($DB->error());
         }
     }
 

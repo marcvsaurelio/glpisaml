@@ -83,6 +83,7 @@ class LoginState extends CommonDBTM
     public const LAST_ACTIVITY              = 'lastClickTime';  // When did we laste update the session
     public const ENFORCE_LOGOFF             = 'enforceLogoff';  // Do we want to enforce a logoff (one time)
     public const EXCLUDED_PATH              = 'excludedPath';   // If request was made using saml bypass.
+    public const EXCLUDED_ACTION            = 'excludedAction'; // Action to perform on Exclude.
     public const SAML_RESPONSE              = 'serverParams';   // Stores the Saml Response
     public const SAML_REQUEST               = 'requestParams';  // Stores the SSO request
     public const PHASE                      = 'phase';          // Describes the current state GLPI, ACS, TIMEOUT, LOGGEDIN, LOGGEDOUT.
@@ -127,15 +128,18 @@ class LoginState extends CommonDBTM
     private function getInitialState(): void
     {
         // Get the globals we need
-        global $DB, $GLPI_CACHE;
+        global $DB;
 
         // Get 'our' decoupled sessionId
         $sessionId = $this->getSamlSessionId();
 
         // Figure out we are processing excluded path
         // Currently we dont reach the loginState if exclude was
-        // found in the loginFlow, this is for future use. 
-        $this->state[self::EXCLUDED_PATH] = Exclude::isExcluded();
+        // found in the loginFlow, this is for future use.
+        if($this->state[self::EXCLUDED_PATH] = Exclude::isExcluded()){
+            $this->state[self::EXCLUDED_ACTION] = Exclude::GetExcludeAction($this->state[self::EXCLUDED_PATH]);
+        }
+
 
         // Get the last activity
         $this->getLastActivity();
@@ -180,30 +184,18 @@ class LoginState extends CommonDBTM
             // Populate the GLPI state first.
             $this->getGlpiState();
 
-            // Populare the username field
+            // Populate the username field
             $this->setGlpiUserName();
-
-            // See if we allready performed a login using saml
-            // The session_id is reset by session::init()
-            // so we need to check if the idpId
-            // was cached by loginFlow doAuth().
-            if($idpid = $GLPI_CACHE->get(self::IDP_ID)){
-                $GLPI_CACHE->delete(self::IDP_ID);
-                $samlAuthed = true;
-            }else{
-                $idpid = 0;
-                $samlAuthed = false;
-            }
 
             // Populate session using actuals
             $this->state = $this->state = array_merge($this->state,[
                 self::USER_ID           => 0,
                 self::SESSION_ID        => $sessionId,
                 self::SESSION_NAME      => session_name(),
-                self::SAML_AUTHED       => $samlAuthed,
+                self::SAML_AUTHED       => 0,
                 self::ENFORCE_LOGOFF    => 0,
                 self::EXCLUDED_PATH     => $this->state[self::EXCLUDED_PATH],
-                self::IDP_ID            => $idpid,
+                self::IDP_ID            => 0,
                 self::DATABASE          => false,
             ]);
         }
@@ -292,7 +284,7 @@ class LoginState extends CommonDBTM
     private function writeStateToDb(): bool   //NOSONAR - WIP
     {
         // Register state in database;
-        if(!$this->state[self::EXCLUDED_PATH]){
+        //if(!$this->state[self::EXCLUDED_PATH]){
             if(!$this->state[self::DATABASE]){
                 if(!$this->add($this->state)){
                     return false;
@@ -302,7 +294,7 @@ class LoginState extends CommonDBTM
                     return false;
                 }
             }
-        }
+        //}
         return true;
     }
 
@@ -397,6 +389,22 @@ class LoginState extends CommonDBTM
     public function getIdpId(): int
     {
         return (!empty($this->state[self::IDP_ID])) ? $this->state[self::IDP_ID] : 0;
+    }
+
+
+    /**
+     * Returns the EXCLUDED_PATH if set, else it returns empty.
+     * @return int  ConfigItem::ID pointing to IdP provider.
+     * @since       1.0.0
+     */
+    public function isExcluded(): string
+    {
+        return (!empty($this->state[self::EXCLUDED_PATH])) ?  $this->state[self::EXCLUDED_PATH] : '';
+    }
+
+    public function getExcludeAction(): bool
+    {
+        return (isset($this->state[self::EXCLUDED_ACTION]) && !empty($this->state[self::EXCLUDED_ACTION])) ? $this->state[self::EXCLUDED_ACTION] : false;
     }
 
     /**

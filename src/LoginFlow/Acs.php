@@ -54,7 +54,7 @@ use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 
 
 /**
- * Responsible to handle the incomming samlResponse. This object should
+ * Responsible to handle the incoming samlResponse. This object should
  * validate we are actually expecting an response and if we do validate it
  * If the response is valid, perform a callback to the loginFlow to handle
  * authentication, user creation and what not. Class is called by /front/acs.php
@@ -124,7 +124,7 @@ class Acs extends LoginFlow
         }
 
         // Update the state to SAML AUTH, again to prevent replays of the received samlResponse that should only be offered
-        // once. Else force the user with previous error to retry the loginflow so we are absolutely sure its the user
+        // once. Else force the user with previous error to retry the login flow so we are absolutely sure its the user
         // requesting the login. If it fails, give an error and redirect the user back.
         if(!$this->state->setPhase(LoginState::PHASE_SAML_AUTH)) {
             $this->printError(__('GLPI was not able to update the phase potentially breaking replay protection. therefor we stopped
@@ -180,9 +180,9 @@ class Acs extends LoginFlow
                                   $extended);
             }
 
-            // Validate the response. Valid? then peform LoginFlow->doSamlLogin()!
+            // Validate the response. Valid? then perform LoginFlow->doSamlLogin()!
             // isValid will print errors to the client still need to
-            // figure out how to capture these throws, throwable doesnt
+            // figure out how to capture these throws, throwable doesn't
             // capture it properly.
             if (is_object($response) && @$response->isValid()){
                     $this->performSamlLogin($response);
