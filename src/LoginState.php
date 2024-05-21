@@ -138,8 +138,9 @@ class LoginState extends CommonDBTM
         // found in the loginFlow, this is for future use.
         if($this->state[self::EXCLUDED_PATH] = Exclude::isExcluded()){
             $this->state[self::EXCLUDED_ACTION] = Exclude::GetExcludeAction($this->state[self::EXCLUDED_PATH]);
+        }else{
+            $this->state[self::EXCLUDED_PATH] = false;
         }
-
 
         // Get the last activity
         $this->getLastActivity();
@@ -199,9 +200,13 @@ class LoginState extends CommonDBTM
                 self::DATABASE          => false,
             ]);
         }
-        // Write state to database.
-        if(!$this->WriteStateToDb()){
-            throw new Exception('Could not write database state to database');          //NOSONAR - We use generic Exceptions
+        // Comment out the following to make plugin log
+        // all calls (including CLI) make to GLPI
+        if(!$this->state[self::EXCLUDED_PATH]){
+            // Write state to database.
+            if(!$this->WriteStateToDb()){
+                throw new Exception('Could not write database state to database');          //NOSONAR - We use generic Exceptions
+            }
         }
     }
 
