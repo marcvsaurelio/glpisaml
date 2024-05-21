@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -52,7 +52,7 @@ use GlpiPlugin\Glpisaml\Config\ConfigItem;
 
 /*
  * Class ConfigEntity's job is to populate, evaluate, test, normalize and
- * make sure we always return a consistant, valid, and usable instance of
+ * make sure we always return a consistent, valid, and usable instance of
  * a samlConfiguration thats either based on a template or based on an
  * existing database row
  */
@@ -202,7 +202,7 @@ class ConfigEntity extends ConfigItem
             // by checking the absence of the 'id' field in the returned ConfigEntity.
             $this->validateAndPopulateTemplateEntity(['template' => 'default']);
         }
-        // Do some final consistancy check here.
+        // Do some final consistency check here.
     }
 
 
@@ -213,7 +213,7 @@ class ConfigEntity extends ConfigItem
      * too (boolean) true in the returned array for type safety purposes.
      *
      * @param  string   $field  - name of the field to validate
-     * @param  mixed    $val    - value beloging to the field.
+     * @param  mixed    $val    - value belonging to the field.
      * @return array            - result of the validation including normalized values.
      * @see https://www.mysqltutorial.org/mysql-basics/mysql-boolean/
      */
@@ -239,7 +239,7 @@ class ConfigEntity extends ConfigItem
 
 
     /**
-     * This static function will return the configration constants
+     * This static function will return the configuration constants
      * defined in this class. Idea is to use this reflection to
      * validate the database fields names, numbers and so forth to detect
      * update caused DB issues.
@@ -370,7 +370,7 @@ class ConfigEntity extends ConfigItem
     }
 
     /**
-     * This function will return specific configfield if it exists
+     * This function will return specific config field if it exists
      *
      * @param  bool     $fieldName  - Name of the configuration item we are looking for, use class constants.
      * @return string               - Value of the configuration or (bool) false if not found.
@@ -419,7 +419,7 @@ class ConfigEntity extends ConfigItem
     }
 
     /**
-     * Pupulates and returns the configuration array for the PHP-saml library.
+     * Populates and returns the configuration array for the PHP-saml library.
      *
      * @return          array   $config
      * @since           1.0.0

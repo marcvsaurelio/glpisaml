@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -57,7 +57,7 @@ use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 
 /**
  * This class is responsible to make sure a corresponding
- * user is returned after successfull login. If a user does
+ * user is returned after successful login. If a user does
  * not exist it will create one if JIT is enabled else it will
  * trigger a human readable error. On Jit creation it will also
  * call the RuleSamlCollection and parse any configured rules.
@@ -122,8 +122,8 @@ class User
                 // from the samlResponse. maybe use this method in the future
                 // to also validate provided claims in one go.
                 if(!$id = $user->add(Sanitizer::sanitize($userFields))){
-                    LoginFlow::showLoginError(__("Your SSO login was succesfull but there is no matching GLPI user account and
-                                                  we failed to create one dynamically using Just In Time usercreation. Please
+                    LoginFlow::showLoginError(__("Your SSO login was successful but there is no matching GLPI user account and
+                                                  we failed to create one dynamically using Just In Time user creation. Please
                                                   request a GLPI administrator to review the logs and correct the problem or
                                                   request the administrator to create a GLPI user manually.", PLUGIN_NAME));
                     // PHP0405-no return by design.
@@ -143,17 +143,17 @@ class User
             }else{
                 $idpName = $configEntity->getField(ConfigEntity::NAME);
                 $email   = $userFields[User::EMAIL]['0'];
-                LoginFlow::showLoginError(__("Your SSO login was succesfull but there is no matching GLPI user account. In addition the Just-in-time user creation
+                LoginFlow::showLoginError(__("Your SSO login was successful but there is no matching GLPI user account. In addition the Just-in-time user creation
                                               is disabled for: $idpName. Please contact your GLPI administrator and request an account to be created matching the
                                               provided email claim: $email or login using a local user account.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
         }else{
-            // Verify the user is not deleted (in trashbin)
+            // Verify the user is not deleted (in trashcan)
             if($user->fields[self::DELETED]){
                 LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[self::USERID]." is marked deleted but still exists in the GLPI database. Because of
                                            this we cannot log you in as this would violate GLPI its security policies. Please contact the GLPI administrator
-                                           to restore the user with provided ID or purge the user to allow the Just in Time (JIT) usercreation to create a
+                                           to restore the user with provided ID or purge the user to allow the Just in Time (JIT) user creation to create a
                                            new user with the idp provided claims.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
@@ -163,7 +163,7 @@ class User
                                             reactivate your account.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
-            // Return the user to the Loginflow object for session initialization!.
+            // Return the user to the LoginFlow object for session initialization!.
             return $user;
         }
     }
@@ -184,7 +184,7 @@ class User
         }
 
         // Do we need to add profiles
-        // If no profiles_id and user_idis present we skip.
+        // If no profiles_id and user_id is present we skip.
         if(isset($update[self::PROFILESID]) && isset($update[self::USERSID])){
             // Set the user to update
             $rights[self::USERSID] = $update[self::USERSID];

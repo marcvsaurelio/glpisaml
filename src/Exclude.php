@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -50,7 +50,7 @@ use DBConnection;
 use CommonDropdown;
 
 /**
- * Be carefull with PSR4 Namespaces when extending common GLPI objects.
+ * Be careful with PSR4 Namespaces when extending common GLPI objects.
  * Only Characters are allowed in namespaces extending glpi Objects.
  * @see https://github.com/pluginsGLPI/example/issues/51
  */
@@ -85,7 +85,7 @@ class Exclude extends CommonDropdown
     /**
      * Overloads missing canCreate Setup right and returns canUpdate instead
      *
-     * @return bool     - Returns true if profile assgined Setup->Setup->Update right
+     * @return bool     - Returns true if profile assigned Setup->Setup->Update right
      * @see             - https://github.com/pluginsGLPI/example/issues/50
      */
     public static function canCreate(): bool
@@ -96,7 +96,7 @@ class Exclude extends CommonDropdown
     /**
      * Overloads missing canPurge Setup right and returns canUpdate instead
      *
-     * @return bool     - Returns true if profile assgined Setup->Setup->Update right
+     * @return bool     - Returns true if profile assigned Setup->Setup->Update right
      * @see             - https://github.com/pluginsGLPI/example/issues/50
      */
     public static function canPurge(): bool
@@ -117,7 +117,7 @@ class Exclude extends CommonDropdown
 
     /**
      * @see CommonGLPI::getAdditionalMenuLinks()
-     * CommonDropdown doesnt seem to implement this,
+     * CommonDropdown does not seem to implement this,
      * just keep it for the future. Hopefully it will be
      * added in the future?
      **/
@@ -274,9 +274,9 @@ class Exclude extends CommonDropdown
             // https://codeberg.org/QuinQuies/glpisaml/issues/18#issuecomment-1785444
             // $_SERVER['REQUEST_URI'] obviously isn't populated in 'CLI' mode.
             if( isset($_SERVER['REQUEST_URI'])                               &&         // Make sure REQ URI is available
-              ( strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false         ||         // dont process acs
-                strpos($_SERVER['REQUEST_URI'], 'common.tabs.php') !== false ||         // dont process common.tabs
-                strpos($_SERVER['REQUEST_URI'], 'dashboard.php') !== false   ||         // dont process dashboard
+              ( strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false         ||         // do not process acs
+                strpos($_SERVER['REQUEST_URI'], 'common.tabs.php') !== false ||         // do not process common.tabs
+                strpos($_SERVER['REQUEST_URI'], 'dashboard.php') !== false   ||         // do not process dashboard
                 Exclude::ProcessExcludes()                                   ))
             {
                 return $_SERVER['REQUEST_URI'];
@@ -310,7 +310,7 @@ class Exclude extends CommonDropdown
         $table = self::getTable();
 
         // Create the base table if it does not yet exist;
-        // Dont update this table for later versions, use the migration class;
+        // Do not update this table for later versions, use the migration class;
         if (!$DB->tableExists($table)) {
             $query = <<<SQL
             CREATE TABLE IF NOT EXISTS `$table` (

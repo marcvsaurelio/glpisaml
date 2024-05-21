@@ -50,7 +50,7 @@ $_POST = [];
 // Load GLPI includes
 include_once '../../../inc/includes.php';                       //NOSONAR - Cant be included with USE.
 
-// Peform assertion
+// Perform assertion
 $acs = new Acs();
 if(!empty($post) && array_key_exists('SAMLResponse', $post)){
     $acs->assertSaml($post);

@@ -50,7 +50,7 @@ include_once '../../../inc/includes.php';                       //NOSONAR intent
 // Check the rights
 Session::checkRight("config", UPDATE);
 
-// Show header with saml config breadcrums.
+// Show header with saml config breadcrumbs.
 Html::header(__('Identity providers'), $_SERVER['PHP_SELF'], "config", Config::class);
 
 // Validate plugin is active and registered properly
@@ -59,7 +59,7 @@ if(!(new Plugin())->isInstalled(PLUGIN_NAME) ||
    !class_exists(ConfigForm::class)          ){
 
     Html::displayNotFoundError();
-// Load the configform
+// Load the config form
 }else{
     $id = (isset($_GET['id']) && is_numeric($_GET['id'])) ? $_GET['id'] : -1;
     $configForm = new ConfigForm();
