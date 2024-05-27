@@ -418,7 +418,7 @@ class User
                 if(strlen($claims[User::SCHEMA_PHONE][0]) <= 255){
                     $user[User::PHONE] = $claims[User::SCHEMA_PHONE][0];
                 }else{
-                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                    LoginFlow::printError(__('Provided telephone phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
                                              'getUserInputFieldsFromSamlClaim',
                                               var_export($response, true)));
                 }
@@ -429,7 +429,7 @@ class User
                 if(strlen($claims[User::SCHEMA_COUNTRY][0]) <= 255){
                     $user[User::SAMLCOUNTRY] = $claims[User::SCHEMA_COUNTRY][0];
                 }else{
-                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                    LoginFlow::printError(__('Provided country claim exceeded 255 characters. This claim should not be longer than 255 characters',
                                                 'getUserInputFieldsFromSamlClaim',
                                                 var_export($response, true)));
                 }
@@ -439,7 +439,7 @@ class User
                 if(strlen($claims[User::SCHEMA_CITY][0]) <= 255){
                     $user[User::SAMLCITY] = $claims[User::SCHEMA_CITY][0];
                 }else{
-                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                    LoginFlow::printError(__('Provided city claim exceeded 255 characters. This claim should not be longer than 255 characters',
                                                 'getUserInputFieldsFromSamlClaim',
                                                 var_export($response, true)));
                 }
@@ -449,7 +449,7 @@ class User
                 if(strlen($claims[User::SCHEMA_STREET][0]) <= 255){
                     $user[User::SAMLSTREET] = $claims[User::SCHEMA_STREET][0];
                 }else{
-                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                    LoginFlow::printError(__('Provided street address claim exceeded 255 characters. This claim should not be longer than 255 characters',
                                                 'getUserInputFieldsFromSamlClaim',
                                                 var_export($response, true)));
                 }
