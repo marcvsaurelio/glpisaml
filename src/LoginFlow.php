@@ -75,8 +75,10 @@ class LoginFlow
      * @since 1.0.0
      */
     public const HTML_TEMPLATE_FILE = PLUGIN_GLPISAML_TPLDIR.'/loginScreen.html';
-                                                            // userData array added by SAML to response.
-    public const POSTFIELD                   = 'samlIdpId';                                                             // https://codeberg.org/QuinQuies/glpisaml/issues/37
+
+    // https://codeberg.org/QuinQuies/glpisaml/issues/37
+    public const POSTFIELD   = 'samlIdpId';
+    public const SAMLBYPASS  =  'saml_bypass';
 
     // LOGIN FLOW AFTER PRESSING A IDP BUTTON.
 
@@ -95,7 +97,7 @@ class LoginFlow
         if(!$state = new Loginstate()){
             $this->printError(__('Could not load loginState', PLUGIN_NAME));
         }else{
-            // Evaluate database state, do we need to force logoff a user,
+            // TODO: Evaluate database state, do we need to force logoff a user,
             // but only after user has been logged in.
 
             // Do we need to skip because of exclusion?
@@ -111,6 +113,25 @@ class LoginFlow
             $_SESSION['noAUTO'] = 1;
             $this->performLogOff();
         }
+
+        // Do we want to or need to break enforcement?
+        if(isset($_GET[LoginFlow::SAMLBYPASS])){
+            setcookie(ConfigEntity::ENFORCE_SSO, '', time() - 3600);
+            $this->performLogOff();
+        }
+        
+        // https://codeberg.org/QuinQuies/glpisaml/issues/35
+        // Do enforced login if we found a previous cookie
+        // And the phase is initial, and the escape string
+        // was not found.
+        if(($state->getPhase() == LoginState::PHASE_INITIAL ||
+            $state->getPhase() == LoginState::PHASE_LOGOFF) &&
+            isset($_COOKIE[ConfigEntity::ENFORCE_SSO])      ){
+            // set the logic to perform SSO using the indicated IdP.
+            $_POST[self::POSTFIELD] = $_COOKIE[ConfigEntity::ENFORCE_SSO];
+        }
+
+        
 
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
         // Capture the post of regular login and verify if the provided domain is SSO enabled.
@@ -170,6 +191,9 @@ class LoginFlow
         // Validate if the IDP configuration is enabled
         // https://codeberg.org/QuinQuies/glpisaml/issues/4
         if($configEntity->isActive()){
+            // Validate if the configuration is enforced and set cookie.
+            $configEntity->isEnforced();
+
             // Initialize the OneLogin phpSaml auth object
             // using the requested phpSaml configuration from
             // the glpisaml config database. Catch all throwable errors

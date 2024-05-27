@@ -399,6 +399,47 @@ class ConfigEntity extends ConfigItem
         return $this->isValid;
     }
 
+    /**
+     * If configuration is enforced it will set the cookie
+     * if its missing. If a cookie is found it will return
+     * the cookies IdP ID, if a different IdP ID is found
+     * it will update the cookie and return the new IdP ID.
+     * @return void
+     */
+    public function isEnforced(): int
+    {
+        // If called by loginFlow->performSamlSSO the Entity is already populated
+        // then we consider this a first login attempt.
+        if($this->fields[ConfigEntity::ENFORCE_SSO]){
+            // If cookie is set unset it.
+            if(isset($_COOKIE[ConfigEntity::ENFORCE_SSO])){
+                setcookie(ConfigEntity::ENFORCE_SSO, '', time() - 3600);
+            }
+            // If the configuration already populated and enforced, then
+            // validate if previous cookie is still correct and should be updated
+            // Set a new cookie using the current identityId and return the id.
+            setcookie(
+                ConfigEntity::ENFORCE_SSO,
+                $this->fields[ConfigEntity::ID],
+                ['expires' => time() + (10 * 365 * 24 * 60 * 60),
+                'secure'   => true,
+                'path'     => '/',
+                'httponly' => true,
+                'samesite' => 'None',]);
+
+            // Make sure we return an INT.
+            return (int) $this->fields[ConfigEntity::ID];
+        }else{
+            // Return the stored ID.
+            if(isset($_COOKIE[ConfigEntity::ENFORCE_SSO])){
+                return (int) $_COOKIE[ConfigEntity::ENFORCE_SSO];
+            }else{
+                // Return -1.
+                return -1;
+            }
+        }
+    }
+
 
     /**
      * Returns the validity state of the currently loaded ConfigEntity

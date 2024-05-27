@@ -199,6 +199,7 @@ class LoginState extends CommonDBTM
                 self::DATABASE          => false,
             ]);
         }
+        
         // Comment out the following if statement to make plugin log
         // all calls (including CLI) make to GLPI including all excluded ones
         if(!$this->state[self::EXCLUDED_PATH]){
