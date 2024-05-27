@@ -55,6 +55,7 @@ use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
+use Phone;
 use PHPUnit\TextUI\XmlConfiguration\Groups;
 
 /**
@@ -73,6 +74,8 @@ class User
     public const FIRSTNAME          = 'firstname';
     public const EMAIL              = '_useremails';
     public const MOBILE             = 'mobile';
+    public const PHONE              = 'phone';
+    public const PHONE2             = 'phone2';
     public const COMMENT            = 'comment';
     public const PASSWORD           = 'password';
     public const PASSWORDN          = 'password2';
@@ -89,6 +92,7 @@ class User
     public const ENTITY_ID          = 'entities_id';
     public const ENTITY_DEFAULT     = '_entities_id_default';
     public const AUTHTYPE           = 'authtype';
+    public const SYNCDATE           = 'date_sync';  //Y-m-d H:i:s
     public const SAMLGROUPS         = 'samlClaimedGroups';
     public const SAMLJOBTITLE       = 'samlClaimedJobTitle';
 
@@ -105,6 +109,7 @@ class User
     public const SCHEMA_GIVENNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT - Optional
     public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used in user creation JIT - Optional
     public const SCHEMA_MOBILE               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone';     // Used in user creation JIT - Optional
+    public const SCHEMA_PHONE                = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber'; // Used in user creation JIT - Optional
     public const SCHEMA_JOBTITLE             = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle';        // Used in user creation JIT - Optional
     public const SCHEMA_GROUPS               = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups';        // Used in assignment rules - Optional
     public const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Entra claim not used
@@ -127,6 +132,9 @@ class User
         // At this point the userFields should be present and validated (textually) by loginFlow.
         // Load GLPI user object
         $user = new glpiUser();
+        $user->getFromDBbyEmail('chris.gralike@flevo-scouts.nl');
+        var_dump($user);
+        exit;
         
         // Verify if user exists in database.
         if(!$user->getFromDBbyName($userFields[User::NAME])       &&      // Try to locate by name->NameId.
@@ -334,7 +342,7 @@ class User
             // required. Issues with any of the provided claim will result in a
             // critical error.
             // TODO: Use valueObjects in the future?
-            
+
             // EmailAddress, if it is provided it should be a valid emailaddress.
             if(filter_var($claims[User::SCHEMA_EMAILADDRESS][0], FILTER_VALIDATE_EMAIL)){
                 $user[User::EMAIL]  = [$claims[User::SCHEMA_EMAILADDRESS][0]];
@@ -397,15 +405,27 @@ class User
                                               var_export($response, true)));
                 }
             }
+
+            // Telephone number
+            if(isset($claims[User::SCHEMA_PHONE][0])){
+                if(strlen($claims[User::SCHEMA_PHONE][0]) <= 255){
+                    $user[User::PHONE] = $claims[User::SCHEMA_PHONE][0];
+                }else{
+                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                             'getUserInputFieldsFromSamlClaim',
+                                              var_export($response, true)));
+                }
+            }
         }
 
         // Set additional user fields for user creation (if needed)
         // These fields are used for user->add($input);
-        $user[User::COMMENT]    = __('Created by phpSaml Just-In-Time user creation on:'.date('Y-M-D H:i:s'));
+        $user[User::COMMENT]    = __('Created by phpSaml Just-In-Time user creation on:'.date('Y-m-d H:i:s'));
         $password = bin2hex(random_bytes(20));
         $user[User::PASSWORD]   = $password;
         $user[User::PASSWORDN]  = $password;
         $user[User::AUTHTYPE]   = 4;
+        $user[User::SYNCDATE]   = date('Y-m-d H:i:s');
 
         // Return the userArray.
         return $user;
