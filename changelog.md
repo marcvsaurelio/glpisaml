@@ -10,6 +10,19 @@
 - Corrected spelling and typo's throughout the plugin files.
 - Addressed issue https://codeberg.org/QuinQuies/glpisaml/issues/36
 - Corrected and finished Excludes configuration. Excluded paths will now not be processed, but will be logged (for debugging purposes) in the `glpi_plugin_glpisaml_loginstates` table.
+- Fixed https://codeberg.org/QuinQuies/glpisaml/issues/42
+- Refactored IF statement in `loginFlow.php:138` to be more compact.
+- Moved the `getUserInputFieldsFromSamlClaim` method from the `LoginFlow` class to `LoginFlow\User\` class.
+- Simplified the `getUserInputFieldsFromSamlClaim` by only supporting the soap identity claims.
+- Simplified the `getUserInputFieldsFromSamlClaim` by trusting the nameId validation of OneLogin and allowing all passed values.
+- Made sure that `nameId` is now always mapped to `glpiUser->name` field
+- Previous 2 changes now also explicitly allow you to use `samaccountname` as valid nameId
+- Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname` or `givenname` claim to be processed by userJit if provided
+- Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname` claim to be processed by userJit if provided
+- Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone` claim to be processed by userJit if provided
+- Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups` to be passed to the rules engine (no match rule yet)
+- Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle` to be passed to the rules engine (no match rule yet)
+- Added `user-fields->authtype = 4 (other)` to Jit Created users as discussed https://codeberg.org/QuinQuies/glpisaml/issues/41
 
 **v1.1.3**
 - Added logic to store the initial sessionId for reference in state table.
