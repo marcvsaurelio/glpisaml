@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -40,7 +40,7 @@
  *  @link       https://github.com/DonutsNL/GLPISaml
  * ------------------------------------------------------------------------
  *
- * The concern this class adresses is added because we want to add support
+ * The concern this class addresses is added because we want to add support
  * for multiple idp's. Deciding what idp to use might involve more complex
  * algorithms then we used (1:1) in the previous version of phpSaml. These
  * can then be implemented here.
@@ -63,7 +63,6 @@ use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 use GlpiPlugin\Glpisaml\LoginFlow\User;
 use GlpiPlugin\Glpisaml\LoginFlow\Auth as glpiAuth;
 
-
 /**
  * This object brings it all together. It is responsible to handle the
  * main logic concerned with the Saml login and logout flows.
@@ -77,28 +76,14 @@ class LoginFlow
      */
     public const HTML_TEMPLATE_FILE = PLUGIN_GLPISAML_TPLDIR.'/loginScreen.html';
 
-    /**
-     * samlResponse attributes or claims provided by IdP.
-     * @see https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
-     * @see https://learn.microsoft.com/en-us/entra/identity-platform/reference-saml-tokens
-     */
-    public const SCHEMA_NAMEID               = 'NameId';                                                                // Used as primairy if it contains valid email.
-    public const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Entra claim not used
-    public const SCHEMA_SURNAME              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';         // Used in user creation JIT - Optional
-    public const SCHEMA_FIRSTNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';       // Used in user creation JIT - Optional
-    public const SCHEMA_GIVENNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT - Optional
-    public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used as Fallback in  JIT for missing email in NameId.
-    public const SCHEMA_TENANTID             = 'http://schemas.microsoft.com/identity/claims/tenantid';                 // Entra claim not used
-    public const SCHEMA_OBJECTID             = 'http://schemas.microsoft.com/identity/claims/objectidentifier';         // Entra claim not used
-    public const SCHEMA_DISPLAYNAME          = 'http://schemas.microsoft.com/identity/claims/displayname';              // Entra claim not used
-    public const SCHEMA_IDP                  = 'http://schemas.microsoft.com/identity/claims/identityprovider';         // Entra claim not used
-    public const SCHEMA_AUTHMETHODSREF       = 'http://schemas.microsoft.com/claims/authnmethodsreferences';            // Entra claim not used
-    public const USERDATA                    = 'userData';                                                              // userData array added by PHPSAML to response.
+    // https://codeberg.org/QuinQuies/glpisaml/issues/37
+    public const POSTFIELD   = 'samlIdpId';
+    public const SAMLBYPASS  =  'bypass';
 
     // LOGIN FLOW AFTER PRESSING A IDP BUTTON.
 
     /**
-     * Evaluates the session and determins if login/logout is required
+     * Evaluates the session and determines if login/logout is required
      * Called by post_init hook via function in hooks.php. It watches POST
      * information passed from the loginForm.
      *
@@ -107,53 +92,72 @@ class LoginFlow
      */
     public function doAuth(): bool
     {
-        global $GLPI_CACHE;
+        global $CFG_GLPI;
+        // global $GLPI_CACHE;
         // Get current state
         if(!$state = new Loginstate()){
             $this->printError(__('Could not load loginState', PLUGIN_NAME));
+        }else{
+            // TODO: Evaluate database state, do we need to force logoff a user,
+            // but only after user has been logged in.
+
+            // Do we need to skip because of exclusion?
+            if($state->isExcluded()){
+                return $state->getExcludeAction();
+            }
         }
 
         // Check if the logout button was pressed and handle request!
         // https://codeberg.org/QuinQuies/glpisaml/issues/18
         if ( isset($_SERVER['REQUEST_URI']) && ( strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) ){
-            // Stop GLPI from processing cookiebased autologin.
+            // Stop GLPI from processing cookie based auto login.
             $_SESSION['noAUTO'] = 1;
-            $this->performSamlLogOff();
-            $this->performGlpiLogOff();
+            $this->performLogOff();
         }
 
-        // Evaluate database state, do we need to force logoff a user,
-        // but only after user has been logged in.
+        // Do we want to or need to break enforcement?
+        if(isset($_GET[LoginFlow::SAMLBYPASS]) &&
+           $_GET[LoginFlow::SAMLBYPASS] == 1   ){
+            ConfigEntity::unsetEnforceCookie();
+            $this->performLogOff();
+            $this->doMetaRefresh($CFG_GLPI['url_base'].'/');
+        }
+
+        // https://codeberg.org/QuinQuies/glpisaml/issues/35
+        // Do enforced login if we found a previous cookie
+        // And the phase is initial, and the escape string
+        // was not found.
+        if(($state->getPhase() == LoginState::PHASE_INITIAL ||
+            $state->getPhase() == LoginState::PHASE_LOGOFF) &&
+            isset($_COOKIE[ConfigEntity::ENFORCE_SSO])      &&
+            $_COOKIE[ConfigEntity::ENFORCE_SSO] != -1       ){
+            // set the logic to perform SSO using the indicated IdP.
+            $_POST[self::POSTFIELD] = $_COOKIE[ConfigEntity::ENFORCE_SSO];
+        }
+
+        
 
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
         // Capture the post of regular login and verify if the provided domain is SSO enabled.
-        // by evaluating the domain portion agains the configured userdomains.
-        // we need to itterate through the keys because of the added csrf token i.e.
+        // by evaluating the domain portion against the configured user domains.
+        // we need to iterate through the keys because of the added csrf token i.e.
         // [fielda[csrf_token]] = value.
         foreach($_POST as $key => $value){
-            // Test keys if fielda[token] is present in the POST.
-            if(strstr($key, 'fielda') && !empty($_POST[$key])){
-                // Pass the value of the username fielda to search idp
-                if($id = Config::getConfigIdByEmailDomain($_POST[$key])){
-                    // Set the POST phpsaml to our found ID this will trigger
-                    // the performSamlSSO method in the next codeblock.
-                    $_POST['phpsaml'] = $id;
-                }
+            if(strstr($key, 'fielda')                               &&    // Test keys if fielda[token] is present in the POST.
+               !empty($_POST[$key])                                 &&    // Test if fielda actually has a value we can process
+               $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){    // If all is true try to find an matching idp id.
+                    $_POST[self::POSTFIELD] = $id;                        // If we found an ID Set the POST phpsaml to our found ID this will trigger
             }
         }
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
-        if (isset($_POST['phpsaml'])         &&      // Must be set
-            is_numeric($_POST['phpsaml'])    &&      // Value must be numeric
-            strlen($_POST['phpsaml']) < 3    ){      // Should not exceed 999
+        if (isset($_POST[self::POSTFIELD])         &&      // Must be set
+            is_numeric($_POST[self::POSTFIELD])    &&      // Value must be numeric
+            strlen($_POST[self::POSTFIELD]) < 3    ){      // Should not exceed 999
 
             // If we know the idp we register it in the login State
-            $state->setIdpId(filter_var($_POST['phpsaml'], FILTER_SANITIZE_NUMBER_INT));
+            $state->setIdpId(filter_var($_POST[self::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
 
-            // Set the idpId in php session because its lost after login due to
-            // sessionId reset.
-            $GLPI_CACHE->set(LoginState::IDP_ID, filter_var($_POST['phpsaml'], FILTER_SANITIZE_NUMBER_INT));
-            
             // Update the current phase in database. The state is verified by the Acs
             // while handling the received SamlResponse. Any other state will force Acs
             // into an error state. This is to prevent unexpected (possibly replayed)
@@ -170,9 +174,9 @@ class LoginFlow
     }
 
     /**
-     * Method uses phpSaml to perform a signin request with the
+     * Method uses phpSaml to perform a sign-in request with the
      * selected Idp that is stored in the state. The Idp will
-     * perform the signin and if succesfull perform a user redirect
+     * perform the sign-in and if successful perform a user redirect
      * to /marketplace/glpisaml/front/acs.php
      *
      * @param   Loginstate $state       The current LoginState
@@ -183,7 +187,7 @@ class LoginFlow
     {
         global $CFG_GLPI;
         
-        // Fetch the correct configEntity
+        // Fetch the correct configEntity GLPI
         if($configEntity = new ConfigEntity($state->getIdpId())){
             $samlConfig = $configEntity->getPhpSamlConfig();
         }
@@ -191,6 +195,9 @@ class LoginFlow
         // Validate if the IDP configuration is enabled
         // https://codeberg.org/QuinQuies/glpisaml/issues/4
         if($configEntity->isActive()){
+            // Validate if the configuration is enforced and set cookie.
+            $configEntity->isEnforced();
+
             // Initialize the OneLogin phpSaml auth object
             // using the requested phpSaml configuration from
             // the glpisaml config database. Catch all throwable errors
@@ -222,7 +229,7 @@ class LoginFlow
 
         // Validate samlResponse and returns provided Saml attributes (claims).
         // validation will print and exit on errors because user information is required.
-        $userFields = $this->getUserInputFieldsFromSamlClaim($response);
+        $userFields = User::getUserInputFieldsFromSamlClaim($response);
 
         // Try to populate GLPI Auth using provided attributes;
         try {
@@ -238,10 +245,11 @@ class LoginFlow
         if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
         $state->setPhase(LoginState::PHASE_GLPI_AUTH);
 
-        // Redirect back to mainpage
-        // Html::redirect($CFG_GLPI['url_base'].'/front/central.php');
-        $this->doMetaRefresh($CFG_GLPI['url_base'].'/front/central.php');
-
+        // Redirect back to main page
+        // We should fix added .'/' to prevent (string|int) type issue.
+        // Html::redirect($CFG_GLPI['url_base']);
+        // https://codeberg.org/QuinQuies/glpisaml/issues/42
+        $this->doMetaRefresh($CFG_GLPI['url_base'].'/');
     }
 
     /**
@@ -249,12 +257,13 @@ class LoginFlow
      * redirect with the php.ini:session.cookie_samesite='Strict'. Performing a meta
      * refresh makes sure the cookie survives.
      *
-     * @param    Response  Response object with the samlRespons attributes.
+     * @param    Response  Response object with the samlResponse attributes.
      * @return   array     user->add input fields array with properties.
      * @since    1.1.3
      */
     private function doMetaRefresh(string $location): void
     {
+        $location = (filter_var($location, FILTER_VALIDATE_URL)) ? $location : '/';
         echo <<<HTML
         <html>
         <head>
@@ -266,141 +275,9 @@ class LoginFlow
         exit;
     }
 
-
-    /**
-     * This function figures out what the samlResponse provided claims are and
-     * how to best populate the GLPI userObject or triggers an error if
-     * essential claims are missing from the samlResponse body.
-     * Maybe move this method to the userObject in the future.
-     *
-     * @param    Response  Response object with the samlRespons attributes.
-     * @return   array     user->add input fields array with properties.
-     * @since    1.0.0
-     */
-     public function getUserInputFieldsFromSamlClaim(Response $response): array     //NOSONAR - Complexity by design.
-     {
-        // Validate nameId clain from provided samlResponse.
-        // These claims sometimes need to be configured manually
-        // at the Identity provider. NameId is required and should be
-        // formatted as an valid email. Others properties are nice to
-        // have and will make the user properties more complete.
-        if(!$user[User::NAME] = $response->getNameId()) {
-            $this->printError(__('NameId attribute is missing in samlResponse', PLUGIN_NAME),
-                              'getUserInputFieldsFromSamlClaim',
-                              var_export($response, true));
-        }
-           
-        // Get additional claims from the samlResponse.
-        if(!$claims[LoginFlow::USERDATA] = $response->getAttributes()) {
-            $claims = '';
-        }
-
-        // If the string #EXT# if found, a guest account is used thats not
-        // transformed properly by entra. In this case write an error and exit!
-        // https://github.com/derricksmith/phpsaml/issues/135
-        if(strstr($user[User::NAME], '#EXT#@')){
-            $this->printError(__('Detected a default guest user in samlResponse, make sure nameid,
-                                name are populated using user.mail instead of the uset.principalname.<br>
-                                You can use the debug saml dumps to validate and compare the claims passed.<br>
-                                They should contain the original email addresses.<br>
-                                Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization', PLUGIN_NAME),
-                                'getUserInputFieldsFromSamlClaim',
-                                var_export($response, true));
-        }
-
-        // Figure out what username to set.
-        // Can we use the NameId as username
-        if(!filter_var($user[User::NAME], FILTER_VALIDATE_EMAIL)){
-            // See if we can fall back using the email address in the claim (if any).
-            if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS])) {
-                // Validate the emailadress in the claim. If its valid we continue processing it.
-                if(!filter_var($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS], FILTER_VALIDATE_EMAIL)){
-                    $this->printError(__('SamlResponse should have at least 1 valid emailaddress for GLPI  to find
-                                          the corresponding GLPI user or create it (with JIT enabled). For this purpose make
-                                          sure either the IDP provided NameId property is populated with the emailaddress format,
-                                          or configure the IDP to add the users emailaddress in the samlResponse claims using
-                                          the designated schema property key:'.self::SCHEMA_EMAILADDRESS.' = "valid@userEmail.Address".', PLUGIN_NAME),
-                                         'getUserInputFieldsFromSamlClaim',
-                                          var_export($response, true));
-                }
-                // Set the emailaddress claim as the username and email.
-                $user[User::NAME]   = $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0];
-                $user[User::EMAIL]  = [$claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0]];
-            }else{
-                // No emailaddress found in the samlResponse.
-                // We need at least one valid emailaddress from the NameId or a emailaddress claim.
-                // to search for a user or create one via JIT.
-                $this->printError(__('SamlResponse should have at least 1 valid emailaddress for GLPI  to find
-                                      the corresponding GLPI user or create it (with JIT enabled). For this purpose make
-                                      sure either the IDP provided NameId property is populated with the emailaddress format,
-                                      or configure the IDP to add the users emailaddress in the samlResponse claims using
-                                      the designated schema property key:'.self::SCHEMA_EMAILADDRESS.' = "valid@userEmail.Address".', PLUGIN_NAME),
-                                     'getUserInputFieldsFromSamlClaim',
-                                      var_export($response, true));
-            }
-        }else{
-            // The NameId property can be used for the username and emailaddress.
-            // because $user[User::NAME] is allready set and contains a valid emailaddress.
-            // This means we can focus on the email claim.
-            // First check if an additional email claim was provided.
-            if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0])){
-                // If the provided emailaddress is different from the NameId then use the
-                // additionally provided emailaddress as primairy emailaddress.
-                if($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0] != $user[User::NAME]){
-                    // Validate it is a valid emailaddress
-                    if(filter_var($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS], FILTER_VALIDATE_EMAIL)){
-                        $user[User::EMAIL] = [$claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_EMAILADDRESS][0]];
-                    }else{
-                        //fall back to the provided NameId emailaddress
-                        $user[User::EMAIL] = [$user[User::NAME]];
-                    }
-                // Fall back to the provided NameId emailaddress
-                }else{
-                    $user[User::EMAIL] = [$user[User::NAME]];
-                }
-            // Fall back to the provided NameId emailaddress
-            }else{
-                $user[User::EMAIL] = [$user[User::NAME]];
-            }
-        }
-
-        // Do we have a valid firstname in the claim fields?
-        // This field is optional, nice to have.
-        if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME][0]) ||
-           isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_GIVENNAME][0]) ){
-                $user[User::FIRSTNAME] = (isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME][0]))
-                    ? $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_FIRSTNAME][0]
-                    : $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_GIVENNAME][0];
-        }else{
-            // try a fallback for users not using the valid schema's but keywords
-            if(isset($claims[LoginFlow::USERDATA]['firstname'][0]) ||
-               isset($claims[LoginFlow::USERDATA]['givenname'][0]) ){
-                $user[User::FIRSTNAME] = (isset($claims[LoginFlow::USERDATA]['firstname'][0]))
-                    ? $claims[LoginFlow::USERDATA]['firstname'][0]
-                    : $claims[LoginFlow::USERDATA]['givenname'][0];
-            }
-        }
-
-        // Do we have a valid surname to provision.
-        // This field is optional, nice to have.
-        if(isset($claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_SURNAME][0])){
-            $user[User::REALNAME] = $claims[LoginFlow::USERDATA][LoginFlow::SCHEMA_SURNAME][0];
-        }
-
-        // Set additional userfields for user creation (if needed)
-        // These fields are used for user->add($input);
-        $user[User::COMMENT] = __('Created by phpSaml Just-In-Time user creation on:'.date('Y-M-D H:i:s'));
-        $password = bin2hex(random_bytes(20));
-        $user[User::PASSWORD]   = $password;
-        $user[User::PASSWORDN]  = $password;
-
-        // Return the userArray.
-        return $user;
-    }
-
     /**
      * Responsible to generate the login buttons to show in conjunction
-     * with the glpi loginfield (not enforced). Only shows if there are
+     * with the glpi login field (not enforced). Only shows if there are
      * buttons to show. Else it will skip.
      *
      * @see https://github.com/DonutsNL/glpisaml/issues/7
@@ -417,50 +294,45 @@ class LoginFlow
             $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
             $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
             $tplVars['noconfig']   = __('No SSO buttons enabled yet. Try your SSO username instead.', PLUGIN_NAME);
+            $tplVars['postfield']   = self::POSTFIELD;
 
             // https://codeberg.org/QuinQuies/glpisaml/issues/12
             TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);
         }
     }
 
-    // LOGOUT FLOW EITHER REQUESTED BY GLPI OR REQUESTED BY THE IDP (SLO) OR FORCED BY ADMIN
+    // LOGOUT
     /**
-     * Makes sure user is logged out of GLPI
+     * Makes sure user is logged out of GLPI, if required logged out from SAML.
      * @return void
      */
-    protected function performGlpiLogOff(): void
+    protected function performLogOff(): void
     {
+        // Update the loginState
+        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
+        $state->setPhase(LoginState::PHASE_LOGOFF);
+
+        // Invalidate GLPI session (needs review)
         $validId   = @$_SESSION['valid_id'];
         $cookieKey = array_search($validId, $_COOKIE);
-        
         Session::destroy();
         
-        //Remove cookie to allow new login
+        //Remove cookie?
         $cookiePath = ini_get('session.cookie_path');
-        
         if (isset($_COOKIE[$cookieKey])) {
            setcookie($cookieKey, '', time() - 3600, $cookiePath);
            unset($_COOKIE[$cookieKey]);
         }
-    }
-    
-     /**
-     * Makes sure user is logged out of responsible IDP provider
-     * @return void
-     */
-    protected function performSamlLogOff(): void
-    {
-        global $CFG_GLPI;
-        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
-        $state->setPhase(LoginState::PHASE_LOGOFF);
-    }
 
+        // If required perform IDP logout as well
+        // Future feature.
+        // https://codeberg.org/QuinQuies/glpisaml/issues/1
+    }
 
     // ERROR HANDLING
 
     /**
      * Shows a login error with human readable message
-     * @todo can this be merged with printError method?
      *
      * @see https://github.com/DonutsNL/glpisaml/issues/7
      * @param   string   error message to show
@@ -489,16 +361,16 @@ class LoginFlow
    
     /**
      * Prints a nice error message with 'back' button and
-     * logs the error passed in the GlpiSaml logfile.
+     * logs the error passed in the GlpiSaml log file.
      *
      * @see https://github.com/DonutsNL/glpisaml/issues/7
      * @param string errorMsg   string with raw error message to be printed
      * @param string action     optionally add 'action' that was performed to error message
-     * @param string extended   optionally add 'extended' information about the error in the logfile.
+     * @param string extended   optionally add 'extended' information about the error in the log file.
      * @return void             no return, PHP execution is terminated by this method.
      * @since 1.0.0
      */
-    public function printError(string $errorMsg, string $action = '', string $extended = ''): void
+    public static function printError(string $errorMsg, string $action = '', string $extended = ''): void
     {
         // Pull GLPI config into scope.
         global $CFG_GLPI;
@@ -510,7 +382,7 @@ class LoginFlow
         }
 
         // Define static translatable elements
-        $tplVars['header']      = __('⚠️ An error occured', PLUGIN_NAME);
+        $tplVars['header']      = __('⚠️ An error occurred', PLUGIN_NAME);
         $tplVars['leading']     = __("We are sorry, something went terribly wrong while processing your $action request!", PLUGIN_NAME);
         $tplVars['error']       = $errorMsg;
         $tplVars['returnPath']  = $CFG_GLPI["root_doc"] .'/';

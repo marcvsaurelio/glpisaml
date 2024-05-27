@@ -62,7 +62,7 @@ use GlpiPlugin\Glpisaml\Exclude;
 /*
  * The goal of this object is to keep track of the login state in the database.
  * this will allow us to 'influence' the login state of a specific session if
- * we want to, for instance to forcefully log someone off or force reauthentication.
+ * we want to, for instance to forcefully log someone off or force re-authentication.
  * we can also extend this session logging for (future) SIEM purposes.
  */
 class LoginState extends CommonDBTM
@@ -80,16 +80,17 @@ class LoginState extends CommonDBTM
     public const LOCATION                   = 'location';       // Location requested;
     public const IDP_ID                     = 'idpId';          // What IdP handled the Auth?
     public const LOGIN_DATETIME             = 'loginTime';      // When did we first see the session
-    public const LAST_ACTIVITY              = 'lastClickTime';  // When did we laste update the session
+    public const LAST_ACTIVITY              = 'lastClickTime';  // When did we last update the session
     public const ENFORCE_LOGOFF             = 'enforceLogoff';  // Do we want to enforce a logoff (one time)
     public const EXCLUDED_PATH              = 'excludedPath';   // If request was made using saml bypass.
+    public const EXCLUDED_ACTION            = 'excludedAction'; // Action to perform on Exclude.
     public const SAML_RESPONSE              = 'serverParams';   // Stores the Saml Response
     public const SAML_REQUEST               = 'requestParams';  // Stores the SSO request
-    public const PHASE                      = 'phase';          // Describes the current state GLPI, ACS, TIMEOUT, LOGGEDIN, LOGGEDOUT.
+    public const PHASE                      = 'phase';          // Describes the current state GLPI, ACS, TIMEOUT, LOGGED IN, LOGGED OUT.
     public const PHASE_INITIAL              = 1;                // Initial visit
     public const PHASE_SAML_ACS             = 2;                // Performed SAML IDP call expected back at ACS
-    public const PHASE_SAML_AUTH            = 3;                // Succesfully performed IDP auth
-    public const PHASE_GLPI_AUTH            = 4;                // Succesfully performed GLPI auth
+    public const PHASE_SAML_AUTH            = 3;                // Successfully performed IDP auth
+    public const PHASE_GLPI_AUTH            = 4;                // Successfully performed GLPI auth
     public const PHASE_FILE_EXCL            = 5;                // Excluded file called
     public const PHASE_FORCE_LOG            = 6;                // Session forced logged off
     public const PHASE_TIMED_OUT            = 7;                // Session Timed out
@@ -100,7 +101,7 @@ class LoginState extends CommonDBTM
 
     /**
      * Restore object if version has been cached and trigger
-     * validation to make sure the session isnt hijacked
+     * validation to make sure the session isn't hijacked
      * @since   1.0.0
      */
     public function __construct()
@@ -114,33 +115,36 @@ class LoginState extends CommonDBTM
      * Keeping track of the session state is important to protect GLPI
      * against all sorts of threats like SAML replays, invalid logins.
      * In the future this table might offer a basis to limit login from
-     * sanctioned countries or the ammount of active sessions a user is
+     * sanctioned countries or the amount of active sessions a user is
      * allowed to have at any one time.
      *
      * The idea is NOT to implement this logic in GLPI and try to maintain
      * all possible variations, but to allow any external SIEM tool to
      * query this data using the GLPI API, do its policy logic using this data
-     * and intervene (with forced logoff) if a session is found not complient
+     * and intervene (with forced logoff) if a session is found not compliant
      * with company policies.
      * @since   1.0.0
      */
     private function getInitialState(): void
     {
         // Get the globals we need
-        global $DB, $GLPI_CACHE;
+        global $DB;
 
         // Get 'our' decoupled sessionId
         $sessionId = $this->getSamlSessionId();
 
         // Figure out we are processing excluded path
-        // Currently we dont reach the loginState if exclude was
-        // found in the loginFlow, this is for future use. 
-        $this->state[self::EXCLUDED_PATH] = Exclude::isExcluded();
+        // Currently we do not reach the loginState if exclude was
+        // found in the loginFlow, this is for future use.
+        $this->state[self::EXCLUDED_PATH] = false;
+        if($this->state[self::EXCLUDED_PATH] = Exclude::isExcluded()){
+            $this->state[self::EXCLUDED_ACTION] = Exclude::GetExcludeAction($this->state[self::EXCLUDED_PATH]);
+        }
 
         // Get the last activity
         $this->getLastActivity();
 
-        // Get somekind of username for logging purposes.
+        // Get some kind of username for logging purposes.
         // Fills with remote address if no user has logged in.
         $this->setGlpiUserName();
 
@@ -148,7 +152,7 @@ class LoginState extends CommonDBTM
         // sessionId instead of the PHP generated ID. The PHP ID is
         // regenerated by GLPI and in some weird scenario's and does
         // not provide a stable reference for our plugin.
-        // This will repopulare flags with database state which is leading.
+        // This will repopulate flags with database state which is leading.
         if(!$sessionIterator = $DB->request(['FROM' => self::getTable(), 'WHERE' => [self::SESSION_ID => $sessionId]])){
             throw new Exception('Could not fetch Login State from database');               //NOSONAR - We use generic Exceptions
         }
@@ -180,37 +184,32 @@ class LoginState extends CommonDBTM
             // Populate the GLPI state first.
             $this->getGlpiState();
 
-            // Populare the username field
+            // Populate the username field
             $this->setGlpiUserName();
 
-            // See if we allready performed a login using saml
-            // The session_id is reset by session::init()
-            // so we need to check if the idpId
-            // was cached by loginFlow doAuth().
-            if($idpid = $GLPI_CACHE->get(self::IDP_ID)){
-                $GLPI_CACHE->delete(self::IDP_ID);
-                $samlAuthed = true;
-            }else{
-                $idpid = 0;
-                $samlAuthed = false;
-            }
-
-            // Populate session using actuals
+            // Populate session using actual
             $this->state = $this->state = array_merge($this->state,[
                 self::USER_ID           => 0,
                 self::SESSION_ID        => $sessionId,
                 self::SESSION_NAME      => session_name(),
-                self::SAML_AUTHED       => $samlAuthed,
+                self::SAML_AUTHED       => 0,
                 self::ENFORCE_LOGOFF    => 0,
                 self::EXCLUDED_PATH     => $this->state[self::EXCLUDED_PATH],
-                self::IDP_ID            => $idpid,
+                self::IDP_ID            => 0,
                 self::DATABASE          => false,
             ]);
         }
-        // Write state to database.
-        if(!$this->WriteStateToDb()){
-            throw new Exception('Could not write database state to database');          //NOSONAR - We use generic Exceptions
-        }
+        
+        // Comment out the following if statement to make plugin log
+        // all calls (including CLI) make to GLPI including all excluded ones
+        if(!$this->state[self::EXCLUDED_PATH]){
+
+            // Write state to database.
+            if(!$this->WriteStateToDb()){ //NOSONAR - not merging if statements by design
+                throw new Exception('Could not write database state to database');          //NOSONAR - We use generic Exceptions
+            }
+
+        }// Nothing.
     }
 
     /**
@@ -235,7 +234,7 @@ class LoginState extends CommonDBTM
         $sessionId = session_id();
         // Set a name for our cookie.
         $cname = '__PSML';
-        // If cookie wasnt set, set it.
+        // If cookie was not set, set it.
         if(!isset($_COOKIE[$cname])){
             // Set our cookie with session ID.
             setcookie($cname, $sessionId, [
@@ -252,14 +251,14 @@ class LoginState extends CommonDBTM
             }
         }
         // Is the sessionId the same as whats stored in the Cookie?
-        // The first itteration these are always the same and so the
+        // The first iteration these are always the same and so the
         // database is always updated with the initial sessionId.
         // If the cookie session is different, one of two things is
         // true. Either we just performed a redirect and lost the
         // session Cookie or Session::init was called. In both cases
         // we need to update the sessionId stored in the state database.
         if($_COOKIE[$cname] != $sessionId){
-            // Dont blindly trust the unencrypted cookiedata
+            // Do not blindly trust the unencrypted cookie data
             $oldSessionId = htmlentities($_COOKIE[$cname]);
             // Update the loginstate database with the new updated sessionId
             if(!$DB->update(self::getTable(), [self::SESSION_ID =>  $sessionId], ['WHERE' => [self::SESSION_ID => $oldSessionId]])){
@@ -292,7 +291,7 @@ class LoginState extends CommonDBTM
     private function writeStateToDb(): bool   //NOSONAR - WIP
     {
         // Register state in database;
-        if(!$this->state[self::EXCLUDED_PATH]){
+        //if(!$this->state[self::EXCLUDED_PATH]){
             if(!$this->state[self::DATABASE]){
                 if(!$this->add($this->state)){
                     return false;
@@ -302,7 +301,7 @@ class LoginState extends CommonDBTM
                     return false;
                 }
             }
-        }
+        //}
         return true;
     }
 
@@ -318,14 +317,14 @@ class LoginState extends CommonDBTM
     }
 
     /**
-     * Gets glpi state from the SESSION superglobal and
+     * Gets glpi state from the SESSION super global and
      * updates the state array accordingly for initial state.
      *
      * @since   1.0.0
      */
     private function getGlpiState(): void
     {
-        // Verify if user is allready authenticated by GLPI.
+        // Verify if user is already authenticated by GLPI.
         // Name_Accessor: Populated with user->name in Session::class:128 after GLPI login->init;
         // Id_Accessor: Populated with session_id() in Session::class:107 after GLPI login;
         if (isset($_SESSION[self::SESSION_GLPI_NAME_ACCESSOR]) &&
@@ -397,6 +396,22 @@ class LoginState extends CommonDBTM
     public function getIdpId(): int
     {
         return (!empty($this->state[self::IDP_ID])) ? $this->state[self::IDP_ID] : 0;
+    }
+
+
+    /**
+     * Returns the EXCLUDED_PATH if set, else it returns empty.
+     * @return int  ConfigItem::ID pointing to IdP provider.
+     * @since       1.0.0
+     */
+    public function isExcluded(): string
+    {
+        return (!empty($this->state[self::EXCLUDED_PATH])) ?  $this->state[self::EXCLUDED_PATH] : '';
+    }
+
+    public function getExcludeAction(): bool
+    {
+        return (isset($this->state[self::EXCLUDED_ACTION]) && !empty($this->state[self::EXCLUDED_ACTION])) ? $this->state[self::EXCLUDED_ACTION] : false;
     }
 
     /**
@@ -487,7 +502,7 @@ class LoginState extends CommonDBTM
         $table = self::getTable();
 
         // Create the base table if it does not yet exist;
-        // Dont update this table for later versions, use the migration class;
+        // Do not update this table for later versions, use the migration class;
         if (!$DB->tableExists($table)) {
             $query = <<<SQL
             CREATE TABLE IF NOT EXISTS `$table` (

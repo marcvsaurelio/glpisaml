@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -78,7 +78,7 @@ class ConfigForm    //NOSONAR complexity by design.
             // Perform database insert using db fields.
             if($id = $config->add($fields)) {
                 // Leave succes message for user and redirect
-                Session::addMessageAfterRedirect(__('Succesfully added new GlpiSaml configuration.', PLUGIN_NAME));
+                Session::addMessageAfterRedirect(__('Successfully added new GlpiSaml configuration.', PLUGIN_NAME));
                 Html::redirect(Plugin::getWebDir(PLUGIN_NAME, true)."/front/config.form.php?id=$id");
                 // PHP0405-no return by design.
             } else {
@@ -116,7 +116,7 @@ class ConfigForm    //NOSONAR complexity by design.
             if($config->canUpdate()       &&
                $config->update($fields) ){
                 // Leave a success message for the user and redirect using ID.
-                Session::addMessageAfterRedirect(__('Configuration updated succesfully', PLUGIN_NAME));
+                Session::addMessageAfterRedirect(__('Configuration updated successfully', PLUGIN_NAME));
                 Html::redirect(Plugin::getWebDir(PLUGIN_NAME, true).PLUGIN_GLPISAML_CONF_FORM.'?id='.$postData['id']);
                 // PHP0405-no return by design.
             } else {
@@ -146,7 +146,7 @@ class ConfigForm    //NOSONAR complexity by design.
         if($config->canPurge()  &&
            $config->delete($postData)){
             // Leave success message and redirect
-            Session::addMessageAfterRedirect(__('Configuration deleted succesfully', PLUGIN_NAME));
+            Session::addMessageAfterRedirect(__('Configuration deleted successfully', PLUGIN_NAME));
             Html::redirect(Plugin::getWebDir(PLUGIN_NAME, true)."/front/config.php");
         } else {
             // Leave fail message and redirect back to config.
@@ -278,7 +278,7 @@ class ConfigForm    //NOSONAR complexity by design.
     }
 
     /**
-     * Generates the HTML for the configform using the GLPI
+     * Generates the HTML for the config form using the GLPI
      * template renderer.
      *
      * @param ConfigEntity $configEntity    Field values to populate in form
@@ -297,7 +297,7 @@ class ConfigForm    //NOSONAR complexity by design.
         // Get AuthN context as array
         $fields[ConfigEntity::AUTHN_CONTEXT][ConfigItem::VALUE] = $configEntity->getRequestedAuthnContextArray();
 
-        // get the logging entries, but only if the object allready exists
+        // get the logging entries, but only if the object already exists
         // https://codeberg.org/QuinQuies/glpisaml/issues/15#issuecomment-1785284
         if(is_numeric($fields[ConfigEntity::ID]['value'])){
             $logging = LoginState::getLoggingEntries($fields[ConfigEntity::ID]['value']);

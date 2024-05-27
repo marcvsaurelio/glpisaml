@@ -77,17 +77,17 @@ if($id){
                 );
             }
         }else{
-            // Dont expose anything meaningfull here, administor needs to toggle debug first.
+            // Do not expose anything meaningful here, administrator needs to toggle debug first.
             header('Content-Type: text/xml');
             echo "<xml><Error>".__("If this is a valid ID. Please request your administrator to enable the 'debug' flag to expose the requested IdP config using this meta file",PLUGIN_NAME)."</Error></xml>";
         }
     } catch (Exception $e) {
-        // Dont expose anything meaningfull here, an invalid id was used
+        // Do not expose anything meaningful here, an invalid id was used
         header('Content-Type: text/xml');
         echo "<xml><Error>".__("If this is a valid ID. Please request your administrator to enable the 'debug' flag to expose the requested IdP config using this meta file",PLUGIN_NAME)."</Error></xml>";
     }
 }else{
-    // Dont expose anything meaningfull here. An invalid url was used.
+    // Do not expose anything meaningful here. An invalid url was used.
     header('Content-Type: text/xml');
     echo "<xml><Error>".__("If this is a valid ID. Please request your administrator to enable the 'debug' flag to expose the requested IdP config using this meta file",PLUGIN_NAME)."</Error></xml>";
 }

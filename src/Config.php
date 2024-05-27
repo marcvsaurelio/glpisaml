@@ -6,7 +6,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -44,7 +44,7 @@
  **/
 
  /**
- * Be carefull with PSR4 Namespaces when extending common GLPI objects.
+ * Be careful with PSR4 Namespaces when extending common GLPI objects.
  * Only Characters are allowed in namespaces extending glpi Objects.
  * @see https://github.com/pluginsGLPI/example/issues/51
  * @see https://github.com/DonutsNL/phpsaml2/issues/6
@@ -60,7 +60,7 @@ use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 
 /**
  * Class Handles the installation and listing of configuration front/config.php
- * is is also the baseclass that extends the CommonDBTM GLPI object. All other
+ * is is also the baseClass that extends the CommonDBTM GLPI object. All other
  * glpisaml config classes reference this class for CRUD operations on the config
  * database.
  */
@@ -81,7 +81,7 @@ class Config extends CommonDBTM
     /**
      * Overloads missing canCreate Setup right and returns canUpdate instead
      *
-     * @return bool     - Returns true if profile assgined Setup->Setup->Update right
+     * @return bool     - Returns true if profile assigned Setup->Setup->Update right
      * @see             - https://github.com/pluginsGLPI/example/issues/50
      */
     public static function canCreate(): bool
@@ -92,7 +92,7 @@ class Config extends CommonDBTM
     /**
      * Overloads missing canDelete Setup right and returns canUpdate instead
      *
-     * @return bool     - Returns true if profile assgined Setup->Setup->Update right
+     * @return bool     - Returns true if profile assigned Setup->Setup->Update right
      * @see             - https://github.com/pluginsGLPI/example/issues/50
      */
     public static function canDelete(): bool
@@ -103,7 +103,7 @@ class Config extends CommonDBTM
     /**
      * Overloads missing canPurge Setup right and returns canUpdate instead
      *
-     * @return bool     - Returns true if profile assgined Setup->Setup->Update right
+     * @return bool     - Returns true if profile assigned Setup->Setup->Update right
      * @see             - https://github.com/pluginsGLPI/example/issues/50
      */
     public static function canPurge(): bool
@@ -118,18 +118,18 @@ class Config extends CommonDBTM
      */
     public static function getTypeName($nb = 0): string
     {
-        return __('SAML Providers', PLUGIN_NAME);
+        return __('Saml SSO applications', PLUGIN_NAME);
     }
 
     /**
      * Returns class icon to use in menus and tabs
      *
-     * @return string   - returns Font Awesom icon classname.
+     * @return string   - returns Font Awesome icon className.
      * @see             - https://fontawesome.com/search
      */
     public static function getIcon(): string
     {
-        return 'fa-regular fa-address-card';
+        return 'fa-fw fas fa-sign-in-alt';
     }
 
     /**
@@ -139,7 +139,7 @@ class Config extends CommonDBTM
      **/
     public static function getAdditionalMenuLinks() {
         $links[__('Excluded paths', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/exclude.php';
-        $links[__('JIT rules', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/rulesaml.php';
+        $links[__('JIT import rules', PLUGIN_NAME)] = PLUGIN_GLPISAML_WEBDIR.'/front/rulesaml.php';
         return $links;
     }
 
@@ -187,7 +187,7 @@ class Config extends CommonDBTM
             'datatype'           => 'bool'
         ];
 
-        // Lets not be as verbose as default GLPI objects when we dont need to.
+        // Lets not be as verbose as default GLPI objects when we do not need to.
         // continue tabId index where we left off.
         $index = 5;
         foreach((new ConfigEntity())->getFields() as $field)
@@ -199,7 +199,7 @@ class Config extends CommonDBTM
                $field[ConfigItem::FIELD] != ConfigEntity::IDP_ENTITY_ID &&
                $field[ConfigItem::FIELD] != ConfigEntity::IS_ACTIVE     &&
                $field[ConfigItem::FIELD] != ConfigEntity::IS_DELETED    ){
-                // Remap DB fields to Search datatypes
+                // Remap DB fields to Search dataTypes
                 if(strstr($field[ConfigItem::TYPE], 'varchar') ){
                     $field[ConfigItem::TYPE] = 'string';
                 }elseif($field[ConfigItem::TYPE] == 'tinyint' ){
@@ -232,7 +232,7 @@ class Config extends CommonDBTM
      * Get all valid configurations and return config buttons only if config is valid
      * and active.
      * @return  array
-     * @see                             - src/Loginflow/showLoginScreen()
+     * @see                             - src/LoginFlow/showLoginScreen()
      * @since 1.0.0
      */
     public static function getLoginButtons(int $length): array
@@ -243,7 +243,7 @@ class Config extends CommonDBTM
         $tplvars = [];
         // $length is used to strip the length of the button name to fit the button.
         $length = (is_numeric($length)) ? $length : 255;
-        // Iterate throught the IDP config rows and generate the buttons for twig template.
+        // Iterate through the IDP config rows and generate the buttons for twig template.
         foreach( $DB->request(['FROM' => self::getTable(), 'WHERE' => ['is_deleted'  => 0]]) as $value)
         {
             // Only populate buttons that are considered valid by ConfigEntity;
@@ -287,7 +287,7 @@ class Config extends CommonDBTM
                 return 0;
             }
         }else{
-            // Username isnt an email, return 0
+            // Username is not an email, return 0
             return 0;
         }
     }
@@ -307,7 +307,7 @@ class Config extends CommonDBTM
         $table              = self::getTable();
 
         // Create the base table if it does not yet exist;
-        // Dont update this table for later versions, use the migration class;
+        // Do not update this table for later versions, use the migration class;
         if (!$DB->tableExists($table)) {
             $migration->displayMessage("Installing $table");
             $query = <<<SQL

@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -49,7 +49,7 @@ use GlpiPlugin\Glpisaml\LoginFlow\User;
 
 /**
  * Extends the glpi Auth class for injection into Session::init();
- * by the LoginFlow class. Loads the $this->user after succesfull
+ * by the LoginFlow class. Loads the $this->user after successful
  * authentication by phpSaml using the provided claim attributes.
  */
 class Auth extends glpiAuth
@@ -60,6 +60,7 @@ class Auth extends glpiAuth
         $this->user = (new User())->getOrCreateUser($userFields);
 
         // Setting this property actually authorizes the login for the user.
+        // (sic) Succeeded is spelled incorrectly  in GLPI object
         $this->auth_succeded = (bool)$this->user->fields;
 
         // Return this object for injection into the session.

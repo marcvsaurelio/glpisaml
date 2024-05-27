@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -50,14 +50,18 @@ use Group_User;
 use Profile_User;
 use User as glpiUser;
 use Glpi\Toolbox\Sanitizer;
+use OneLogin\Saml2\Response;
 use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
+use Phone;
+use PHPUnit\TextUI\XmlConfiguration\Groups;
+use PHPUnit\TextUI\XmlConfiguration\Logging\TeamCity;
 
 /**
  * This class is responsible to make sure a corresponding
- * user is returned after successfull login. If a user does
+ * user is returned after successful login. If a user does
  * not exist it will create one if JIT is enabled else it will
  * trigger a human readable error. On Jit creation it will also
  * call the RuleSamlCollection and parse any configured rules.
@@ -70,6 +74,9 @@ class User
     public const REALNAME           = 'realname';
     public const FIRSTNAME          = 'firstname';
     public const EMAIL              = '_useremails';
+    public const MOBILE             = 'mobile';
+    public const PHONE              = 'phone';
+    public const PHONE2             = 'phone2';
     public const COMMENT            = 'comment';
     public const PASSWORD           = 'password';
     public const PASSWORDN          = 'password2';
@@ -85,7 +92,40 @@ class User
     public const PROFILE_RECURSIVE  = 'is_recursive';
     public const ENTITY_ID          = 'entities_id';
     public const ENTITY_DEFAULT     = '_entities_id_default';
+    public const AUTHTYPE           = 'authtype';
+    public const SYNCDATE           = 'date_sync';  //Y-m-d H:i:s
+    public const SAMLGROUPS         = 'samlClaimedGroups';
+    public const SAMLJOBTITLE       = 'samlClaimedJobTitle';
+    public const SAMLCOUNTRY        = 'country';
+    public const SAMLCITY           = 'city';
+    public const SAMLSTREET         = 'street';
 
+
+    /**
+     * samlResponse attributes or claims provided by IdP.
+     * @see https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
+     * @see https://learn.microsoft.com/en-us/entra/identity-platform/reference-saml-tokens
+     */
+    public const USERDATA                    = 'userData';
+    public const SCHEMA_NAMEID               = 'NameId';                                                                // Used as primary if it contains valid email.
+    public const SCHEMA_SURNAME              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';         // Used in user creation JIT - Optional
+    public const SCHEMA_FIRSTNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';       // Used in user creation JIT - Optional
+    public const SCHEMA_GIVENNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT - Optional
+    public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used in user creation JIT - Optional
+    public const SCHEMA_MOBILE               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone';     // Used in user creation JIT - Optional
+    public const SCHEMA_PHONE                = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber'; // Used in user creation JIT - Optional
+    public const SCHEMA_JOBTITLE             = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle';        // Used in user creation JIT - Optional
+    public const SCHEMA_COUNTRY              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country';         //
+    public const SCHEMA_CITY                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/city';            //
+    public const SCHEMA_STREET               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress';   //
+    public const SCHEMA_GROUPS               = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups';        // Used in assignment rules - Optional
+    public const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Entra claim not used
+    public const SCHEMA_TENANTID             = 'http://schemas.microsoft.com/identity/claims/tenantid';                 // Entra claim not used
+    public const SCHEMA_OBJECTID             = 'http://schemas.microsoft.com/identity/claims/objectidentifier';         // Entra claim not used
+    public const SCHEMA_DISPLAYNAME          = 'http://schemas.microsoft.com/identity/claims/displayname';              // Entra claim not used
+    public const SCHEMA_IDP                  = 'http://schemas.microsoft.com/identity/claims/identityprovider';         // Entra claim not used
+    public const SCHEMA_AUTHMETHODSREF       = 'http://schemas.microsoft.com/claims/authnmethodsreferences';            // Entra claim not used
+    public const SCHEMA_WIDS                 = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/wids';          // Entra claim not used
 
     /**
      * Gets or creates (if JIT is enabled for IDP) the GLPI user.
@@ -97,24 +137,23 @@ class User
     public function getOrCreateUser(array $userFields): glpiUser    //NOSONAR Complexity by design
     {
         // At this point the userFields should be present and validated (textually) by loginFlow.
-
         // Load GLPI user object
         $user = new glpiUser();
         
         // Verify if user exists in database.
-        if(!$user->getFromDBbyName($userFields[User::NAME])              &&      // Try to locate by name->NameId.
-           !$user->getFromDBbyEmail($userFields[User::NAME])             ){      // Try to locate by email->emailaddress.
-            
-            // Get current state
-            if(!$state = new Loginstate()){
-                throw new Exception(__('Could not load loginState from database!', PLUGIN_NAME)); //NOSONAR
-            }
+        if(!$user->getFromDBbyName($userFields[User::NAME])       &&      // Try to locate by name->NameId.
+           !$user->getFromDBbyEmail($userFields[User::EMAIL][0])  &&
+           !$user->getFromDBbyEmail($userFields[User::NAME])      ){      // Try to locate by email->emailaddress.
+            // User is not found, do we need to create it?
 
-            // Fetch the correct configEntity using our current state.
-            if(!$configEntity = new ConfigEntity($state->getIdpId())){
-                throw new Exception(__('Could not load ConfigEntity from database!', PLUGIN_NAME)); //NOSONAR
+            // Get current loginState and
+            // Fetch the correct configEntity using the idp found in our loginState.
+            if(!$configEntity = new ConfigEntity((new Loginstate())->getIdpId())){
+                LoginFlow::showLoginError(__("Your SSO login was successful but we where not able to fetch
+                                              the loginState from the database and could not continue to log
+                                              you into GLPI.", PLUGIN_NAME));
             }
-
+   
             // Are we allowed to perform JIT user creation?
             if($configEntity->getField(ConfigEntity::USER_JIT)){
 
@@ -122,16 +161,21 @@ class User
                 // from the samlResponse. maybe use this method in the future
                 // to also validate provided claims in one go.
                 if(!$id = $user->add(Sanitizer::sanitize($userFields))){
-                    LoginFlow::showLoginError(__("Your SSO login was succesfull but there is no matching GLPI user account and
-                                                  we failed to create one dynamically using Just In Time usercreation. Please
+                    LoginFlow::showLoginError(__("Your SSO login was successful but there is no matching GLPI user account and
+                                                  we failed to create one dynamically using Just In Time user creation. Please
                                                   request a GLPI administrator to review the logs and correct the problem or
                                                   request the administrator to create a GLPI user manually.", PLUGIN_NAME));
                     // PHP0405-no return by design.
                 }else{
                     $ruleCollection = new RuleSamlCollection();
-                    $matchInput = [self::EMAIL => $userFields[self::EMAIL]];
+                    $matchInput = [User::EMAIL          => $userFields[User::EMAIL],
+                                   User::SAMLGROUPS     => $userFields[User::SAMLGROUPS],
+                                   User::SAMLJOBTITLE   => $userFields[User::SAMLJOBTITLE],
+                                   User::SAMLCOUNTRY    => $userFields[User::SAMLCOUNTRY],
+                                   User::SAMLCITY       => $userFields[User::SAMLCITY],
+                                   User::SAMLSTREET     => $userFields[User::SAMLSTREET]];
                     // Uses a hook to call $this->updateUser() if a rule was found.
-                    $ruleCollection->processAllRules($matchInput, [self::USERSID => $id], []);
+                    $ruleCollection->processAllRules($matchInput, [User::USERSID => $id], []);
                 }
 
                 // Return freshly created user!
@@ -141,19 +185,22 @@ class User
                     return $user;
                 }
             }else{
+                // Show a nice login Error
                 $idpName = $configEntity->getField(ConfigEntity::NAME);
                 $email   = $userFields[User::EMAIL]['0'];
-                LoginFlow::showLoginError(__("Your SSO login was succesfull but there is no matching GLPI user account. In addition the Just-in-time user creation
+                LoginFlow::showLoginError(__("Your SSO login was successful but there is no matching GLPI user account. In addition the Just-in-time user creation
                                               is disabled for: $idpName. Please contact your GLPI administrator and request an account to be created matching the
                                               provided email claim: $email or login using a local user account.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
+
+        // User is found, check if we are allowed to use it.
         }else{
-            // Verify the user is not deleted (in trashbin)
+            // Verify the user is not deleted (in trashcan)
             if($user->fields[self::DELETED]){
                 LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[self::USERID]." is marked deleted but still exists in the GLPI database. Because of
                                            this we cannot log you in as this would violate GLPI its security policies. Please contact the GLPI administrator
-                                           to restore the user with provided ID or purge the user to allow the Just in Time (JIT) usercreation to create a
+                                           to restore the user with provided ID or purge the user to allow the Just in Time (JIT) user creation to create a
                                            new user with the idp provided claims.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
@@ -163,7 +210,7 @@ class User
                                             reactivate your account.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
-            // Return the user to the Loginflow object for session initialization!.
+            // Return the user to the LoginFlow object for session initialization!.
             return $user;
         }
     }
@@ -184,7 +231,7 @@ class User
         }
 
         // Do we need to add profiles
-        // If no profiles_id and user_idis present we skip.
+        // If no profiles_id and user_id is present we skip.
         if(isset($update[self::PROFILESID]) && isset($update[self::USERSID])){
             // Set the user to update
             $rights[self::USERSID] = $update[self::USERSID];
@@ -239,4 +286,186 @@ class User
             }
         }
     }
+
+    /**
+     * This function figures out what the samlResponse provided claims are and
+     * evaluates the values and assigns them to the UserArray that will be
+     * passed to the Auth object in the loginFlow object. If a critical error
+     * is found, processing is stopped and an error shown.
+     *
+     * @param    Response  Response object with the samlResponse attributes.
+     * @return   array     user->add input fields array with properties.
+     * @since    1.0.0
+     */
+    public static function getUserInputFieldsFromSamlClaim(Response $response): array     //NOSONAR - Complexity by design.
+    {
+        
+        // https://codeberg.org/QuinQuies/glpisaml/issues/28
+        // https://codeberg.org/QuinQuies/glpisaml/issues/39
+        // https://codeberg.org/QuinQuies/glpisaml/issues/40
+
+        // In essence we should just capture the props shared
+        // and assign them to prefixed fields of the userObj.
+        // Issue 39 shows tons of properties, but we want to
+        // limit ourself to essential properties in the glpi
+        // userObj.
+
+        // properties to search for
+        // glpi_users->name         => nameId
+        // glpi_users->groups       => via_rules
+        // glpi_users_groups        => schema_groups (⚠️ be aware Entra only emits object identifiers, not friendly names)
+        // glpi_users->profiles     => via_rules
+        // glpi_users->email        => schema_emailaddress
+        // glpi_users->firstname    => schema_firstname
+        // glpi_users->lastname     => schema_surname
+        // glpi_users->mobile       => schema_mobilephone
+        // glpi_users_titles        => schema_jobtitle
+
+
+        // Validate nameId claim from provided samlResponse.
+        // NameId should be formatted as set by NAMEID FORMAT.
+        // This should be tested by the OneLogin plugin.
+        if(!$user[User::NAME] = $response->getNameId()) {
+            LoginFlow::printError(__('NameId attribute is missing in samlResponse', PLUGIN_NAME),
+                                'getUserInputFieldsFromSamlClaim',
+                                var_export($response, true));
+        }
+            
+        // If the string #EXT# is found, a guest account is used thats not
+        // owned by the Entra IdP handling this request. This is not supported.
+        // https://github.com/derricksmith/phpsaml/issues/135
+        if(strstr($user[User::NAME], '#EXT#@')){
+            LoginFlow::printError(__('Detected a default guest user in samlResponse, this is not supported<br>
+                                      by glpiSAML. Please create a dedicated account for this user owned by your
+                                      tenant/identity provider.<br>
+                                      Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization', PLUGIN_NAME),
+                                     'getUserInputFieldsFromSamlClaim',
+                                      var_export($response, true));
+        }
+
+        // Fetch additional claims from the samlResponse.
+        if($claims = $response->getAttributes()){
+            // Assign the available claims. Treat every provided claim as strictly
+            // required. Issues with any of the provided claim will result in a
+            // critical error.
+            // TODO: Use valueObjects in the future?
+
+            // EmailAddress, if it is provided it should be a valid emailaddress.
+            if(filter_var($claims[User::SCHEMA_EMAILADDRESS][0], FILTER_VALIDATE_EMAIL)){
+                $user[User::EMAIL]  = [$claims[User::SCHEMA_EMAILADDRESS][0]];
+            }else{
+                LoginFlow::printError(__('SamlResponse should have at least 1 valid email address for GLPI  to find
+                                          the corresponding GLPI user or create it (with JIT enabled). For this purpose make
+                                          sure either the IDP provided NameId property is populated with the email address format,
+                                          or configure the IDP to add the users email address in the samlResponse claims using
+                                          the designated schema property key:'.self::SCHEMA_EMAILADDRESS, PLUGIN_NAME),
+                                         'getUserInputFieldsFromSamlClaim',
+                                          var_export($response, true));
+            }
+
+            // Groups to be passed to the rules engine
+            $user[User::SAMLGROUPS] = isset($claims[User::SCHEMA_GROUPS]) ? $claims[User::SCHEMA_GROUPS] : [];
+
+            // Firstname
+            if(isset($claims[User::SCHEMA_FIRSTNAME][0]) ||
+               isset($claims[User::SCHEMA_GIVENNAME][0]) ){
+                // check and assign the value
+                $firstname = (isset($claims[User::SCHEMA_FIRSTNAME][0])) ? $claims[User::SCHEMA_FIRSTNAME][0] : $claims[User::SCHEMA_GIVENNAME][0];
+                if(strlen($firstname) <= 255){
+                    $user[User::FIRSTNAME] = $firstname ;
+                }else{
+                    LoginFlow::printError(__('Provided firstname or givenname exceeded 255 characters. This claim should not be longer than 255 characters',
+                                             'getUserInputFieldsFromSamlClaim',
+                                              var_export($response, true)));
+                }
+            }
+
+            // Surname
+            if(isset($claims[User::SCHEMA_SURNAME][0])){
+                if(strlen($claims[User::SCHEMA_SURNAME][0]) <= 255){
+                    $user[User::REALNAME] = $claims[User::SCHEMA_SURNAME][0];
+                }else{
+                    LoginFlow::printError(__('Provided surname claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                             'getUserInputFieldsFromSamlClaim',
+                                              var_export($response, true)));
+                }
+            }
+
+            // jobTitle
+            if(isset($claims[User::SCHEMA_JOBTITLE][0])){
+                if(strlen($claims[User::SCHEMA_JOBTITLE][0]) <= 255){
+                    $user[User::SAMLJOBTITLE] = $claims[User::SCHEMA_JOBTITLE][0];
+                }else{
+                    LoginFlow::printError(__('Provided job title claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                             'getUserInputFieldsFromSamlClaim',
+                                              var_export($response, true)));
+                }
+            }
+
+            // Mobile Phone
+            if(isset($claims[User::SCHEMA_MOBILE][0])){
+                if(strlen($claims[User::SCHEMA_MOBILE][0]) <= 255){
+                    $user[User::MOBILE] = $claims[User::SCHEMA_MOBILE][0];
+                }else{
+                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                             'getUserInputFieldsFromSamlClaim',
+                                              var_export($response, true)));
+                }
+            }
+
+            // Telephone number
+            if(isset($claims[User::SCHEMA_PHONE][0])){
+                if(strlen($claims[User::SCHEMA_PHONE][0]) <= 255){
+                    $user[User::PHONE] = $claims[User::SCHEMA_PHONE][0];
+                }else{
+                    LoginFlow::printError(__('Provided telephone phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                             'getUserInputFieldsFromSamlClaim',
+                                              var_export($response, true)));
+                }
+            }
+
+            // Country
+            if(isset($claims[User::SCHEMA_COUNTRY][0])){
+                if(strlen($claims[User::SCHEMA_COUNTRY][0]) <= 255){
+                    $user[User::SAMLCOUNTRY] = $claims[User::SCHEMA_COUNTRY][0];
+                }else{
+                    LoginFlow::printError(__('Provided country claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                                'getUserInputFieldsFromSamlClaim',
+                                                var_export($response, true)));
+                }
+            }
+
+            if(isset($claims[User::SCHEMA_CITY][0])){
+                if(strlen($claims[User::SCHEMA_CITY][0]) <= 255){
+                    $user[User::SAMLCITY] = $claims[User::SCHEMA_CITY][0];
+                }else{
+                    LoginFlow::printError(__('Provided city claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                                'getUserInputFieldsFromSamlClaim',
+                                                var_export($response, true)));
+                }
+            }
+
+            if(isset($claims[User::SCHEMA_STREET][0])){
+                if(strlen($claims[User::SCHEMA_STREET][0]) <= 255){
+                    $user[User::SAMLSTREET] = $claims[User::SCHEMA_STREET][0];
+                }else{
+                    LoginFlow::printError(__('Provided street address claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                                'getUserInputFieldsFromSamlClaim',
+                                                var_export($response, true)));
+                }
+            }
+        }
+
+        // Set additional user fields for user creation (if needed)
+        // These fields are used for user->add($input);
+        $user[User::COMMENT]    = __('Created by phpSaml Just-In-Time user creation on:'.date('Y-m-d H:i:s'));
+        $password = bin2hex(random_bytes(20));
+        $user[User::PASSWORD]   = $password;
+        $user[User::PASSWORDN]  = $password;
+        $user[User::AUTHTYPE]   = 4;
+        $user[User::SYNCDATE]   = date('Y-m-d H:i:s');
+
+        // Return the userArray.
+        return $user;
+   }
 }

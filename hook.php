@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -61,7 +61,7 @@ function updateUser(array $params): void
 
 /**
  * Add Excludes to setup dropdown menu.
- * @return array [Classname => __('Menu label') ]
+ * @return array [ClassName => __('Menu label') ]
  */
 function plugin_glpisaml_getDropdown() : array                                      //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
 {
@@ -79,7 +79,7 @@ function plugin_glpisaml_evalAuth() : void                                      
 }
 
 /**
- * function to inject the loginflow show loginform.
+ * function to inject the loginFlow show login form.
  * @return void
  */
 function plugin_glpisaml_displaylogin() : void                                      //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
@@ -127,7 +127,7 @@ function plugin_glpisaml_install() : bool                                       
 }
 
 /**
- * Performs uninstall of pluginclasses in /src.
+ * Performs uninstall of plugin classes in /src.
  *
  * @return boolean
  */
@@ -162,7 +162,7 @@ function plugin_glpisaml_getSrcClasses() : array                                
             return !is_dir(PLUGIN_GLPISAML_SRCDIR.'/'.$item);
         });
     }else{
-        echo "The directory". PLUGIN_GLPISAML_SRCDIR . "Isnt accessible, Plugin installation failed!";
+        echo "The directory". PLUGIN_GLPISAML_SRCDIR . "Is not accessible, Plugin installation failed!";
         return [];
     }
 }

@@ -5,7 +5,7 @@
  *
  *  GLPISaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -66,16 +66,16 @@ class ConfigItem    //NOSONAR
     public const ERRORS     = 'errors';                                 // Encountered problems notnull will prevent DB update/inserts
     public const VALIDATE   = 'validate';                               // Could either be string or array
     public const CONSTANT   = 'itemconstant';                           // What class constant is used for item
-    public const FORMEXPLAIN= 'formexplain';                            // Field explaination
+    public const FORMEXPLAIN= 'formexplain';                            // Field explanation
     public const FORMTITLE  = 'formtitle';                              // Form title to use with field
     public const VALIDATOR  = 'validator';                              // What validator was used
 
 
 
-    protected function noMethod(string $field, string $varue): array
+    protected function noMethod(string $field, string $value): array
     {
         return [self::FORMEXPLAIN => self::INVALID,
-                self::VALUE     => $varue,
+                self::VALUE     => $value,
                 self::FIELD     => $field,
                 self::VALIDATOR => __method__,
                 self::EVAL      => false,
@@ -91,7 +91,7 @@ class ConfigItem    //NOSONAR
         if($var               &&
             $var != -1        &&
             !is_numeric($var) ){
-            $error = __('⭕ ID must be a positive nummeric value!');
+            $error = __('⭕ ID must be a positive numeric value!');
         }
 
         return [self::FORMEXPLAIN => __('Unique identifier for this configuration', PLUGIN_NAME),
@@ -225,7 +225,7 @@ class ConfigItem    //NOSONAR
         if(!filter_var($var, FILTER_VALIDATE_URL, $options)){
             $error .= __('⭕ Invalid IdP SSO URL, use: scheme://host.domain.tld/path/', PLUGIN_NAME);
         }
-        // Maybe add actual webcall here to validate if the URL is accessible
+        // Maybe add actual web call here to validate if the URL is accessible
         // if its not, show a warning that the validity of the url could not be validated
         // Accessibility by the server is not a requirement given its the client browser
         // that needs to access the provided resource not the webserver itself.
@@ -251,7 +251,7 @@ class ConfigItem    //NOSONAR
         $error = false;
         // This setting is not required because for example in Azure it will log the user out
         // of all online sessions not just GLPI. No url will result in SAML not performing a
-        // SLO when the glpi Logoff is triggered. It will allow the user to 'relogin' by
+        // SLO when the glpi Logoff is triggered. It will allow the user to 're-login' by
         // pressing the correct button.
         $options = [FILTER_FLAG_PATH_REQUIRED];
         if(!empty($var) && !filter_var($var, FILTER_VALIDATE_URL, $options)){
@@ -428,7 +428,7 @@ class ConfigItem    //NOSONAR
         return array_merge([self::FORMEXPLAIN   => __('If enabled the OneLogin PHPSAML Toolkit will reject unsigned or unencrypted
                                                        messages if it expects them to be signed or encrypted. Also it will reject the
                                                        messages if the SAML standard is not strictly followed: Destination, NameId,
-                                                       Conditions are validated too. Strongly adviced in production environments.', PLUGIN_NAME),
+                                                       Conditions are validated too. Strongly advised in production environments.', PLUGIN_NAME),
                             self::FORMTITLE     => __('STRICT', PLUGIN_NAME),
                             self::FIELD         => __function__,
                             self::VALIDATOR     => __method__,],
@@ -439,7 +439,7 @@ class ConfigItem    //NOSONAR
     {
         return array_merge([self::FORMEXPLAIN   => __('If enabled it will enforce OneLogin PHPSAML to print status and error messages.
                                                        be aware that not all message\'s might be captured by GLPISAML and might therefor
-                                                       not become visable.'),
+                                                       not become visible.'),
                             self::FORMTITLE     => __('DEBUG', PLUGIN_NAME),
                             self::FIELD         => __function__,
                             self::VALIDATOR     => __method__,],
@@ -459,7 +459,7 @@ class ConfigItem    //NOSONAR
 
     protected function security_nameidencrypted(mixed $var): array //NOSONAR
     {
-        return array_merge([self::FORMEXPLAIN     => __('If enabled the OneLogin PHPSAML toolkit will encrypt the <asmlp:logoutRequest> sent by
+        return array_merge([self::FORMEXPLAIN     => __('If enabled the OneLogin PHPSAML toolkit will encrypt the <samlp:logoutRequest> sent by
                                                          this SP using the provided SP certificate and private key. This option will be toggled
                                                          "off" automatically if no, or no valid SP certificate and key is provided.'),
                             self::FORMTITLE     => __('ENCRYPT NAMEID', PLUGIN_NAME),
@@ -548,7 +548,7 @@ class ConfigItem    //NOSONAR
                             self::handleAsBool($var, ConfigEntity::LOWERCASE_URL));
     }
 
-    // Make sure we allways return the correct boolean datatype.
+    // Make sure we always return the correct boolean datatype.
     protected function handleAsBool(mixed $var, $field = null): array
     {
         // Default to false if no or an impropriate value is provided.
@@ -572,11 +572,11 @@ class ConfigItem    //NOSONAR
             $validations = [];
             // Try to parse the certificate using Openssl.
             if ($parsedCertificate = openssl_x509_parse($certificate)) {
-                // Create timeobject from current timestamp to calculate with
+                // Create time object from current timestamp to calculate with
                 $n = new DateTimeImmutable('now');
-                // Create timeobject from validTo certificate property
+                // Create time object from validTo certificate property
                 $t = (array_key_exists('validTo', $parsedCertificate)) ? DateTimeImmutable::createFromFormat("ymdHisT", $parsedCertificate['validTo']) : '';
-                // Create timeobject from validFrom certificate property
+                // Create time object from validFrom certificate property
                 $f = (array_key_exists('validFrom', $parsedCertificate)) ? DateTimeImmutable::createFromFormat("ymdHisT", $parsedCertificate['validFrom']) : '';
                 // Calculate if the current date is past the validTo certificate property
                 $aged = $n->diff($t);
@@ -595,6 +595,9 @@ class ConfigItem    //NOSONAR
                 // Validate if we got a negative sign in the calculated validFrom days.
                 if(strpos($born,'-') !== false){
                     $validations['validFrom'] = __("⚠️ Warning, certificate with Common Name (CN): $cn issued in the future ($born days)", PLUGIN_NAME);
+                }
+                if($cn == 'withlove.from.donuts.nl'){
+                    $validations['validFrom'] = __("⚠️ Warning, do not use the 'withlove.from.donuts.nl' example certificates. They do not offer any protection!", PLUGIN_NAME);
                 }
                 $parsedCertificate['validations'] = $validations;
                 return $parsedCertificate;

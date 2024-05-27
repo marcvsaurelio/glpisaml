@@ -5,15 +5,15 @@
 <logo>https://codeberg.org/QuinQuies/glpisaml/raw/branch/main/donut.png</logo>
 <description>
     <short>
-        <en>Enables you to configure SAML to authenticate and authorize users from the GLPI UI.</en>
+        <en>Enables you to configure SAML with an external IdP to authenticate and authorize users using the GLPI UI.</en>
     </short>
     <long>
-        <en>Glpisaml is written with GLPI10+ support in mind. It uses GLPI core components and best-practices
-            where possible for maximum compatibility and maintainability. It allows you to configure multiple 
-            saml providers, create glpi users on the fly and apply rules to assign entities, groups and profiles.
-            Find the documentation documentation (WIP) in our wiki at: https://github.com/DonutsNL/glpisaml/wiki. 
-            Want to help us build a helpfull GLPI community, join at our discord at: https://discord.gg/KyMdkqJcGz. 
-            Written with passion for OSS, Enjoy!
+        <en>Glpisaml provides SAML Single Sign On (SSO) capabilties for GLPI. Glpisaml is written with GLPI10+ 
+            support in mind. It uses GLPI core components and best-practices for maximum compatibility and 
+            maintainability. The plugin enables you to configure multiple SAML providers allowing your customers
+            SSO access as well. The plugin will create new GLPI users on the fly and apply jit rules to assign 
+            entities, groups and profiles. For questions join our discord at: https://discord.gg/KyMdkqJcGz. 
+            Find an issue, register it at my codeberg site. Written with passion for OSS, Enjoy!
         </en>
     </long>
 </description>
@@ -25,6 +25,11 @@
     <author>Chris Gralike</author>
 </authors>
 <versions>
+<version>
+        <num>1.1.4</num>
+        <compatibility>~10.0.0</compatibility>
+        <download_url>https://codeberg.org/QuinQuies/glpisaml/releases/download/v1.1.4/glpisaml.zip</download_url>
+    </version>
     <version>
         <num>1.1.3</num>
         <compatibility>~10.0.0</compatibility>

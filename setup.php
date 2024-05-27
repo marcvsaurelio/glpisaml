@@ -5,7 +5,7 @@
  *
  *  Glpisaml was inspired by the initial work of Derrick Smith's
  *  PhpSaml. This project's intend is to address some structural issues
- *  caused by the gradual development of GLPI and the broad ammount of
+ *  caused by the gradual development of GLPI and the broad amount of
  *  wishes expressed by the community.
  *
  *  Copyright (C) 2024 by Chris Gralike
@@ -49,7 +49,7 @@ use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 
 // Setup constants
-define('PLUGIN_GLPISAML_VERSION', '1.1.3');                                                     // GLPI SAML version
+define('PLUGIN_GLPISAML_VERSION', '1.1.4');                                                     // GLPI SAML version
 define('PLUGIN_GLPISAML_MIN_GLPI', '10.0.0');                                                   // Min required GLPI version
 define('PLUGIN_GLPISAML_MAX_GLPI', '10.9.99');                                                  // Max GLPI compat version
 define('PLUGIN_NAME', 'glpisaml');                                                              // Plugin name
@@ -57,7 +57,7 @@ define('PLUGIN_NAME', 'glpisaml');                                              
 define('PLUGIN_GLPISAML_WEBDIR', Plugin::getWebDir(PLUGIN_NAME, false));                        // Plugin web directory
 define('PLUGIN_GLPISAML_SRCDIR', __DIR__ . '/src');                                             // Location of the main classes
 define('PLUGIN_GLPISAML_TPLDIR', __DIR__ . '/tpl');                                             // Location of the templates directory
-// Webpaths
+// WebPaths
 define('PLUGIN_GLPISAML_ATOM_URL', 'https://codeberg.org/QuinQuies/glpisaml/releases.rss');     // Location of the repository versions
 define('PLUGIN_GLPISAML_ACS_PATH', '/front/acs.php');                                           // Location of the assertion service.
 define('PLUGIN_GLPISAML_SLO_PATH', '/front/slo.php');                                           // Location to handle logout requests
@@ -67,7 +67,7 @@ define('PLUGIN_GLPISAML_CONF_FORM', '/front/config.form.php');                  
 define('PLUGIN_GLPISAML_CONFCSS_PATH', 'templates/css/configForm.css');                         // Location of the config CSS
 
 /**
- * Default GLPI Plguin Init function.
+ * Default GLPI Plugin Init function.
  * @return void
  * @see https://glpi-developer-documentation.readthedocs.io/en/master/plugins/requirements.html
  * @see https://codeberg.org/QuinQuies/glpisaml/issues/8
@@ -77,16 +77,16 @@ function plugin_init_glpisaml() : void                                          
     global $PLUGIN_HOOKS;                                                                       //NOSONAR
     $plugin = new Plugin();
 
-    // INCLUDE PLUGIN VENDOR AUTOLOADER
+    // INCLUDE PSR4 AUTOLOADER
     include_once(__DIR__. '/vendor/autoload.php');                                              //NOSONAR - intentional include_once to load composer autoload;
 
     // CSRF
     $PLUGIN_HOOKS[Hooks::CSRF_COMPLIANT][PLUGIN_NAME] = true;                                   //NOSONAR - These are GLPI default variable names  
     
-    // Dont show config buttons if plugin is not enabled.
+    // Do not show config buttons if plugin is not enabled.
     if ($plugin->isInstalled(PLUGIN_NAME) || $plugin->isActivated(PLUGIN_NAME)) {
 
-        // is registration still required with PSR4 autoloading?
+        // is registration still required with PSR4 auto loading?
         Plugin::registerClass(Config::class);
         Plugin::registerClass(Exclude::class);
 
@@ -101,7 +101,7 @@ function plugin_init_glpisaml() : void                                          
         Plugin::registerClass(RuleSamlCollection::class, ['rulecollections_types' => true]);
         $PLUGIN_HOOKS[Hooks::RULE_MATCHED][PLUGIN_NAME]     = 'updateUser';
 
-        // Register and hook the loginflow directly after GLPI init.
+        // Register and hook the loginFlow directly after GLPI init.
         Plugin::registerClass(LoginFlow::class);
         $PLUGIN_HOOKS[Hooks::POST_INIT][PLUGIN_NAME]        = 'plugin_glpisaml_evalAuth';       //NOSONAR
 
@@ -118,11 +118,11 @@ function plugin_init_glpisaml() : void                                          
 function plugin_version_glpisaml() : array                                                      //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
 {
     return [
-        'name'           => 'GLPI SAML',
+        'name'           => 'Glpisaml',
         'version'        => PLUGIN_GLPISAML_VERSION,
         'author'         => 'Chris Gralike',
         'license'        => 'GPLv2+',
-        'homepage'       => 'https://github.com/DonutsNL/Phpsaml2',
+        'homepage'       => 'https://codeberg.org/QuinQuies/glpisaml',
         'requirements'   => [
             'glpi' => [
             'min' => PLUGIN_GLPISAML_MIN_GLPI,
