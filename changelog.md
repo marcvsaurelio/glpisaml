@@ -20,6 +20,7 @@
 - Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname` or `givenname` claim to be processed by userJit if provided
 - Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname` claim to be processed by userJit if provided
 - Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone` claim to be processed by userJit if provided
+- Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber` claim to be processed by userJit if provided
 - Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups` to be passed to the rules engine (no match rule yet)
 - Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle` to be passed to the rules engine (no match rule yet)
 - Added `user-fields->authtype = 4 (other)` to Jit Created users as discussed https://codeberg.org/QuinQuies/glpisaml/issues/41
