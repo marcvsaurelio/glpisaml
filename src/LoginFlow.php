@@ -78,7 +78,7 @@ class LoginFlow
 
     // https://codeberg.org/QuinQuies/glpisaml/issues/37
     public const POSTFIELD   = 'samlIdpId';
-    public const SAMLBYPASS  =  'saml_bypass';
+    public const SAMLBYPASS  =  'bypass';
 
     // LOGIN FLOW AFTER PRESSING A IDP BUTTON.
 
@@ -92,6 +92,7 @@ class LoginFlow
      */
     public function doAuth(): bool
     {
+        global $CFG_GLPI;
         // global $GLPI_CACHE;
         // Get current state
         if(!$state = new Loginstate()){
@@ -115,18 +116,21 @@ class LoginFlow
         }
 
         // Do we want to or need to break enforcement?
-        if(isset($_GET[LoginFlow::SAMLBYPASS])){
-            setcookie(ConfigEntity::ENFORCE_SSO, '', time() - 3600);
+        if(isset($_GET[LoginFlow::SAMLBYPASS]) &&
+           $_GET[LoginFlow::SAMLBYPASS] == 1   ){
+            ConfigEntity::unsetEnforceCookie();
             $this->performLogOff();
+            $this->doMetaRefresh($CFG_GLPI['url_base'].'/');
         }
-        
+
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
         // Do enforced login if we found a previous cookie
         // And the phase is initial, and the escape string
         // was not found.
         if(($state->getPhase() == LoginState::PHASE_INITIAL ||
             $state->getPhase() == LoginState::PHASE_LOGOFF) &&
-            isset($_COOKIE[ConfigEntity::ENFORCE_SSO])      ){
+            isset($_COOKIE[ConfigEntity::ENFORCE_SSO])      &&
+            $_COOKIE[ConfigEntity::ENFORCE_SSO] != -1       ){
             // set the logic to perform SSO using the indicated IdP.
             $_POST[self::POSTFIELD] = $_COOKIE[ConfigEntity::ENFORCE_SSO];
         }

@@ -440,6 +440,21 @@ class ConfigEntity extends ConfigItem
         }
     }
 
+    /**
+     * Unsets the enforce cookie
+     * @return void
+     */
+    public static function unsetEnforceCookie() {
+        setcookie(
+            ConfigEntity::ENFORCE_SSO,
+            '-1',
+            ['expires' => time() - 3600,
+            'secure'   => true,
+            'path'     => '/',
+            'httponly' => true,
+            'samesite' => 'None',]);
+    }
+
 
     /**
      * Returns the validity state of the currently loaded ConfigEntity
