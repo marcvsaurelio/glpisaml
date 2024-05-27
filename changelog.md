@@ -23,6 +23,8 @@
 - Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups` to be passed to the rules engine (no match rule yet)
 - Added `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle` to be passed to the rules engine (no match rule yet)
 - Added `user-fields->authtype = 4 (other)` to Jit Created users as discussed https://codeberg.org/QuinQuies/glpisaml/issues/41
+- JIT wil now populate sync_date property
+- Added location claims to the logic, they are currently not handled.
 
 **v1.1.3**
 - Added logic to store the initial sessionId for reference in state table.

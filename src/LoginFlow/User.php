@@ -57,6 +57,7 @@ use GlpiPlugin\Glpisaml\RuleSamlCollection;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 use Phone;
 use PHPUnit\TextUI\XmlConfiguration\Groups;
+use PHPUnit\TextUI\XmlConfiguration\Logging\TeamCity;
 
 /**
  * This class is responsible to make sure a corresponding
@@ -95,6 +96,9 @@ class User
     public const SYNCDATE           = 'date_sync';  //Y-m-d H:i:s
     public const SAMLGROUPS         = 'samlClaimedGroups';
     public const SAMLJOBTITLE       = 'samlClaimedJobTitle';
+    public const SAMLCOUNTRY        = 'country';
+    public const SAMLCITY           = 'city';
+    public const SAMLSTREET         = 'street';
 
 
     /**
@@ -111,6 +115,9 @@ class User
     public const SCHEMA_MOBILE               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone';     // Used in user creation JIT - Optional
     public const SCHEMA_PHONE                = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber'; // Used in user creation JIT - Optional
     public const SCHEMA_JOBTITLE             = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle';        // Used in user creation JIT - Optional
+    public const SCHEMA_COUNTRY              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country';         //
+    public const SCHEMA_CITY                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/city';            //
+    public const SCHEMA_STREET               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress';   //
     public const SCHEMA_GROUPS               = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups';        // Used in assignment rules - Optional
     public const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Entra claim not used
     public const SCHEMA_TENANTID             = 'http://schemas.microsoft.com/identity/claims/tenantid';                 // Entra claim not used
@@ -132,9 +139,6 @@ class User
         // At this point the userFields should be present and validated (textually) by loginFlow.
         // Load GLPI user object
         $user = new glpiUser();
-        $user->getFromDBbyEmail('chris.gralike@flevo-scouts.nl');
-        var_dump($user);
-        exit;
         
         // Verify if user exists in database.
         if(!$user->getFromDBbyName($userFields[User::NAME])       &&      // Try to locate by name->NameId.
@@ -146,7 +150,7 @@ class User
             // Fetch the correct configEntity using the idp found in our loginState.
             if(!$configEntity = new ConfigEntity((new Loginstate())->getIdpId())){
                 LoginFlow::showLoginError(__("Your SSO login was successful but we where not able to fetch
-                                              the loginState from the database and could not continue loggin
+                                              the loginState from the database and could not continue to log
                                               you into GLPI.", PLUGIN_NAME));
             }
    
@@ -164,9 +168,12 @@ class User
                     // PHP0405-no return by design.
                 }else{
                     $ruleCollection = new RuleSamlCollection();
-                    $matchInput = [User::EMAIL => $userFields[User::EMAIL],
-                                   User::SAMLGROUPS => $userFields[User::SAMLGROUPS],
-                                   User::SAMLJOBTITLE => $userFields[User::SAMLJOBTITLE]];
+                    $matchInput = [User::EMAIL          => $userFields[User::EMAIL],
+                                   User::SAMLGROUPS     => $userFields[User::SAMLGROUPS],
+                                   User::SAMLJOBTITLE   => $userFields[User::SAMLJOBTITLE],
+                                   User::SAMLCOUNTRY    => $userFields[User::SAMLCOUNTRY],
+                                   User::SAMLCITY       => $userFields[User::SAMLCITY],
+                                   User::SAMLSTREET     => $userFields[User::SAMLSTREET]];
                     // Uses a hook to call $this->updateUser() if a rule was found.
                     $ruleCollection->processAllRules($matchInput, [User::USERSID => $id], []);
                 }
@@ -414,6 +421,37 @@ class User
                     LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
                                              'getUserInputFieldsFromSamlClaim',
                                               var_export($response, true)));
+                }
+            }
+
+            // Country
+            if(isset($claims[User::SCHEMA_COUNTRY][0])){
+                if(strlen($claims[User::SCHEMA_COUNTRY][0]) <= 255){
+                    $user[User::SAMLCOUNTRY] = $claims[User::SCHEMA_COUNTRY][0];
+                }else{
+                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                                'getUserInputFieldsFromSamlClaim',
+                                                var_export($response, true)));
+                }
+            }
+
+            if(isset($claims[User::SCHEMA_CITY][0])){
+                if(strlen($claims[User::SCHEMA_CITY][0]) <= 255){
+                    $user[User::SAMLCITY] = $claims[User::SCHEMA_CITY][0];
+                }else{
+                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                                'getUserInputFieldsFromSamlClaim',
+                                                var_export($response, true)));
+                }
+            }
+
+            if(isset($claims[User::SCHEMA_STREET][0])){
+                if(strlen($claims[User::SCHEMA_STREET][0]) <= 255){
+                    $user[User::SAMLSTREET] = $claims[User::SCHEMA_STREET][0];
+                }else{
+                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                                'getUserInputFieldsFromSamlClaim',
+                                                var_export($response, true)));
                 }
             }
         }
