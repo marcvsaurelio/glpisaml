@@ -60,7 +60,7 @@ class Auth extends glpiAuth
         $this->user = (new User())->getOrCreateUser($userFields);
 
         // Setting this property actually authorizes the login for the user.
-        // (sic) Succeeded is spelled incorrectly  in GLPI object
+        // (sic) Succeeded is spelled incorrectly in GLPI object
         $this->auth_succeded = (bool)$this->user->fields;
 
         // Return this object for injection into the session.

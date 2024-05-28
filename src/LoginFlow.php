@@ -93,14 +93,10 @@ class LoginFlow
     public function doAuth(): bool
     {
         global $CFG_GLPI;
-        // global $GLPI_CACHE;
         // Get current state
         if(!$state = new Loginstate()){
             $this->printError(__('Could not load loginState', PLUGIN_NAME));
         }else{
-            // TODO: Evaluate database state, do we need to force logoff a user,
-            // but only after user has been logged in.
-
             // Do we need to skip because of exclusion?
             if($state->isExcluded()){
                 return $state->getExcludeAction();
@@ -131,7 +127,7 @@ class LoginFlow
             $state->getPhase() == LoginState::PHASE_LOGOFF) &&
             $idpId = ConfigEntity::getEnforced()            ){
             // set the logic to perform SSO using the indicated IdP.
-            $_POST[self::POSTFIELD] = $idpId;
+            $_POST[LoginFlow::POSTFIELD] = $idpId;
         }
 
         
@@ -145,24 +141,24 @@ class LoginFlow
             if(strstr($key, 'fielda')                               &&    // Test keys if fielda[token] is present in the POST.
                !empty($_POST[$key])                                 &&    // Test if fielda actually has a value we can process
                $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){    // If all is true try to find an matching idp id.
-                    $_POST[self::POSTFIELD] = $id;                        // If we found an ID Set the POST phpsaml to our found ID this will trigger
+                    $_POST[LoginFlow::POSTFIELD] = $id;                        // If we found an ID Set the POST phpsaml to our found ID this will trigger
             }
         }
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
-        if (isset($_POST[self::POSTFIELD])         &&      // Must be set
-            is_numeric($_POST[self::POSTFIELD])    &&      // Value must be numeric
-            strlen($_POST[self::POSTFIELD]) < 3    ){      // Should not exceed 999
+        if (isset($_POST[LoginFlow::POSTFIELD])         &&      // Must be set
+            is_numeric($_POST[LoginFlow::POSTFIELD])    &&      // Value must be numeric
+            strlen($_POST[LoginFlow::POSTFIELD]) < 3    ){      // Should not exceed 999
 
             // If we know the idp we register it in the login State
-            $state->setIdpId(filter_var($_POST[self::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
+            $state->setIdpId(filter_var($_POST[LoginFlow::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
 
             // Update the current phase in database. The state is verified by the Acs
             // while handling the received SamlResponse. Any other state will force Acs
             // into an error state. This is to prevent unexpected (possibly replayed)
             // samlResponses from being processed. to prevent playback attacks.
             if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
-                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[self::POSTFIELD] , PLUGIN_NAME));
+                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[LoginFlow::POSTFIELD] , PLUGIN_NAME));
             }
 
             // Actually perform SSO
@@ -293,7 +289,7 @@ class LoginFlow
             $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
             $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
             $tplVars['noconfig']   = __('No SSO buttons enabled yet. Try your SSO username instead.', PLUGIN_NAME);
-            $tplVars['postfield']   = self::POSTFIELD;
+            $tplVars['postfield']   = LoginFlow::POSTFIELD;
 
             // https://codeberg.org/QuinQuies/glpisaml/issues/12
             TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);

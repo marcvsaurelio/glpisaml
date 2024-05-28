@@ -268,7 +268,7 @@ class ConfigEntity extends ConfigItem
     {
         global $DB;
         // Fetch config item constants;
-        $classConstants = self::getConstants();
+        $classConstants = ConfigEntity::getConstants();
         // Fetch database columns;
         $sql = 'SHOW COLUMNS FROM '.SamlConfig::getTable();
         if ($result = $DB->doQuery($sql)) {
@@ -319,9 +319,9 @@ class ConfigEntity extends ConfigItem
      */
     public function getConfigDomain(): string
     {
-        return (key_exists(self::CONF_DOMAIN, $this->fields) &&
-                !empty($this->fields[self::CONF_DOMAIN])     &&
-                $this->fields[self::CONF_DOMAIN] != 'youruserdomain.tld') ? $this->fields[self::CONF_DOMAIN] : '';
+        return (key_exists(ConfigEntity::CONF_DOMAIN, $this->fields) &&
+                !empty($this->fields[ConfigEntity::CONF_DOMAIN])     &&
+                $this->fields[ConfigEntity::CONF_DOMAIN] != 'youruserdomain.tld') ? $this->fields[ConfigEntity::CONF_DOMAIN] : '';
     }
 
     /**

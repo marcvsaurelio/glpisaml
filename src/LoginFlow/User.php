@@ -45,7 +45,6 @@
 namespace GlpiPlugin\Glpisaml\LoginFlow;
 
 use Session;
-use Exception;
 use Group_User;
 use Profile_User;
 use User as glpiUser;
@@ -197,16 +196,16 @@ class User
         // User is found, check if we are allowed to use it.
         }else{
             // Verify the user is not deleted (in trashcan)
-            if($user->fields[self::DELETED]){
-                LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[self::USERID]." is marked deleted but still exists in the GLPI database. Because of
+            if($user->fields[User::DELETED]){
+                LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[User::USERID]." is marked deleted but still exists in the GLPI database. Because of
                                            this we cannot log you in as this would violate GLPI its security policies. Please contact the GLPI administrator
                                            to restore the user with provided ID or purge the user to allow the Just in Time (JIT) user creation to create a
                                            new user with the idp provided claims.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
             // Verify the user is not disabled by the admin;
-            if($user->fields[self::ACTIVE] == 0){
-                LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[self::USERID]." is disabled. Please contact your GLPI administrator and request him to
+            if($user->fields[User::ACTIVE] == 0){
+                LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[User::USERID]." is disabled. Please contact your GLPI administrator and request him to
                                             reactivate your account.", PLUGIN_NAME));
                 // PHP0405-no return by design.
             }
@@ -217,14 +216,14 @@ class User
 
     public function updateUserRights(array $params): void
     {
-        $update = $params[self::RULEOUTPUT];
+        $update = $params[User::RULEOUTPUT];
         // Do we need to add a group?
-        if(isset($update[self::GROUPID])  &&
-           isset($update[self::USERSID])  ){
+        if(isset($update[User::GROUPID])  &&
+           isset($update[User::USERSID])  ){
             // Get the Group_User object to update the user group relation.
             $groupuser = new Group_User();
-            if(!$groupuser->add([self::USERSID   => $update[self::USERSID],
-                                 self::GROUPID   => $update[self::GROUPID]])){
+            if(!$groupuser->add([User::USERSID   => $update[User::USERSID],
+                                 User::GROUPID   => $update[User::GROUPID]])){
                 Session::addMessageAfterRedirect(__('GLPI SAML was not able to assign the correct permissions to your user.
                                                      Please let an Administrator review them before using GLPI.',PLUGIN_NAME));
             }
@@ -232,22 +231,22 @@ class User
 
         // Do we need to add profiles
         // If no profiles_id and user_id is present we skip.
-        if(isset($update[self::PROFILESID]) && isset($update[self::USERSID])){
+        if(isset($update[User::PROFILESID]) && isset($update[User::USERSID])){
             // Set the user to update
-            $rights[self::USERSID] = $update[self::USERSID];
+            $rights[User::USERSID] = $update[User::USERSID];
             // Set the profile to rights assignment
-            $rights[self::PROFILESID] = $update[self::PROFILESID];
+            $rights[User::PROFILESID] = $update[User::PROFILESID];
             // Do we need to set a profile for a specific entity?
-            if(isset($update[self::ENTITY_ID])){
-                $rights[self::ENTITY_ID] = $update[self::ENTITY_ID];
+            if(isset($update[User::ENTITY_ID])){
+                $rights[User::ENTITY_ID] = $update[User::ENTITY_ID];
             }
             // Do we need to make the profile behave recursive?
-            if(isset($update[self::PROFILE_RECURSIVE])){
-                $rights[self::PROFILE_RECURSIVE] = (isset($update[self::PROFILE_RECURSIVE])) ? '1' : '0';
+            if(isset($update[User::PROFILE_RECURSIVE])){
+                $rights[User::PROFILE_RECURSIVE] = (isset($update[User::PROFILE_RECURSIVE])) ? '1' : '0';
             }
             // Delete all default profile assignments
             $profileUser = new Profile_User();
-            if($pid = $profileUser->getForUser($update[self::USERSID])){
+            if($pid = $profileUser->getForUser($update[User::USERSID])){
                 foreach($pid as $key => $data){
                     $profileUser->delete(['id' => $key]);
                 }
@@ -261,22 +260,22 @@ class User
         }
 
         // Do we need to update the user profile defaults?
-        if(isset($update[self::GROUP_DEFAULT])   ||
-           isset($update[self::ENTITY_DEFAULT]) ||
-           isset($update[self::PROFILE_DEFAULT]) ){
+        if(isset($update[User::GROUP_DEFAULT])   ||
+           isset($update[User::ENTITY_DEFAULT]) ||
+           isset($update[User::PROFILE_DEFAULT]) ){
             // Set the user Id.
             $userDefaults['id'] = $update['users_id'];
             // Do we need to set a default group?
-            if(isset($update[self::GROUP_DEFAULT])){
-                $userDefaults[self::GROUPID]  = $update[self::GROUP_DEFAULT];
+            if(isset($update[User::GROUP_DEFAULT])){
+                $userDefaults[User::GROUPID]  = $update[User::GROUP_DEFAULT];
             }
             // Do we need to set a specific default entity?
-            if(isset($update[self::ENTITY_DEFAULT])){
-                $userDefaults[self::ENTITY_ID] = $update[self::ENTITY_DEFAULT];
+            if(isset($update[User::ENTITY_DEFAULT])){
+                $userDefaults[User::ENTITY_ID] = $update[User::ENTITY_DEFAULT];
             }
             // Do we need to set a specific profile?
-            if(isset($update[self::PROFILE_DEFAULT])){
-                $userDefaults[self::PROFILESID] = $update[self::PROFILE_DEFAULT];
+            if(isset($update[User::PROFILE_DEFAULT])){
+                $userDefaults[User::PROFILESID] = $update[User::PROFILE_DEFAULT];
             }
 
             $user = new glpiUser();
@@ -348,7 +347,6 @@ class User
             // Assign the available claims. Treat every provided claim as strictly
             // required. Issues with any of the provided claim will result in a
             // critical error.
-            // TODO: Use valueObjects in the future?
 
             // EmailAddress, if it is provided it should be a valid emailaddress.
             if(filter_var($claims[User::SCHEMA_EMAILADDRESS][0], FILTER_VALIDATE_EMAIL)){
@@ -358,7 +356,7 @@ class User
                                           the corresponding GLPI user or create it (with JIT enabled). For this purpose make
                                           sure either the IDP provided NameId property is populated with the email address format,
                                           or configure the IDP to add the users email address in the samlResponse claims using
-                                          the designated schema property key:'.self::SCHEMA_EMAILADDRESS, PLUGIN_NAME),
+                                          the designated schema property key:'.User::SCHEMA_EMAILADDRESS, PLUGIN_NAME),
                                          'getUserInputFieldsFromSamlClaim',
                                           var_export($response, true));
             }

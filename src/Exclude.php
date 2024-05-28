@@ -201,12 +201,12 @@ class Exclude extends CommonDropdown
         $dropdown = new Exclude();
         $table = $dropdown::getTable();
         foreach($DB->request($table) as $id => $row){                           //NOSONAR - For readability
-            $excludes[] = [self::NAME                => $row[self::NAME],
-                           self::ACTION              => $row[self::ACTION],
-                           self::DATE_CREATION       => $row[self::DATE_CREATION],
-                           self::DATE_MOD            => $row[self::DATE_MOD],
-                           self::CLIENTAGENT         => $row[self::CLIENTAGENT],
-                           self::EXCLUDEPATH         => $row[self::EXCLUDEPATH]];
+            $excludes[] = [Exclude::NAME                => $row[Exclude::NAME],
+                           Exclude::ACTION              => $row[Exclude::ACTION],
+                           Exclude::DATE_CREATION       => $row[Exclude::DATE_CREATION],
+                           Exclude::DATE_MOD            => $row[Exclude::DATE_MOD],
+                           Exclude::CLIENTAGENT         => $row[Exclude::CLIENTAGENT],
+                           Exclude::EXCLUDEPATH         => $row[Exclude::EXCLUDEPATH]];
         }
         return $excludes;
     }
@@ -219,7 +219,7 @@ class Exclude extends CommonDropdown
      */
     public static function ProcessExcludes(): bool                                                         //NOSONAR - Maybe fix complexity in future.
     {
-        $excludes = self::getExcludes();
+        $excludes = Exclude::getExcludes();
         // Process configured excluded URIs and agents.
         foreach($excludes as $exclude){
             if (strpos($_SERVER['REQUEST_URI'], $exclude[Exclude::EXCLUDEPATH]) !== false) {
@@ -246,7 +246,7 @@ class Exclude extends CommonDropdown
     public static function GetExcludeAction(string $excluded, $agent = false): bool    //NOSONAR - complexity by design
     {
         // Get all the excluded objects from the database
-        $excludes = self::getExcludes();
+        $excludes = Exclude::getExcludes();
         // Process configured excluded URIs and agents.
         foreach($excludes as $exclude){
             if (strpos($excluded, $exclude[Exclude::EXCLUDEPATH]) !== false) {
@@ -307,7 +307,7 @@ class Exclude extends CommonDropdown
         $default_collation = DBConnection::getDefaultCollation();
         $default_key_sign = DBConnection::getDefaultPrimaryKeySignOption();
 
-        $table = self::getTable();
+        $table = Exclude::getTable();
 
         // Create the base table if it does not yet exist;
         // Do not update this table for later versions, use the migration class;
@@ -382,7 +382,7 @@ class Exclude extends CommonDropdown
      */
     public static function uninstall(Migration $migration) : void
     {
-        $table = self::getTable();
+        $table = Exclude::getTable();
         Session::addMessageAfterRedirect("🆗 Removed: $table");
         $migration->dropTable($table);
     }
