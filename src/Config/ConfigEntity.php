@@ -406,7 +406,7 @@ class ConfigEntity extends ConfigItem
      * it will update the cookie and return the new IdP ID.
      * @return void
      */
-    public function isEnforced(): int
+    public function setIsEnforced(): int
     {
         // If called by loginFlow->performSamlSSO the Entity is already populated
         // then we consider this a first login attempt.
@@ -444,7 +444,7 @@ class ConfigEntity extends ConfigItem
      * Unsets the enforce cookie
      * @return void
      */
-    public static function unsetEnforceCookie() {
+    public static function unsetIsEnforced() {
         setcookie(
             ConfigEntity::ENFORCE_SSO,
             '-1',
@@ -453,6 +453,19 @@ class ConfigEntity extends ConfigItem
             'path'     => '/',
             'httponly' => true,
             'samesite' => 'None',]);
+    }
+
+    /**
+     * Gets the value of the enforce Cookie.
+     * @return void
+     */
+    public static function getEnforced(): int {
+        if(isset($_COOKIE[ConfigEntity::ENFORCE_SSO]) &&
+           $_COOKIE[ConfigEntity::ENFORCE_SSO] != -1){
+             return $_COOKIE[ConfigEntity::ENFORCE_SSO];
+        }else{
+            return 0;
+        }
     }
 
 

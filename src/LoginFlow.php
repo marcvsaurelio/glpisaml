@@ -118,7 +118,7 @@ class LoginFlow
         // Do we want to or need to break enforcement?
         if(isset($_GET[LoginFlow::SAMLBYPASS]) &&
            $_GET[LoginFlow::SAMLBYPASS] == 1   ){
-            ConfigEntity::unsetEnforceCookie();
+            ConfigEntity::unsetIsEnforced();
             $this->performLogOff();
             $this->doMetaRefresh($CFG_GLPI['url_base'].'/');
         }
@@ -129,10 +129,9 @@ class LoginFlow
         // was not found.
         if(($state->getPhase() == LoginState::PHASE_INITIAL ||
             $state->getPhase() == LoginState::PHASE_LOGOFF) &&
-            isset($_COOKIE[ConfigEntity::ENFORCE_SSO])      &&
-            $_COOKIE[ConfigEntity::ENFORCE_SSO] != -1       ){
+            $idpId = ConfigEntity::getEnforced()            ){
             // set the logic to perform SSO using the indicated IdP.
-            $_POST[self::POSTFIELD] = $_COOKIE[ConfigEntity::ENFORCE_SSO];
+            $_POST[self::POSTFIELD] = $idpId;
         }
 
         
@@ -196,7 +195,7 @@ class LoginFlow
         // https://codeberg.org/QuinQuies/glpisaml/issues/4
         if($configEntity->isActive()){
             // Validate if the configuration is enforced and set cookie.
-            $configEntity->isEnforced();
+            $configEntity->setIsEnforced();
 
             // Initialize the OneLogin phpSaml auth object
             // using the requested phpSaml configuration from
