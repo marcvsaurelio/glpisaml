@@ -90,7 +90,7 @@ class LoginFlow
      * @return  boolean
      * @since                   1.0.0
      */
-    public function doAuth(): bool
+    public function doAuth(): bool                         //NOSONAR - complexity by design
     {
         global $CFG_GLPI;
         // Get current state

@@ -214,7 +214,7 @@ class User
         }
     }
 
-    public function updateUserRights(array $params): void
+    public function updateUserRights(array $params): void       //NOSONAR - Complexity by design
     {
         $update = $params[User::RULEOUTPUT];
         // Do we need to add a group?

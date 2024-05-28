@@ -269,7 +269,8 @@ class ConfigItem    //NOSONAR
                 ConfigItem::ERRORS    => ($error) ? $error : null,];
     }
 
-    // TODO: Im not yet happy with the structure and complexity. Should be simplified.
+    // Im not yet happy with the structure and complexity. 
+    // Should be simplified.
     protected function idp_certificate(mixed $var): array //NOSONAR
     {
         // Is a required field!
