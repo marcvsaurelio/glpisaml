@@ -78,6 +78,7 @@ class LoginFlow
 
     // https://codeberg.org/QuinQuies/glpisaml/issues/37
     public const POSTFIELD   = 'samlIdpId';
+    public const GETFIELD    = 'samlIdpId';
     public const SAMLBYPASS  =  'bypass';
 
     // LOGIN FLOW AFTER PRESSING A IDP BUTTON.
@@ -142,6 +143,13 @@ class LoginFlow
                $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){    // If all is true try to find an matching idp id.
                     $_POST[LoginFlow::POSTFIELD] = $id;                   // If we found an ID Set the POST phpsaml to our found ID this will trigger
             }
+        }
+
+        // Check if the user manually provided the correct idp to use
+        // this to provision Idp Initiated SAML flows.
+        if(isset($_GET[LoginFlow::GETFIELD])        &&
+           is_numeric($_GET[LoginFlow::GETFIELD])   ){
+            $_POST[LoginFlow::POSTFIELD] = $_GET[LoginFlow::GETFIELD];
         }
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
