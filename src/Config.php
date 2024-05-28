@@ -33,7 +33,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.3
+ *  @version    1.1.4
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -243,7 +243,7 @@ class Config extends CommonDBTM
 
         // $length is used to strip the length of the button name to fit the button.
         $length = (is_numeric($length)) ? $length : 255;
-        
+
         // Iterate through the IDP config rows and generate the buttons for twig template.
         foreach( $DB->request(['FROM' => Config::getTable(), 'WHERE' => ['is_deleted'  => 0]]) as $value)
         {
