@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.3
+ *  @version    1.1.4
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -268,7 +268,7 @@ class ConfigEntity extends ConfigItem
     {
         global $DB;
         // Fetch config item constants;
-        $classConstants = self::getConstants();
+        $classConstants = ConfigEntity::getConstants();
         // Fetch database columns;
         $sql = 'SHOW COLUMNS FROM '.SamlConfig::getTable();
         if ($result = $DB->doQuery($sql)) {
@@ -319,9 +319,9 @@ class ConfigEntity extends ConfigItem
      */
     public function getConfigDomain(): string
     {
-        return (key_exists(self::CONF_DOMAIN, $this->fields) &&
-                !empty($this->fields[self::CONF_DOMAIN])     &&
-                $this->fields[self::CONF_DOMAIN] != 'youruserdomain.tld') ? $this->fields[self::CONF_DOMAIN] : '';
+        return (key_exists(ConfigEntity::CONF_DOMAIN, $this->fields) &&
+                !empty($this->fields[ConfigEntity::CONF_DOMAIN])     &&
+                $this->fields[ConfigEntity::CONF_DOMAIN] != 'youruserdomain.tld') ? $this->fields[ConfigEntity::CONF_DOMAIN] : '';
     }
 
     /**
@@ -406,7 +406,7 @@ class ConfigEntity extends ConfigItem
      * it will update the cookie and return the new IdP ID.
      * @return void
      */
-    public function isEnforced(): int
+    public function setIsEnforced(): int
     {
         // If called by loginFlow->performSamlSSO the Entity is already populated
         // then we consider this a first login attempt.
@@ -444,7 +444,7 @@ class ConfigEntity extends ConfigItem
      * Unsets the enforce cookie
      * @return void
      */
-    public static function unsetEnforceCookie() {
+    public static function unsetIsEnforced() {
         setcookie(
             ConfigEntity::ENFORCE_SSO,
             '-1',
@@ -453,6 +453,19 @@ class ConfigEntity extends ConfigItem
             'path'     => '/',
             'httponly' => true,
             'samesite' => 'None',]);
+    }
+
+    /**
+     * Gets the value of the enforce Cookie.
+     * @return void
+     */
+    public static function getEnforced(): int {
+        if(isset($_COOKIE[ConfigEntity::ENFORCE_SSO]) &&
+           $_COOKIE[ConfigEntity::ENFORCE_SSO] != -1){
+             return $_COOKIE[ConfigEntity::ENFORCE_SSO];
+        }else{
+            return 0;
+        }
     }
 
 

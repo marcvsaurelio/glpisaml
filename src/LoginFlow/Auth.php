@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.3
+ *  @version    1.1.4
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -60,7 +60,7 @@ class Auth extends glpiAuth
         $this->user = (new User())->getOrCreateUser($userFields);
 
         // Setting this property actually authorizes the login for the user.
-        // (sic) Succeeded is spelled incorrectly  in GLPI object
+        // (sic) Succeeded is spelled incorrectly in GLPI object
         $this->auth_succeded = (bool)$this->user->fields;
 
         // Return this object for injection into the session.

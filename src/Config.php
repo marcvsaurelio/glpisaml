@@ -33,7 +33,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.3
+ *  @version    1.1.4
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -214,7 +214,7 @@ class Config extends CommonDBTM
                 // Build tab array
                 $tab[] = [
                     'id'                 => $index,
-                    'table'              => self::getTable(),
+                    'table'              => Config::getTable(),
                     'field'              => $field[ConfigItem::FIELD],
                     'name'               => __(str_replace('_', ' ', ucfirst($field[ConfigItem::FIELD]))),
                     'datatype'           => $field[ConfigItem::TYPE],
@@ -237,14 +237,15 @@ class Config extends CommonDBTM
      */
     public static function getLoginButtons(int $length): array
     {
-        // Get global DB object to query the configTable.
-        global $DB;
-        // Define the array used to store the buttons (if any)
-        $tplvars = [];
+        
+        global $DB;         // Get global DB object to query the configTable.
+        $tplvars = [];      // Define the array used to store the buttons (if any)
+
         // $length is used to strip the length of the button name to fit the button.
         $length = (is_numeric($length)) ? $length : 255;
+
         // Iterate through the IDP config rows and generate the buttons for twig template.
-        foreach( $DB->request(['FROM' => self::getTable(), 'WHERE' => ['is_deleted'  => 0]]) as $value)
+        foreach( $DB->request(['FROM' => Config::getTable(), 'WHERE' => ['is_deleted'  => 0]]) as $value)
         {
             // Only populate buttons that are considered valid by ConfigEntity;
             $configEntity = new ConfigEntity($value[ConfigEntity::ID]);
@@ -256,6 +257,20 @@ class Config extends CommonDBTM
         }
         // Return the buttons (if any) else empty array.
         return $tplvars;
+    }
+
+     /**
+     * Returns true if any of the configured IdPs is set to enforced.
+     * this will hide the password and database fields from the login
+     * page.
+     * @return  bool
+     * @see                             - src/LoginFlow/showLoginScreen()
+     * @since 1.0.0
+     */
+    public static function getIsEnforced(): bool
+    {
+        global $DB;
+        return (count($DB->request(['FROM' => Config::getTable(), 'WHERE' => [ConfigEntity::ENFORCE_SSO  => 1]])) > 0) ? true : false;
     }
 
     /**
@@ -274,22 +289,17 @@ class Config extends CommonDBTM
             $domain = explode('@', $upn);
             // Query the database for the given domain;
             $req = $DB->request(['SELECT'   =>  ConfigEntity::ID,
-                                 'FROM'     =>  self::getTable(),
+                                 'FROM'     =>  Config::getTable(),
                                  'WHERE'    =>  [ConfigEntity::CONF_DOMAIN => $domain[1]]]);
             // If we got a result, cast it to int and return it
             if($req->numrows() == 1){
                 foreach($req as $row){
                     $id = (int) $row['id'];
                 }
-                return $id;
-            }else{
-                // If we found nothing, return 0
-                return 0;
-            }
-        }else{
-            // Username is not an email, return 0
-            return 0;
-        }
+                return $id; // Return the correct idp id
+            }          // We found nothing, return 0
+        }              // Username is not an email, return 0
+        return 0;
     }
 
     /**
@@ -304,7 +314,7 @@ class Config extends CommonDBTM
         $default_charset    = DBConnection::getDefaultCharset();
         $default_collation  = DBConnection::getDefaultCollation();
         $default_key_sign   = DBConnection::getDefaultPrimaryKeySignOption();
-        $table              = self::getTable();
+        $table              = Config::getTable();
 
         // Create the base table if it does not yet exist;
         // Do not update this table for later versions, use the migration class;
@@ -373,7 +383,7 @@ class Config extends CommonDBTM
      */
     public static function uninstall(Migration $migration): void
     {
-        $table = self::getTable();
+        $table = Config::getTable();
         // Make this smarter in the future. Never create a backup
         // when the source table is empty and an existing table is
         // populated! Allow user to restore from backup table. Current

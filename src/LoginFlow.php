@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.3
+ *  @version    1.1.4
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -78,6 +78,7 @@ class LoginFlow
 
     // https://codeberg.org/QuinQuies/glpisaml/issues/37
     public const POSTFIELD   = 'samlIdpId';
+    public const GETFIELD    = 'samlIdpId';
     public const SAMLBYPASS  =  'bypass';
 
     // LOGIN FLOW AFTER PRESSING A IDP BUTTON.
@@ -90,17 +91,13 @@ class LoginFlow
      * @return  boolean
      * @since                   1.0.0
      */
-    public function doAuth(): bool
+    public function doAuth(): bool                         //NOSONAR - complexity by design
     {
         global $CFG_GLPI;
-        // global $GLPI_CACHE;
         // Get current state
         if(!$state = new Loginstate()){
             $this->printError(__('Could not load loginState', PLUGIN_NAME));
         }else{
-            // TODO: Evaluate database state, do we need to force logoff a user,
-            // but only after user has been logged in.
-
             // Do we need to skip because of exclusion?
             if($state->isExcluded()){
                 return $state->getExcludeAction();
@@ -115,27 +112,25 @@ class LoginFlow
             $this->performLogOff();
         }
 
-        // Do we want to or need to break enforcement?
-        if(isset($_GET[LoginFlow::SAMLBYPASS]) &&
-           $_GET[LoginFlow::SAMLBYPASS] == 1   ){
-            ConfigEntity::unsetEnforceCookie();
-            $this->performLogOff();
-            $this->doMetaRefresh($CFG_GLPI['url_base'].'/');
+        // Do we want to or need to break our SSO enforcement?
+        // https://codeberg.org/QuinQuies/glpisaml/issues/35
+        if(isset($_GET[LoginFlow::SAMLBYPASS])                  &&  // Is ?bypass=1 set in our uri
+           strpos($_SERVER['REQUEST_URI'], '/front/') !== false &&  // We are not on the login page
+           $_GET[LoginFlow::SAMLBYPASS] == 1                    ){  // bypass is set to 1 (can be replaced with secret key)
+            ConfigEntity::unsetIsEnforced();                        // Unset the enforce cookie
+            $this->performLogOff();                                 // Perform logoff
+            $this->doMetaRefresh($CFG_GLPI['url_base'].'/');        // Redirect user to the login page
         }
 
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
         // Do enforced login if we found a previous cookie
         // And the phase is initial, and the escape string
         // was not found.
-        if(($state->getPhase() == LoginState::PHASE_INITIAL ||
-            $state->getPhase() == LoginState::PHASE_LOGOFF) &&
-            isset($_COOKIE[ConfigEntity::ENFORCE_SSO])      &&
-            $_COOKIE[ConfigEntity::ENFORCE_SSO] != -1       ){
-            // set the logic to perform SSO using the indicated IdP.
-            $_POST[self::POSTFIELD] = $_COOKIE[ConfigEntity::ENFORCE_SSO];
+        if(($state->getPhase() == LoginState::PHASE_INITIAL ||      // Login should not be enforced after initial login phase
+            $state->getPhase() == LoginState::PHASE_LOGOFF) &&      // Login should not be enforced before logout phase
+            $idpId = ConfigEntity::getEnforced()            ){      // Fetch the idpId from the enforced cookie
+            $_POST[LoginFlow::POSTFIELD] = $idpId;                  // Set the id to trigger an SSO using the set IdP.
         }
-
-        
 
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
         // Capture the post of regular login and verify if the provided domain is SSO enabled.
@@ -146,24 +141,31 @@ class LoginFlow
             if(strstr($key, 'fielda')                               &&    // Test keys if fielda[token] is present in the POST.
                !empty($_POST[$key])                                 &&    // Test if fielda actually has a value we can process
                $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){    // If all is true try to find an matching idp id.
-                    $_POST[self::POSTFIELD] = $id;                        // If we found an ID Set the POST phpsaml to our found ID this will trigger
+                    $_POST[LoginFlow::POSTFIELD] = $id;                   // If we found an ID Set the POST phpsaml to our found ID this will trigger
             }
         }
 
+        // Check if the user manually provided the correct idp to use
+        // this to provision Idp Initiated SAML flows.
+        if(isset($_GET[LoginFlow::GETFIELD])        &&
+           is_numeric($_GET[LoginFlow::GETFIELD])   ){
+            $_POST[LoginFlow::POSTFIELD] = $_GET[LoginFlow::GETFIELD];
+        }
+
         // Check if a SAML button was pressed and handle the corresponding logon request!
-        if (isset($_POST[self::POSTFIELD])         &&      // Must be set
-            is_numeric($_POST[self::POSTFIELD])    &&      // Value must be numeric
-            strlen($_POST[self::POSTFIELD]) < 3    ){      // Should not exceed 999
+        if (isset($_POST[LoginFlow::POSTFIELD])         &&      // Must be set
+            is_numeric($_POST[LoginFlow::POSTFIELD])    &&      // Value must be numeric
+            strlen($_POST[LoginFlow::POSTFIELD]) < 3    ){      // Should not exceed 999
 
             // If we know the idp we register it in the login State
-            $state->setIdpId(filter_var($_POST[self::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
+            $state->setIdpId(filter_var($_POST[LoginFlow::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
 
             // Update the current phase in database. The state is verified by the Acs
             // while handling the received SamlResponse. Any other state will force Acs
             // into an error state. This is to prevent unexpected (possibly replayed)
             // samlResponses from being processed. to prevent playback attacks.
             if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
-                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow', PLUGIN_NAME));
+                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[LoginFlow::POSTFIELD] , PLUGIN_NAME));
             }
 
             // Actually perform SSO
@@ -188,20 +190,19 @@ class LoginFlow
         global $CFG_GLPI;
         
         // Fetch the correct configEntity GLPI
-        if($configEntity = new ConfigEntity($state->getIdpId())){
-            $samlConfig = $configEntity->getPhpSamlConfig();
+        if($configEntity = new ConfigEntity($state->getIdpId())){ // Get the configEntity object using our stored ID
+            $samlConfig = $configEntity->getPhpSamlConfig();      // Get the correctly formatted SamlConfig array
         }
 
         // Validate if the IDP configuration is enabled
         // https://codeberg.org/QuinQuies/glpisaml/issues/4
-        if($configEntity->isActive()){
-            // Validate if the configuration is enforced and set cookie.
-            $configEntity->isEnforced();
+        if($configEntity->isActive()){                            // Validate the IdP config is activated
+            $configEntity->setIsEnforced();                       // Validate if the configuration is enforced and set cookie.
 
             // Initialize the OneLogin phpSaml auth object
             // using the requested phpSaml configuration from
-            // the glpisaml config database. Catch all throwable errors
-            // and exceptions.
+            // the glpisaml config database. Catch all throwable
+            // errors and exceptions.
             try { $auth = new samlAuth($samlConfig); } catch (Throwable $e) {
                 $this->printError($e->getMessage(), 'Saml::Auth->init', var_export($auth->getErrors(), true));
             }
@@ -263,6 +264,7 @@ class LoginFlow
      */
     private function doMetaRefresh(string $location): void
     {
+
         $location = (filter_var($location, FILTER_VALIDATE_URL)) ? $location : '/';
         echo <<<HTML
         <html>
@@ -286,18 +288,25 @@ class LoginFlow
      */
     public function showLoginScreen(): void
     {
-        // Fetch the global DB object;
-        $tplVars = Config::getLoginButtons(12);
-        // Only show the interface if we have buttons to show.
-        if(!empty($tplVars)){
+        
+        $tplVars = Config::getLoginButtons(12);         // Fetch the global DB object;
+        if(!empty($tplVars)){                           // Only show the interface if we have buttons to show.
             // Define static translatable elements
             $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
             $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
-            $tplVars['noconfig']   = __('No SSO buttons enabled yet. Try your SSO username instead.', PLUGIN_NAME);
-            $tplVars['postfield']   = self::POSTFIELD;
-
+            $tplVars['showbuttons']    = true;
+            $tplVars['postfield']  = LoginFlow::POSTFIELD;
+            $tplVars['enforced']   = Config::getIsEnforced();
             // https://codeberg.org/QuinQuies/glpisaml/issues/12
             TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);
+        }else{
+            // We might still need to hide password, remember and database login fields
+            if($tplVars['enforced'] = Config::getIsEnforced() &&    // Validate there is 'an' enforced saml Config
+               !isset($_GET['bypass'])                        ){    // Validate we don't want to bypass our enforcement
+                
+                // Call the renderer to render our CSS injection.
+                TemplateRenderer::getInstance()->display('@glpisaml/loginScreen.html.twig',  $tplVars);
+            }
         }
     }
 

@@ -1,4 +1,5 @@
 <!-- implemented in Loginflow->showLoginScreen(void): string -->
+{% if showbuttons == true %}
 <div>
     <div class="card-header">
         <h2>{{ header }}</h2>
@@ -22,3 +23,12 @@
         </div>
     </div>
 </div>
+{% endif %}
+<!-- Add CSS to hide certain login buttons -->
+{% if enforced == true %}
+<style>
+    .mb-4:has(#login_password){ display:none; }
+    .mb-2:has(#login_remember){ display:none; }
+    .mb-3:has(.select2){ display:none; }
+</style>
+{% endif %}
