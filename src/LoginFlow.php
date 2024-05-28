@@ -162,7 +162,7 @@ class LoginFlow
             // into an error state. This is to prevent unexpected (possibly replayed)
             // samlResponses from being processed. to prevent playback attacks.
             if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
-                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow', PLUGIN_NAME));
+                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[self::POSTFIELD] , PLUGIN_NAME));
             }
 
             // Actually perform SSO
