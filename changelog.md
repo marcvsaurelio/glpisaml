@@ -27,7 +27,8 @@
 - JIT wil now populate sync_date property
 - Added location claims to the logic, they are currently not handled.
 - Implemented the `enforced` option, enforcing automatic login if the user selected its IdP in a previous session using a `enforce_saml` cookie.
-- Implemented the `?bypass=1` option to bypass the enforced login for troubleshooting. 
+- Implemented the `?bypass=1` option to bypass the enforced login for troubleshooting.
+- Enforce will now also `hide` the password, 
 
 **v1.1.3**
 - Added logic to store the initial sessionId for reference in state table.

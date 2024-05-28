@@ -237,12 +237,13 @@ class Config extends CommonDBTM
      */
     public static function getLoginButtons(int $length): array
     {
-        // Get global DB object to query the configTable.
-        global $DB;
-        // Define the array used to store the buttons (if any)
-        $tplvars = [];
+        
+        global $DB;         // Get global DB object to query the configTable.
+        $tplvars = [];      // Define the array used to store the buttons (if any)
+
         // $length is used to strip the length of the button name to fit the button.
         $length = (is_numeric($length)) ? $length : 255;
+        
         // Iterate through the IDP config rows and generate the buttons for twig template.
         foreach( $DB->request(['FROM' => Config::getTable(), 'WHERE' => ['is_deleted'  => 0]]) as $value)
         {
@@ -295,15 +296,10 @@ class Config extends CommonDBTM
                 foreach($req as $row){
                     $id = (int) $row['id'];
                 }
-                return $id;
-            }else{
-                // If we found nothing, return 0
-                return 0;
-            }
-        }else{
-            // Username is not an email, return 0
-            return 0;
-        }
+                return $id; // Return the correct idp id
+            }          // We found nothing, return 0
+        }              // Username is not an email, return 0
+        return 0;
     }
 
     /**

@@ -286,7 +286,7 @@ class LoginFlow
             // Define static translatable elements
             $tplVars['action']     = Plugin::getWebDir(PLUGIN_NAME, true);
             $tplVars['header']     = __('Login with external provider', PLUGIN_NAME);
-            $tplVars['buttons']    = true;
+            $tplVars['showbuttons']    = true;
             $tplVars['postfield']  = LoginFlow::POSTFIELD;
             $tplVars['enforced']   = Config::getIsEnforced();
             // https://codeberg.org/QuinQuies/glpisaml/issues/12
