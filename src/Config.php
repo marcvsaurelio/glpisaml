@@ -258,6 +258,20 @@ class Config extends CommonDBTM
         return $tplvars;
     }
 
+     /**
+     * Returns true if any of the configured IdPs is set to enforced.
+     * this will hide the password and database fields from the login
+     * page.
+     * @return  bool
+     * @see                             - src/LoginFlow/showLoginScreen()
+     * @since 1.0.0
+     */
+    public static function getIsEnforced(): bool
+    {
+        global $DB;
+        return (count($DB->request(['FROM' => Config::getTable(), 'WHERE' => [ConfigEntity::ENFORCE_SSO  => 1]])) > 0) ? true : false;
+    }
+
     /**
      * Search saml configurations based on provided username@[domain.ext]
      * and return the configuration ID of the matching saml configuration.
