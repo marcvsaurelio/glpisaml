@@ -70,12 +70,6 @@ use GlpiPlugin\Glpisaml\LoginFlow\Auth as glpiAuth;
  */
 class LoginFlow
 {
-    /**
-     * Where to find the loginScreen template.
-     * @since 1.0.0
-     */
-    public const HTML_TEMPLATE_FILE = PLUGIN_GLPISAML_TPLDIR.'/loginScreen.html';
-
     // https://codeberg.org/QuinQuies/glpisaml/issues/37
     public const POSTFIELD   = 'samlIdpId';
     public const GETFIELD    = 'samlIdpId';
