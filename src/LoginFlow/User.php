@@ -142,10 +142,10 @@ class User
         // Verify if user exists in database.
         // https://codeberg.org/QuinQuies/glpisaml/issues/48
         if((isset($userFields[User::NAME])                         &&      // Field must be set
-           !$user->getFromDBbyName($userFields[User::NAME]))       &&      // Try to locate by name->NameId.
+           !$user->getFromDBbyName($userFields[User::NAME]))       &&      // Try to locate by name->NameId, continue on ! fail.
            (isset($userFields[$userFields[User::EMAIL][0]])        &&      // Fields must be set
-           !$user->getFromDBbyEmail($userFields[User::EMAIL][0]))  &&      // Use email to fetch result
-           !$user->getFromDBbyEmail($userFields[User::NAME])       ){      // Try to locate by email->emailaddress.
+           !$user->getFromDBbyEmail($userFields[User::EMAIL][0]))  &&      // Try to locate by email->emailaddress, continue on ! fail.
+           !$user->getFromDBbyEmail($userFields[User::NAME])       ){      // Try to locate by email->emailaddress, continue on ! fail.
             // User is not found, do we need to create it?
 
             // Get current loginState and

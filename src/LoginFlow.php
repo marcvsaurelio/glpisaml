@@ -82,10 +82,10 @@ class LoginFlow
      * Called by post_init hook via function in hooks.php. It watches POST
      * information passed from the loginForm.
      *
-     * @return  boolean
+     * @return  null
      * @since                   1.0.0
      */
-    public function doAuth(): bool                         //NOSONAR - complexity by design
+    public function doAuth()                         //NOSONAR - complexity by design
     {
         global $CFG_GLPI;
         // Get current state
@@ -94,7 +94,9 @@ class LoginFlow
         }else{
             // Do we need to skip because of exclusion?
             if($state->isExcluded()){
-                return $state->getExcludeAction();
+                //return $state->getExcludeAction();
+                // Return false seems to break GLPI in all kind of ways.
+                return;
             }
         }
 
@@ -165,8 +167,8 @@ class LoginFlow
             // Actually perform SSO
             $this->performSamlSSO($state);
         }
-        // else
-        return false;
+        // Do nothing will return nothing.
+        // Return false breaks glpi in all kinds of nasty ways.
     }
 
     /**
