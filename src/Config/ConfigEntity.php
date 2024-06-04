@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.4
+ *  @version    1.1.5
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -505,10 +505,10 @@ class ConfigEntity extends ConfigItem
                     'sp' => [
                         'entityId'                          => $CFG_GLPI['url_base'].'/',
                         'assertionConsumerService'          => [
-                            'url'                           => $CFG_GLPI['url_base'].'/'.PLUGIN_GLPISAML_WEBDIR.PLUGIN_GLPISAML_ACS_PATH,
+                            'url'                           => $CFG_GLPI['url_base'].'/'.PLUGIN_GLPISAML_WEBDIR.'/front/acs.php',
                         ],
                         'singleLogoutService'               => [
-                            'url'                           => $CFG_GLPI['url_base'].'/'.PLUGIN_GLPISAML_WEBDIR.PLUGIN_GLPISAML_SLO_PATH,
+                            'url'                           => $CFG_GLPI['url_base'].'/'.PLUGIN_GLPISAML_WEBDIR.'/front/slo.php',
                         ],
                         'x509cert'                          => $this->fields[ConfigEntity::SP_CERTIFICATE],
                         'privateKey'                        => $this->fields[ConfigEntity::SP_KEY],

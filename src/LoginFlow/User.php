@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.4
+ *  @version    1.1.5
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -140,9 +140,12 @@ class User
         $user = new glpiUser();
         
         // Verify if user exists in database.
-        if(!$user->getFromDBbyName($userFields[User::NAME])       &&      // Try to locate by name->NameId.
-           !$user->getFromDBbyEmail($userFields[User::EMAIL][0])  &&
-           !$user->getFromDBbyEmail($userFields[User::NAME])      ){      // Try to locate by email->emailaddress.
+        // https://codeberg.org/QuinQuies/glpisaml/issues/48
+        if((isset($userFields[User::NAME])                         &&      // Field must be set
+           !$user->getFromDBbyName($userFields[User::NAME]))       &&      // Try to locate by name->NameId, continue on ! fail.
+           (isset($userFields[$userFields[User::EMAIL][0]])        &&      // Fields must be set
+           !$user->getFromDBbyEmail($userFields[User::EMAIL][0]))  &&      // Try to locate by email->emailaddress, continue on ! fail.
+           !$user->getFromDBbyEmail($userFields[User::NAME])       ){      // Try to locate by email->emailaddress, continue on ! fail.
             // User is not found, do we need to create it?
 
             // Get current loginState and

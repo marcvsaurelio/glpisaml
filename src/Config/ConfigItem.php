@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.4
+ *  @version    1.1.5
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -598,7 +598,7 @@ class ConfigItem    //NOSONAR
                     $validations['validFrom'] = __("⚠️ Warning, certificate with Common Name (CN): $cn issued in the future ($born days)", PLUGIN_NAME);
                 }
                 if($cn == 'withlove.from.donuts.nl'){
-                    $validations['validFrom'] = __("⚠️ Warning, do not use the 'withlove.from.donuts.nl' example certificates. They do not offer any protection!", PLUGIN_NAME);
+                    $validations['validFrom'] = __("⚠️ Warning, do not use the 'withlove.from.donuts.nl' example certificates. They offer no additional protection.", PLUGIN_NAME);
                 }
                 $parsedCertificate['validations'] = $validations;
                 return $parsedCertificate;

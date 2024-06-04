@@ -1,3 +1,6 @@
+**v1.1.5**
+- We found that the return value bool:false on the POST_INIT hook might break cron functionality in very nasty ways (removing user profiles after succesfull mail import for instance!) as a quick fix we now return null, making sure other components are not influenced by anything we did 'not' return to the calling plugin function. 
+
 **v1.1.4**
 - Aligned the menu icons and naming with TecLib's Oauth SSO Applications plugin in `src/Config.php`
 - Altered `name` in `setup.php:122` to reflect plugin name correctly with value `Glpisaml`

@@ -5,11 +5,8 @@ This plugin is a full rewrite by Chris Gralike of Derrick Smith's initial SAML p
 PRODUCTION RELEASE
 
 # Current Focus
-* Fixing session.cookie_samesite issues.
-* Implementing hide button functionality
-* Hardening the plugin
-* Documentation
-* Adding additional locales
+* Adding functionality
+* hardening the plugin
 
 # Support
 Want to support my work?

@@ -30,7 +30,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    Glpisaml
- *  @version    1.1.4
+ *  @version    1.1.5
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2023 by Chris Gralike
  *  @license    GPLv2+
@@ -56,15 +56,12 @@ define('PLUGIN_NAME', 'glpisaml');                                              
 // Directories
 define('PLUGIN_GLPISAML_WEBDIR', Plugin::getWebDir(PLUGIN_NAME, false));                        // Plugin web directory
 define('PLUGIN_GLPISAML_SRCDIR', __DIR__ . '/src');                                             // Location of the main classes
-define('PLUGIN_GLPISAML_TPLDIR', __DIR__ . '/tpl');                                             // Location of the templates directory
 // WebPaths
 define('PLUGIN_GLPISAML_ATOM_URL', 'https://codeberg.org/QuinQuies/glpisaml/releases.rss');     // Location of the repository versions
-define('PLUGIN_GLPISAML_ACS_PATH', '/front/acs.php');                                           // Location of the assertion service.
-define('PLUGIN_GLPISAML_SLO_PATH', '/front/slo.php');                                           // Location to handle logout requests
-define('PLUGIN_GLPISAML_META_PATH', '/front/meta.php');                                         // Location where to get metadata about sp.
+define('PLUGIN_GLPISAML_META_PATH', '/front/meta.php');                                         // Location where to get metadata about sp
 define('PLUGIN_GLPISAML_CONF_PATH', '/front/config.php');                                       // Location of the config page
 define('PLUGIN_GLPISAML_CONF_FORM', '/front/config.form.php');                                  // Location of config form
-define('PLUGIN_GLPISAML_CONFCSS_PATH', 'templates/css/configForm.css');                         // Location of the config CSS
+define('PLUGIN_GLPISAML_CONFCSS_PATH', 'templates/css/glpiSaml.css');                           // Location of the config CSS
 
 /**
  * Default GLPI Plugin Init function.
