@@ -138,14 +138,15 @@ class User
         // At this point the userFields should be present and validated (textually) by loginFlow.
         // Load GLPI user object
         $user = new glpiUser();
+        $name  = (isset($userFields[User::NAME])) ? $userFields[User::NAME] : '';
+        $email = (isset($userFields[User::EMAIL][0])) ? $userFields[User::EMAIL][0] : '';
+
         
         // Verify if user exists in database.
         // https://codeberg.org/QuinQuies/glpisaml/issues/48
-        if((isset($userFields[User::NAME])                         &&      // Field must be set
-           !$user->getFromDBbyName($userFields[User::NAME]))       &&      // Try to locate by name->NameId, continue on ! fail.
-           (isset($userFields[$userFields[User::EMAIL][0]])        &&      // Fields must be set
-           !$user->getFromDBbyEmail($userFields[User::EMAIL][0]))  &&      // Try to locate by email->emailaddress, continue on ! fail.
-           !$user->getFromDBbyEmail($userFields[User::NAME])       ){      // Try to locate by email->emailaddress, continue on ! fail.
+        if(!$user->getFromDBbyName($name)       &&      // Try to locate by name->NameId, continue on ! fail.
+           !$user->getFromDBbyEmail($email)     &&      // Try to locate by email->emailaddress, continue on ! fail.
+           !$user->getFromDBbyEmail($name)      ){      // Try to locate by email->emailaddress, continue on ! fail.
             // User is not found, do we need to create it?
 
             // Get current loginState and
@@ -198,6 +199,8 @@ class User
 
         // User is found, check if we are allowed to use it.
         }else{
+            var_dump($user->fields);
+            exit;
             // Verify the user is not deleted (in trashcan)
             if($user->fields[User::DELETED]){
                 LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[User::USERID]." is marked deleted but still exists in the GLPI database. Because of
