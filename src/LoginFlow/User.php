@@ -222,6 +222,15 @@ class User
 
     public function updateUserRights(array $params): void       //NOSONAR - Complexity by design
     {
+        // Glpi core WILL call this function on random when
+        // processing rules elsewhere (where it should'nt). As a
+        // result we need to make sure there are no breaking
+        // side effects occur because of this unexpected behavior.
+        // @see https://codeberg.org/QuinQuies/glpisaml/issues/55
+        if(!$params[User::RULEOUTPUT]["_rule_process"]){
+            return;
+        }
+
         $update = $params[User::RULEOUTPUT];
         // Do we need to add a group?
         if(isset($update[User::GROUPID])  &&
