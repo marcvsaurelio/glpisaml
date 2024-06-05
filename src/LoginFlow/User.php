@@ -224,8 +224,8 @@ class User
     {
         // Glpi core WILL call this function on random when
         // processing rules elsewhere (where it should'nt). As a
-        // result we need to make sure there are no breaking
-        // side effects occur because of this unexpected behavior.
+        // result we need to make sure no breaking side effects
+        // occur because of this unexpected behavior.
         // @see https://codeberg.org/QuinQuies/glpisaml/issues/55
         if(!$params[User::RULEOUTPUT]["_rule_process"]){
             return;
