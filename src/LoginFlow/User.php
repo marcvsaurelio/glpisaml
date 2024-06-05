@@ -32,7 +32,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package    GLPISaml
- *  @version    1.1.5
+ *  @version    1.1.6
  *  @author     Chris Gralike
  *  @copyright  Copyright (c) 2024 by Chris Gralike
  *  @license    GPLv3+
@@ -138,14 +138,15 @@ class User
         // At this point the userFields should be present and validated (textually) by loginFlow.
         // Load GLPI user object
         $user = new glpiUser();
+        $name  = (isset($userFields[User::NAME])) ? $userFields[User::NAME] : '';
+        $email = (isset($userFields[User::EMAIL][0])) ? $userFields[User::EMAIL][0] : '';
+
         
         // Verify if user exists in database.
         // https://codeberg.org/QuinQuies/glpisaml/issues/48
-        if((isset($userFields[User::NAME])                         &&      // Field must be set
-           !$user->getFromDBbyName($userFields[User::NAME]))       &&      // Try to locate by name->NameId, continue on ! fail.
-           (isset($userFields[$userFields[User::EMAIL][0]])        &&      // Fields must be set
-           !$user->getFromDBbyEmail($userFields[User::EMAIL][0]))  &&      // Try to locate by email->emailaddress, continue on ! fail.
-           !$user->getFromDBbyEmail($userFields[User::NAME])       ){      // Try to locate by email->emailaddress, continue on ! fail.
+        if(!$user->getFromDBbyName($name)       &&      // Try to locate by name->NameId, continue on ! fail.
+           !$user->getFromDBbyEmail($email)     &&      // Try to locate by email->emailaddress, continue on ! fail.
+           !$user->getFromDBbyEmail($name)      ){      // Try to locate by email->emailaddress, continue on ! fail.
             // User is not found, do we need to create it?
 
             // Get current loginState and
@@ -219,6 +220,7 @@ class User
 
     public function updateUserRights(array $params): void       //NOSONAR - Complexity by design
     {
+        // We are working on the output only.
         $update = $params[User::RULEOUTPUT];
         // Do we need to add a group?
         if(isset($update[User::GROUPID])  &&
@@ -234,7 +236,8 @@ class User
 
         // Do we need to add profiles
         // If no profiles_id and user_id is present we skip.
-        if(isset($update[User::PROFILESID]) && isset($update[User::USERSID])){
+        if(isset($update[User::PROFILESID]) &&
+           isset($update[User::USERSID])    ){
             // Set the user to update
             $rights[User::USERSID] = $update[User::USERSID];
             // Set the profile to rights assignment
