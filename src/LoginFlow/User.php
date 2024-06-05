@@ -199,8 +199,6 @@ class User
 
         // User is found, check if we are allowed to use it.
         }else{
-            var_dump($user->fields);
-            exit;
             // Verify the user is not deleted (in trashcan)
             if($user->fields[User::DELETED]){
                 LoginFlow::showLoginError(__("User with GlpiUserid: ".$user->fields[User::USERID]." is marked deleted but still exists in the GLPI database. Because of
@@ -222,15 +220,7 @@ class User
 
     public function updateUserRights(array $params): void       //NOSONAR - Complexity by design
     {
-        // Glpi core WILL call this function on random when
-        // processing rules elsewhere (where it should'nt). As a
-        // result we need to make sure no breaking side effects
-        // occur because of this unexpected behavior.
-        // @see https://codeberg.org/QuinQuies/glpisaml/issues/55
-        if(!$params[User::RULEOUTPUT]["_rule_process"]){
-            return;
-        }
-
+        // We are working on the output only.
         $update = $params[User::RULEOUTPUT];
         // Do we need to add a group?
         if(isset($update[User::GROUPID])  &&
@@ -246,7 +236,8 @@ class User
 
         // Do we need to add profiles
         // If no profiles_id and user_id is present we skip.
-        if(isset($update[User::PROFILESID]) && isset($update[User::USERSID])){
+        if(isset($update[User::PROFILESID]) &&
+           isset($update[User::USERSID])    ){
             // Set the user to update
             $rights[User::USERSID] = $update[User::USERSID];
             // Set the profile to rights assignment

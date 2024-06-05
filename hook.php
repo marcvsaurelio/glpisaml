@@ -43,20 +43,25 @@
  **/
 
 use GlpiPlugin\Glpisaml\Exclude;
+use GlpiPlugin\Glpisaml\RuleSaml;
 use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\LoginFlow\User;
 
 /**
  * Hooked by rule engine if an user import rule matches
  * sadly we cannot call the User::updateUser() method directly
- * from the hook itself :(
+ * from the hook itself.
  * @see setup.php
  * @see src\LoginFlow\User.php
  */
 function updateUser(array $params): void
 {
-    // Call the update User method
-    (new User)->updateUserRights($params);
+    // Only call the update if sub_type is our ruleSaml::class
+    // https://codeberg.org/QuinQuies/glpisaml/issues/55
+    if($params['sub_type'] == RuleSaml::class) {
+        // Call the update User method
+        (new User)->updateUserRights($params);
+    }
 }
 
 /**
