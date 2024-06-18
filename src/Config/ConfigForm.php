@@ -234,47 +234,51 @@ class ConfigForm    //NOSONAR complexity by design.
      * Validates the provided Phpsaml version against the git repository
      * if $return is true method will return collected information in an array.
      *
-     * version($dbConf, $return);
-     *
      * @param string $compare       Version to compare
      * @param bool $return          Return the outcomes
      * @return array|void $outcomes Optional return
+     * @see                         https://codeberg.org/QuinQuies/glpisaml/issues/59#issuecomment-2012549
      * @since                       1.2.1
      */
     private function version(): array
     {
         try {
-            if($feed = implode(file(PLUGIN_GLPISAML_ATOM_URL))){
-                if ($xmlArray = simplexml_load_string($feed)) {
-                    $link = (string) $xmlArray->channel->item->link[0];
-                    preg_match('/.*(v.+)/', $link, $version);
-                    if (is_array($version)) {
-                        $v = $version['1'];
-                        if ($v <> PLUGIN_GLPISAML_VERSION) {
-                            return ['gitVersion'        => $v,
-                                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
-                                    'gitUrl'            => $link,
-                                    'latest'            => false];
+            if(checkInternetConnection()                       &&       // Check if we have inet conn available
+               $feed = implode(file(PLUGIN_GLPISAML_ATOM_URL)) ){       // If so fetch the version from URL
+                if ($xmlArray = simplexml_load_string($feed)) {         //NOSONAR - wont merge ifs further
+                    $link = (string) $xmlArray->channel->item->link[0]; // Fetch the link to the release
+                    preg_match('/.*(v.+)/', $link, $version);           // Grab the version from the release
+                    if (is_array($version)) {                           // Verify preg_match returned a result
+                        $v = $version['1'];                             // Grab our match group from the result.
+                        if ($v <> PLUGIN_GLPISAML_VERSION) {            // Compare the values
+                            $r = ['gitVersion'        => $v,
+                                  'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                                  'gitUrl'            => $link,
+                                  'latest'            => false];
                         } else {
-                            return ['gitVersion'        => $v,
-                                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
-                                    'gitUrl'            => $link,
-                                    'latest'            => true];
+                            $r = ['gitVersion'        => $v,
+                                  'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                                  'gitUrl'            => $link,
+                                  'latest'            => true];
                         }
                     }
                 }
+            }else{
+                // If all failed, give back something meaningful.
+                $r = ['gitVersion'        => `Could not fetch latest version`,
+                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                    'gitUrl'            => '',
+                    'latest'            => true];
             }
-            return ['gitVersion'        => 'Unavailable',
-                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
-                    'gitUrl'            => '#',
-                    'latest'            => false];
-
         }catch(Throwable $e){
-            return ['gitVersion'        => "Unavailable with errors: $e",
-                    'currentVersion'    => PLUGIN_GLPISAML_VERSION,
-                    'gitUrl'            => '#',
-                    'latest'            => false];
+            // An error occurred, give back the error.
+            $r = ['gitVersion'        => `Error occurred while fetching latest version: $e`,
+                  'currentVersion'    => PLUGIN_GLPISAML_VERSION,
+                  'gitUrl'            => '',
+                  'latest'            => true];
         }
+        // Return the error for our template
+        return $r;
     }
 
     /**

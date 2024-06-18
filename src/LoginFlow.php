@@ -143,9 +143,18 @@ class LoginFlow
 
         // Check if the user manually provided the correct idp to use
         // this to provision Idp Initiated SAML flows.
-        if(isset($_GET[LoginFlow::GETFIELD])        &&
-           is_numeric($_GET[LoginFlow::GETFIELD])   ){
+        if(isset($_GET[LoginFlow::GETFIELD])        &&             // If correct SAML config ID was provided manually, use that
+           is_numeric($_GET[LoginFlow::GETFIELD])   ){             // Make sure its a numeric value and not a string
             $_POST[LoginFlow::POSTFIELD] = $_GET[LoginFlow::GETFIELD];
+        }
+
+        // Check if we only have 1 configuration and its enforced
+        // https://codeberg.org/QuinQuies/glpisaml/issues/61
+        if($state->getPhase() == LoginState::PHASE_INITIAL ||      // Make sure we only do this if state is initial
+           $state->getPhase() == LoginState::PHASE_LOGOFF  &&      // Make sure we only do this if state is logoff
+           Config::getIsOnlyOneConfig()                    &&      // Only perform this login type with only one samlConfig entry
+           Config::getIsEnforced()                         ){      // Only perform this login type if samlLogin is enforced.
+            $_POST[LoginFlow::POSTFIELD] = Config::getIsOnlyOneConfig();
         }
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
