@@ -4,7 +4,9 @@
 -  Added logic to automatically enforce saml configuration if there is only one configured with enforce enabled.
 - Update template with compression enabled
 - Added message with 'version' after install for saas validation purposes
-- 
+- Upped minimal version: https://codeberg.org/QuinQuies/glpisaml/issues/65#issuecomment-2066465
+- Upped the minimal required version in `setup.php` to GLPI 10.0.11 because plugin does not use deprecated `query()` but newer `doQuery()` instead.
+- fixed warning in User.php file https://codeberg.org/QuinQuies/glpisaml/issues/71
 
 
 **v1.1.5**

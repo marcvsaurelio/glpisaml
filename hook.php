@@ -97,6 +97,7 @@ function plugin_glpisaml_displaylogin() : void                                  
  * Performs install of plugin classes in /src.
  *
  * @return boolean
+ * @see https://codeberg.org/QuinQuies/glpisaml/issues/65
  */
 //phpcs:ignore PSR1.Function.CamelCapsMethodName
 function plugin_glpisaml_install() : bool                                           //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
@@ -138,6 +139,7 @@ function plugin_glpisaml_install() : bool                                       
  * Performs uninstall of plugin classes in /src.
  *
  * @return boolean
+ * @see https://codeberg.org/QuinQuies/glpisaml/issues/65
  */
 function plugin_glpisaml_uninstall() : bool                                         //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
 {
