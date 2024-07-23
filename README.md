@@ -1,18 +1,21 @@
 # glpi saml
-This plugin is a full rewrite by Chris Gralike of Derrick Smith's initial SAML plugin for GLPI. This plugin is redesigned and rewritten to be compatible with GLPI10+, Support multiple saml idp's, implement user right rules and more. It allows you to configure everything from the GLPI UI and dont require coding skills. It uses GLPI core components where possible for maximum compatibility and maintainability. It implements composer for quick 3rd party library updates if security issue's requires it. It follows the PSR best-practices where possible.
+This plugin is a full rewrite by Chris Gralike of Derrick Smith's initial phpSAML plugin for GLPI. This plugin is redesigned and rewritten to be compatible with GLPI10+, Support multiple saml idp's, implement user right rules and more. It allows you to configure everything from the GLPI UI and dont require coding skills. It uses GLPI core components where possible for maximum compatibility and maintainability. It implements composer for quick 3rd party library updates if security issue's requires it. It follows the PSR best-practices where possible.
+
+Want to support my work?
+- Star my repo and contribute to my stargazer achievement. 
+- Want to do more, I just love coffee: https://www.buymeacoffee.com/donutsnl
+- Consider to donate codeberg.org to keep the European open source movement going.
 
 # Status
 PRODUCTION RELEASE
 
 # Current Focus
-* Adding functionality
-* hardening the plugin
-
-# Support
-Want to support my work?
-- Star my repo and contribute to my stargazer achievement. 
-- Want to do more, I just love coffee: https://www.buymeacoffee.com/donutsnl
-- Consider to donate codeberg.org to keep the open source movement going.
+* Fix currently reported issues
+* Remove version checking (covered by GLPI marketplace)
+* splitting the config
+* Adding support for additional protocols
+* Adding support for additional rules
+* Adding support for account sync
 
 # Contribute, ideas and help?
 Join my (and hopefully our in the future) discord at: https://discord.gg/KyMdkqJcGz
