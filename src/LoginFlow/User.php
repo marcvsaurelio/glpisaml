@@ -54,9 +54,6 @@ use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
-use Phone;
-use PHPUnit\TextUI\XmlConfiguration\Groups;
-use PHPUnit\TextUI\XmlConfiguration\Logging\TeamCity;
 
 /**
  * This class is responsible to make sure a corresponding

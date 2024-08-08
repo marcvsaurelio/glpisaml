@@ -7,6 +7,8 @@
 - Upped minimal version: https://codeberg.org/QuinQuies/glpisaml/issues/65#issuecomment-2066465
 - Upped the minimal required version in `setup.php` to GLPI 10.0.11 because plugin does not use deprecated `query()` but newer `doQuery()` instead.
 - fixed warning in User.php file https://codeberg.org/QuinQuies/glpisaml/issues/71
+- Removed unused 'use' inclusion in front/config.php https://codeberg.org/QuinQuies/glpisaml/issues/73
+- Added gitignore to stop phpunit and deps from being send to the repository
 
 
 **v1.1.5**

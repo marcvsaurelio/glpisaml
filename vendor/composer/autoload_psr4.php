@@ -7,5 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'RobRichards\\XMLSecLibs\\' => array($vendorDir . '/robrichards/xmlseclibs/src'),
+    'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
     'OneLogin\\' => array($vendorDir . '/onelogin/php-saml/src'),
+    'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
 );
