@@ -78,7 +78,7 @@ class ConfigEntity extends ConfigItem
     public const IDP_ENTITY_ID   = 'idp_entity_id';                          // Identity provider Entity ID
     public const IDP_SSO_URL     = 'idp_single_sign_on_service';             // Identity provider Single Sign On Url
     public const IDP_SLO_URL     = 'idp_single_logout_service';              // Identity provider Logout Url
-    public const IDP_CERTIFICATE = 'idp_certificate';                       // Identity provider certificate
+    public const IDP_CERTIFICATE = 'idp_certificate';                        // Identity provider certificate
     public const AUTHN_CONTEXT   = 'requested_authn_context';                // Requested authn context (to be provided by Idp)
     public const AUTHN_COMPARE   = 'requested_authn_context_comparison';     // Requested authn context comparison (to be evaluated by Idp)
     public const ENCRYPT_NAMEID  = 'security_nameidencrypted';               // Encrypt nameId field using service provider certificate
@@ -88,7 +88,7 @@ class ConfigEntity extends ConfigItem
     public const COMPRESS_REQ    = 'compress_requests';                      // Compress all requests
     public const COMPRESS_RES    = 'compress_responses';                     // Compress all responses
     public const XML_VALIDATION  = 'validate_xml';                           // Validate XML messages
-    public const DEST_VALIDATION = 'validate_destination';                  // relax destination validation
+    public const DEST_VALIDATION = 'validate_destination';                   // relax destination validation
     public const LOWERCASE_URL   = 'lowercase_url_encoding';                 // lowercaseUrlEncoding
     public const COMMENT         = 'comment';                                // Field for comments on configuration page
     public const IS_ACTIVE       = 'is_active';                              // Toggle SAML config active or disabled
