@@ -176,8 +176,8 @@ class LoginFlow
             // Actually perform SSO
             $this->performSamlSSO($state);
         }
-        // Do nothing will return nothing.
-        // Return false breaks glpi in all kinds of nasty ways.
+        // Do nothing and return nothing.
+        // Returning an value like false breaks glpi in all kinds of nasty ways.
     }
 
     /**
