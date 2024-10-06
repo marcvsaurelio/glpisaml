@@ -91,16 +91,17 @@ class LoginFlow
         // Get current state
         if(!$state = new Loginstate()){
             $this->printError(__('Could not load loginState', PLUGIN_NAME));
-        }else{
-            // Do we need to skip because of exclusion?
-            if($state->isExcluded()){
-                //return $state->getExcludeAction();
-                // Return false seems to break GLPI in all kind of ways.
-                return;
-            }
         }
 
-        // Check if the logout button was pressed and handle request!
+        // FILE EXCLUDED
+        // Do we need to skip because of exclusion?
+        if($state->isExcluded()){
+            //return $state->getExcludeAction();
+            // Return false seems to break GLPI in all kind of ways.
+            return;
+        }
+
+        // LOGOUT PRESSED?
         // https://codeberg.org/QuinQuies/glpisaml/issues/18
         if ( isset($_SERVER['REQUEST_URI']) && ( strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) ){
             // Stop GLPI from processing cookie based auto login.
@@ -108,7 +109,8 @@ class LoginFlow
             $this->performLogOff();
         }
 
-        // Do we want to or need to break our SSO enforcement?
+        // BYPASS SAML ENFORCE OPTION
+        // TODO: Make configurable login screens
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
         if(isset($_GET[LoginFlow::SAMLBYPASS])                  &&  // Is ?bypass=1 set in our uri
            strpos($_SERVER['REQUEST_URI'], '/front/') !== false &&  // We are not on the login page
@@ -118,6 +120,8 @@ class LoginFlow
             $this->doMetaRefresh($CFG_GLPI['url_base'].'/');        // Redirect user to the login page
         }
 
+        // SAML ENFORCED BY COOKIE?
+        // TODO: Make configurable login screens
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
         // Do enforced login if we found a previous cookie
         // And the phase is initial, and the escape string
@@ -128,6 +132,8 @@ class LoginFlow
             $_POST[LoginFlow::POSTFIELD] = $idpId;                  // Set the id to trigger an SSO using the set IdP.
         }
 
+        // CAPTURE LOGIN FIELD
+        // TODO: Make configurable login screens
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
         // Capture the post of regular login and verify if the provided domain is SSO enabled.
         // by evaluating the domain portion against the configured user domains.
@@ -141,6 +147,7 @@ class LoginFlow
             }
         }
 
+        // MANUAL IDP ID VIA GETTER
         // Check if the user manually provided the correct idp to use
         // this to provision Idp Initiated SAML flows.
         if(isset($_GET[LoginFlow::GETFIELD])        &&             // If correct SAML config ID was provided manually, use that
@@ -164,14 +171,6 @@ class LoginFlow
 
             // If we know the idp we register it in the login State
             $state->setIdpId(filter_var($_POST[LoginFlow::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
-
-            // Update the current phase in database. The state is verified by the Acs
-            // while handling the received SamlResponse. Any other state will force Acs
-            // into an error state. This is to prevent unexpected (possibly replayed)
-            // samlResponses from being processed. to prevent playback attacks.
-            if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
-                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[LoginFlow::POSTFIELD] , PLUGIN_NAME));
-            }
 
             // Actually perform SSO
             $this->performSamlSSO($state);
@@ -211,12 +210,30 @@ class LoginFlow
             try { $auth = new samlAuth($samlConfig); } catch (Throwable $e) {
                 $this->printError($e->getMessage(), 'Saml::Auth->init', var_export($auth->getErrors(), true));
             }
+
+            // Added version 1.2.0
+            // Capture and register requestId in database
+            // before performing the redirect so we don't need Cookies
+            // https://codeberg.org/QuinQuies/glpisaml/issues/45
+            $ssoBuiltUrl = $auth->login($CFG_GLPI["url_base"], array(), false, false, true);
             
-            // Perform a login request with the loaded glpiSaml
-            // configuration. Catch all throwable errors and exceptions
-            try { $auth->login($CFG_GLPI["url_base"]); } catch (Throwable $e) {
-                $this->printError($e->getMessage(), 'Saml::Auth->login', var_export($auth->getErrors(), true));
+            // Register the requestId in the database and $_SESSION var;
+            $state->setRequestId($auth->getLastRequestID());
+
+            // Update the current phase in database. The state is verified by the Acs
+            // while handling the received SamlResponse. Any other state will force Acs
+            // into an error state. This is to prevent unexpected (possibly replayed)
+            // samlResponses from being processed. to prevent playback attacks.
+            if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
+                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[LoginFlow::POSTFIELD] , PLUGIN_NAME));
             }
+
+            // Perform redirect using HTTP-GET
+            header('Pragma: no-cache');
+            header('Cache-Control: no-cache, must-revalidate');
+            header('Location: ' . $ssoBuiltUrl);
+            exit();
+
         } // Do nothing, ignore the samlSSORequest.
     }
 
@@ -236,7 +253,7 @@ class LoginFlow
         // Validate samlResponse and returns provided Saml attributes (claims).
         // validation will print and exit on errors because user information is required.
         $userFields = User::getUserInputFieldsFromSamlClaim($response);
-
+       
         // Try to populate GLPI Auth using provided attributes;
         try {
             $auth = (new GlpiAuth())->loadUser($userFields);
@@ -244,12 +261,17 @@ class LoginFlow
             $this->printError($e->getMessage(), 'doSamlLogin');
         }
 
-        // Populate Glpi session with Auth.
-        Session::init($auth);
-
         // Update the current state
         if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
         $state->setPhase(LoginState::PHASE_GLPI_AUTH);
+
+        // Populate Glpi session with Auth.
+        Session::init($auth);
+
+        // Update the sessionID (thats reset by Session::init)
+        // So we can find it after the redirect! Else we will
+        // end up in a login loop. Very anoying!
+        $state->setSessionId();
 
         // Redirect back to main page
         // We should fix added .'/' to prevent (string|int) type issue.

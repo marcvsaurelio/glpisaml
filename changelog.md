@@ -1,4 +1,5 @@
-**v1.2.0**
+**v1.1.6**
+- Preparation for 1.2.0
 - https://codeberg.org/QuinQuies/glpisaml/issues/61
 - https://codeberg.org/QuinQuies/glpisaml/issues/46
 -  Added logic to automatically enforce saml configuration if there is only one configured with enforce enabled.
@@ -9,6 +10,13 @@
 - fixed warning in User.php file https://codeberg.org/QuinQuies/glpisaml/issues/71
 - Removed unused 'use' inclusion in front/config.php https://codeberg.org/QuinQuies/glpisaml/issues/73
 - Added gitignore to stop phpunit and deps from being send to the repository
+- Updated `onelogin/php-saml` to latest version 4.2.0 @see https://github.com/SAML-Toolkits/php-saml/releases
+- Changed `ConfigEntity.php:508` to add `?idpId=` to the ACS service URL send to the Idp for capture at ACS.
+- Added wiki reference `https://codeberg.org/QuinQuies/glpisaml/wiki/ACS.php` in the acs error page to provide more information.
+- Fully refactored `LoginFlow/Acs.php` and `/front/acs.php` to work arround the login cookie requirement.
+- Fully refactored `src/LoginState.php` object to store and process additional fields samlRequestId, samlResponseId (InResponseTo), requestUnsolicited fields
+- Refactored method LoginFlow::doAuth() for https://codeberg.org/QuinQuies/glpisaml/issues/45
+- Refactored method LoginFlow::performSamlSSO for https://codeberg.org/QuinQuies/glpisaml/issues/45
 
 
 **v1.1.5**

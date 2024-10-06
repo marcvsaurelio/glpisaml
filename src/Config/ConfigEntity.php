@@ -505,7 +505,7 @@ class ConfigEntity extends ConfigItem
                     'sp' => [
                         'entityId'                          => $CFG_GLPI['url_base'].'/',
                         'assertionConsumerService'          => [
-                            'url'                           => $CFG_GLPI['url_base'].'/'.PLUGIN_GLPISAML_WEBDIR.'/front/acs.php',
+                            'url'                           => $CFG_GLPI['url_base'].'/'.PLUGIN_GLPISAML_WEBDIR.'/front/acs.php?idpId='.$this->fields[ConfigEntity::ID],
                         ],
                         'singleLogoutService'               => [
                             'url'                           => $CFG_GLPI['url_base'].'/'.PLUGIN_GLPISAML_WEBDIR.'/front/slo.php',
