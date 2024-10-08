@@ -62,6 +62,7 @@ use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 use GlpiPlugin\Glpisaml\LoginFlow\User;
 use GlpiPlugin\Glpisaml\LoginFlow\Auth as glpiAuth;
+use Sabre\CardDAV\IDirectory;
 
 /**
  * This object brings it all together. It is responsible to handle the
@@ -70,6 +71,22 @@ use GlpiPlugin\Glpisaml\LoginFlow\Auth as glpiAuth;
  */
 class LoginFlow
 {
+    // Database fields
+    public const ID                 =   'id';
+    public const DEBUG              =   'debug';
+    public const ENFORCED           =   'enforced';
+    public const ENFORCED_IDP       =   'forcedIdp';
+    public const EN_GETTER_LOGIN    =   'enableGetterLogin';
+    public const EN_GLPI_LOGIN      =   'enableGlpiLogin';
+    public const EN_SAML_BUTTONS    =   'enableSamlButtons';
+    public const EN_USERNAME_LOGIN  =   'enableUsername';
+    public const CUSTOM_LOGIN_TPL   =   'useCustomLoginTemplate';
+    public const BYPASS_VAR         =   'byPassVar';
+    public const BYPASS_STR         =   'byPassString';
+    public const EN_IDP_LOGOUT      =   'enableIdpLogout';
+    public const ENF_AUTH_AFTER     =   'enforceReAuthAfterIdle';       // Time in minutes that session is allowed to idle before forcing reAuth
+    public const BLK_AFTER_LOGOUT   =   'blockAfterEnfocedLogout';      // Time to block user after he/she was forcefully logged out.
+
     // https://codeberg.org/QuinQuies/glpisaml/issues/37
     public const POSTFIELD   = 'samlIdpId';
     public const GETFIELD    = 'samlIdpId';
@@ -110,7 +127,6 @@ class LoginFlow
         }
 
         // BYPASS SAML ENFORCE OPTION
-        // TODO: Make configurable login screens
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
         if(isset($_GET[LoginFlow::SAMLBYPASS])                  &&  // Is ?bypass=1 set in our uri
            strpos($_SERVER['REQUEST_URI'], '/front/') !== false &&  // We are not on the login page
@@ -121,7 +137,6 @@ class LoginFlow
         }
 
         // SAML ENFORCED BY COOKIE?
-        // TODO: Make configurable login screens
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
         // Do enforced login if we found a previous cookie
         // And the phase is initial, and the escape string
@@ -133,7 +148,6 @@ class LoginFlow
         }
 
         // CAPTURE LOGIN FIELD
-        // TODO: Make configurable login screens
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
         // Capture the post of regular login and verify if the provided domain is SSO enabled.
         // by evaluating the domain portion against the configured user domains.
@@ -434,4 +448,68 @@ class LoginFlow
         exit;
     }
 
+    
+    /**
+     * Install the LoginFlow DB table
+     * @param   Migration $obj
+     * @return  void
+     * @since   1.0.0
+     */
+
+    /*  //NOSONAR - This is in preparation of version 1.2.0 but should not YET be processed by
+        //          the hook.php install
+    public static function install(Migration $migration) : void
+    {
+        global $DB;
+        $default_charset = DBConnection::getDefaultCharset();
+        $default_collation = DBConnection::getDefaultCollation();
+        $default_key_sign = DBConnection::getDefaultPrimaryKeySignOption();
+
+        $table = LoginState::getTable();
+
+        // Create the base table if it does not yet exist;
+        // Do not update this table for later versions, use the migration class;
+        if (!$DB->tableExists($table)) {
+            // Create table
+            $query = <<<SQL
+            CREATE TABLE IF NOT EXISTS `$table` (
+                `id`                        int {$default_key_sign} NOT NULL AUTO_INCREMENT,
+                `debug`                     tinyint NOT NULL DEFAULT 0,
+                `enforced`                  tinyint NOT NULL DEFAULT 0,
+                `forcedIdp`                 int DEFAULT -1,
+                `enableGetterLogin`         tinyint NOT NULL DEFAULT 0,
+                `hideGlpiLogin`             tinyint NOT NULL DEFAULT 0,
+                `hideSamlButtons`           tinyint NOT NULL DEFAULT 0,
+                `hideUsername`              tinyint NOT NULL DEFAULT 0,
+                `useCustomLoginTemplate`    varchar(255) NULL,
+                `byPassString`              varchar(255) DEFAULT '1',
+                `byPassVar`                 varchar(255) DEFAULT 'bypass',
+                `enableIdpLogout`           tinyint NOT NULL DEFAULT 0,
+                `enforceReAuthAfterIdle`    int NOT NULL DEFAULT -1,                        // Time in minutes that session is allowed to idle before forcing reAuth
+                `blockAfterEnfocedLogout`   int NOT NULL DEFAULT -1,                        // Time to block user after he/she was forcefully logged out.
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=COMPRESSED;
+            SQL;
+            $DB->doQuery($query) or die($DB->error());
+            Session::addMessageAfterRedirect("🆗 Installed: $table.");
+        }
+    }
+    */
+
+    /**
+     * Uninstall the LoginState DB table
+     * @param   Migration $obj
+     * @return  void
+     * @since   1.0.0
+     */
+
+    /*  //NOSONAR - This is in preparation of version 1.2.0 but should not YET be processed by
+        //          the hook.php install
+    public static function uninstall(Migration $migration) : void
+    {
+        $table = LoginState::getTable();
+        $migration->dropTable($table);
+        Session::addMessageAfterRedirect("🆗 Removed: $table.");
+    }
+    */
 }

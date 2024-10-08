@@ -1,5 +1,5 @@
 **v1.1.8**
-- Preparation for 1.2.0
+- test Pre-release in preparation for 1.2.0
 - https://codeberg.org/QuinQuies/glpisaml/issues/61
 - https://codeberg.org/QuinQuies/glpisaml/issues/46
 -  Added logic to automatically enforce saml configuration if there is only one configured with enforce enabled.
@@ -17,6 +17,10 @@
 - Fully refactored `src/LoginState.php` object to store and process additional fields samlRequestId, samlResponseId (InResponseTo), requestUnsolicited fields
 - Refactored method LoginFlow::doAuth() for https://codeberg.org/QuinQuies/glpisaml/issues/45
 - Refactored method LoginFlow::performSamlSSO for https://codeberg.org/QuinQuies/glpisaml/issues/45
+- Added `tests/createPot.sh` to create a POT file from the php source using xgettext
+- Added `locals/glpiSaml.pot` to allow users to translate and create localization files (PO/PM)
+- Added https://app.transifex.com/quinquies/glpisaml/ project for public translations
+- Started refactoring LoginFlow.php to include a LoginFlow configuration page.
 
 
 **v1.1.5**
