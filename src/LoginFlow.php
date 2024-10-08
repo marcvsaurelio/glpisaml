@@ -130,6 +130,7 @@ class LoginFlow
 
         // BYPASS SAML ENFORCE OPTION
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
+        /* //NOSONAR
         if(isset($_GET[LoginFlow::SAMLBYPASS])                  &&  // Is ?bypass=1 set in our uri
            strpos($_SERVER['REQUEST_URI'], '/front/') !== false &&  // We are not on the login page
            $_GET[LoginFlow::SAMLBYPASS] == 1                    ){  // bypass is set to 1 (can be replaced with secret key)
@@ -151,6 +152,7 @@ class LoginFlow
             $state->addLoginFlowTrace(['loginEnforcedByCookie' => 'idpId:'.$idpId]);   // Register the login was enforced by cookie
             $_POST[LoginFlow::POSTFIELD] = $idpId;                                  // Set the id to trigger an SSO using the set IdP.
         }
+        */
 
         // CAPTURE LOGIN FIELD
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
@@ -185,6 +187,7 @@ class LoginFlow
              $state->addLoginFlowTrace(['OnlyOneIdpEnforced' => 'idpId:'.Config::getIsOnlyOneConfig()]);
              $_POST[LoginFlow::POSTFIELD] = Config::getIsOnlyOneConfig();
         }
+
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
         if (isset($_POST[LoginFlow::POSTFIELD])         &&      // Must be set
@@ -223,7 +226,6 @@ class LoginFlow
         // Validate if the IDP configuration is enabled
         // https://codeberg.org/QuinQuies/glpisaml/issues/4
         if($configEntity->isActive()){                            // Validate the IdP config is activated
-            $configEntity->setIsEnforced();                       // Validate if the configuration is enforced and set cookie.
 
             // Initialize the OneLogin phpSaml auth object
             // using the requested phpSaml configuration from
