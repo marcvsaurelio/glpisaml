@@ -115,6 +115,7 @@ class LoginFlow
         if($state->isExcluded()){
             //return $state->getExcludeAction();
             // Return false seems to break GLPI in all kind of ways.
+            $state->addLoginFlowTrace(['isExcluded' => 'Path:'.$state->isExcluded()]);
             return;
         }
 
@@ -123,6 +124,7 @@ class LoginFlow
         if ( isset($_SERVER['REQUEST_URI']) && ( strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) ){
             // Stop GLPI from processing cookie based auto login.
             $_SESSION['noAUTO'] = 1;
+            $state->addLoginFlowTrace(['logoutPressed' => true]);
             $this->performLogOff();
         }
 
@@ -132,6 +134,7 @@ class LoginFlow
            strpos($_SERVER['REQUEST_URI'], '/front/') !== false &&  // We are not on the login page
            $_GET[LoginFlow::SAMLBYPASS] == 1                    ){  // bypass is set to 1 (can be replaced with secret key)
             ConfigEntity::unsetIsEnforced();                        // Unset the enforce cookie
+            $state->addLoginFlowTrace(['bypassUsed' => true]);     // Register the bypass was used
             $this->performLogOff();                                 // Perform logoff
             $this->doMetaRefresh($CFG_GLPI['url_base'].'/');        // Redirect user to the login page
         }
@@ -141,10 +144,12 @@ class LoginFlow
         // Do enforced login if we found a previous cookie
         // And the phase is initial, and the escape string
         // was not found.
-        if(($state->getPhase() == LoginState::PHASE_INITIAL ||      // Login should not be enforced after initial login phase
-            $state->getPhase() == LoginState::PHASE_LOGOFF) &&      // Login should not be enforced before logout phase
-            $idpId = ConfigEntity::getEnforced()            ){      // Fetch the idpId from the enforced cookie
-            $_POST[LoginFlow::POSTFIELD] = $idpId;                  // Set the id to trigger an SSO using the set IdP.
+        if(($state->getPhase() == LoginState::PHASE_INITIAL ||                      // Login should not be enforced after initial login phase
+            $state->getPhase() == LoginState::PHASE_LOGOFF) &&
+            Config::getIsEnforced()                         &&                      // Login should not be enforced before logout phase
+            $idpId = ConfigEntity::getEnforced()            ){                      // Fetch the idpId from the enforced cookie
+            $state->addLoginFlowTrace(['loginEnforcedByCookie' => 'idpId:'.$idpId]);   // Register the login was enforced by cookie
+            $_POST[LoginFlow::POSTFIELD] = $idpId;                                  // Set the id to trigger an SSO using the set IdP.
         }
 
         // CAPTURE LOGIN FIELD
@@ -154,18 +159,20 @@ class LoginFlow
         // we need to iterate through the keys because of the added csrf token i.e.
         // [fielda[csrf_token]] = value.
         foreach($_POST as $key => $value){
-            if(strstr($key, 'fielda')                               &&    // Test keys if fielda[token] is present in the POST.
-               !empty($_POST[$key])                                 &&    // Test if fielda actually has a value we can process
-               $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){    // If all is true try to find an matching idp id.
-                    $_POST[LoginFlow::POSTFIELD] = $id;                   // If we found an ID Set the POST phpsaml to our found ID this will trigger
+            if(strstr($key, 'fielda')                               &&                                      // Test keys if fielda[token] is present in the POST.
+               !empty($_POST[$key])                                 &&                                      // Test if fielda actually has a value we can process
+               $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){                                      // If all is true try to find an matching idp id.
+                $state->addLoginFlowTrace(['loginViaUserfield' => 'user:'.$_POST[$key].',idpId:'.$id]);     // Register the userfield was used with user
+                $_POST[LoginFlow::POSTFIELD] = $id;                                                         // If we found an ID Set the POST phpsaml to our found ID this will trigger
             }
         }
 
         // MANUAL IDP ID VIA GETTER
         // Check if the user manually provided the correct idp to use
         // this to provision Idp Initiated SAML flows.
-        if(isset($_GET[LoginFlow::GETFIELD])        &&             // If correct SAML config ID was provided manually, use that
-           is_numeric($_GET[LoginFlow::GETFIELD])   ){             // Make sure its a numeric value and not a string
+        if(isset($_GET[LoginFlow::GETFIELD])        &&                                                      // If correct SAML config ID was provided manually, use that
+           is_numeric($_GET[LoginFlow::GETFIELD])   ){                                                      // Make sure its a numeric value and not a string
+            $state->addLoginFlowTrace(['loginViaGetter' => 'getValue:'.$_GET[LoginFlow::GETFIELD]]);
             $_POST[LoginFlow::POSTFIELD] = $_GET[LoginFlow::GETFIELD];
         }
 
@@ -175,6 +182,7 @@ class LoginFlow
             $state->getPhase() == LoginState::PHASE_LOGOFF) &&      // Make sure we only do this if state is logoff
             Config::getIsOnlyOneConfig()                    &&      // Only perform this login type with only one samlConfig entry
             Config::getIsEnforced()                         ){      // Only perform this login type if samlLogin is enforced.
+             $state->addLoginFlowTrace(['OnlyOneIdpEnforced' => 'idpId:'.Config::getIsOnlyOneConfig()]);
              $_POST[LoginFlow::POSTFIELD] = Config::getIsOnlyOneConfig();
         }
 
@@ -182,7 +190,7 @@ class LoginFlow
         if (isset($_POST[LoginFlow::POSTFIELD])         &&      // Must be set
             is_numeric($_POST[LoginFlow::POSTFIELD])    &&      // Value must be numeric
             strlen($_POST[LoginFlow::POSTFIELD]) < 3    ){      // Should not exceed 999
-
+            $state->addLoginFlowTrace(['finalIdp' => 'idpId:'.$_POST[LoginFlow::POSTFIELD]]);
             // If we know the idp we register it in the login State
             $state->setIdpId(filter_var($_POST[LoginFlow::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
 

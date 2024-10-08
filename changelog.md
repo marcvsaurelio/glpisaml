@@ -21,6 +21,7 @@
 - Added `locals/glpiSaml.pot` to allow users to translate and create localization files (PO/PM)
 - Added https://app.transifex.com/quinquies/glpisaml/ project for public translations
 - Started refactoring LoginFlow.php to include a LoginFlow configuration page.
+- Fixed always enforced bug with only one idp configured and enforce off.
 
 
 **v1.1.5**
