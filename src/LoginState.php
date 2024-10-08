@@ -526,7 +526,7 @@ class LoginState extends CommonDBTM
 
         // This field should match the samlRequestId registered in LoginFlow::performSamlSSO();
         if(!$sessionIterator = $DB->request(['FROM' => LoginState::getTable(), 'WHERE' => [LoginState::SAML_RESPONSE_ID => $responseId]])){
-            throw new Exception('Could not fetch Login State from database');
+            throw new Exception('Could not fetch Login State from database');   //NOSONAR we are happy with this one!
         }
 
         return ($sessionIterator->numrows() > 0) ? false : true;
@@ -577,7 +577,7 @@ class LoginState extends CommonDBTM
     /**
      * Determin if the state was loaded from the LoginState database or if you are dealing with
      * an initial version.
-     * 
+     *
      * @return  bool
      * @since   1.2.0
      */
@@ -647,7 +647,7 @@ class LoginState extends CommonDBTM
 
         if ( $DB->tableExists($table)                                                                                                                       &&   // Table should exist
             !$DB->fieldExists($table, LoginState::SAML_RESPONSE_ID, false)                                                                                  &&   // Field should not exist
-            $migration->addField($table, LoginState::SAML_RESPONSE_ID, 'str', ['null' => true, 'after' => LoginState::SAML_UNSOLLICITED, 'update' => true]) ){   // @see Migration::fieldFormat()
+            $migration->addField($table, LoginState::SAML_RESPONSE_ID, 'str', ['null' => true, 'after' => LoginState::SAML_UNSOLICITED, 'update' => true]) ){   // @see Migration::fieldFormat()
                 Session::addMessageAfterRedirect("🆗 Added field LoginState::SAML_RESPONSE_ID for v1.2.0");
         } // We silently ignore errors. Most common cause for an error is if the field already exists.
     }
