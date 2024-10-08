@@ -22,7 +22,7 @@
 - Added https://app.transifex.com/quinquies/glpisaml/ project for public translations
 - Started refactoring LoginFlow.php to include a LoginFlow configuration page.
 - Fixed always enforced bug with only one idp configured and enforce off.
-
+- Added loginFlow trace to the log idp page
 
 **v1.1.5**
 - We found that the return value bool:false on the POST_INIT hook might break cron functionality in very nasty ways (removing user profiles after succesfull mail import for instance!) as a quick fix we now return null, making sure other components are not influenced by anything we did 'not' return to the calling plugin function. 

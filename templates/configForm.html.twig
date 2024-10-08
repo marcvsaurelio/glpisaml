@@ -882,6 +882,7 @@
                                     <th>Location</th>
                                     <th>loginTime</th>
                                     <th>lastClickTime</th>
+                                    <th>LoginFlowTrace</th>
                                   </tr>
                                 </thead>
                                 {% for logrow in loggingfields %}
@@ -895,6 +896,7 @@
                                     <td>{{ logrow.location }}</td>
                                     <td>{{ logrow.loginTime }}</td>
                                     <td>{{ logrow.lastClickTime }}</td>
+                                    <td>{{ logrow.loginFlowTrace }}</td>
                                 </tr>
                                 {% endfor %}
                             </table>
