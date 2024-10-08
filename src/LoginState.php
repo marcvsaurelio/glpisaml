@@ -639,9 +639,9 @@ class LoginState extends CommonDBTM
                 Session::addMessageAfterRedirect("🆗 Added field LoginState::SAML_REQUEST_ID for v1.2.0");
         } // We silently ignore errors. Most common cause for an error is if the field already exists.
 
-        if ( $DB->tableExists($table)                                                                                                                       &&   // Table should exist
-            !$DB->fieldExists($table, LoginState::SAML_UNSOLLICITED, false)                                                                                 &&   // Field should not exist
-            $migration->addField($table, LoginState::SAML_UNSOLLICITED, 'str', ['null' => true, 'after' => LoginState::SAML_REQUEST_ID, 'update' => true])  ){   // @see Migration::fieldFormat()
+        if ( $DB->tableExists($table)                                                                                                                      &&   // Table should exist
+            !$DB->fieldExists($table, LoginState::SAML_UNSOLICITED, false)                                                                                 &&   // Field should not exist
+            $migration->addField($table, LoginState::SAML_UNSOLICITED, 'str', ['null' => true, 'after' => LoginState::SAML_REQUEST_ID, 'update' => true])  ){   // @see Migration::fieldFormat()
                 Session::addMessageAfterRedirect("🆗 Added field LoginState::SAML_UNSOLLICITED for v1.2.0");
         } // We silently ignore errors. Most common cause for an error is if the field already exists.
 

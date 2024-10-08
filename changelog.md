@@ -1,4 +1,4 @@
-**v1.1.6**
+**v1.1.8**
 - Preparation for 1.2.0
 - https://codeberg.org/QuinQuies/glpisaml/issues/61
 - https://codeberg.org/QuinQuies/glpisaml/issues/46
