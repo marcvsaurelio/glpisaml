@@ -6,3 +6,4 @@
 /vendor/sebastian
 /vendor/theseer
 /tests
+*.swp

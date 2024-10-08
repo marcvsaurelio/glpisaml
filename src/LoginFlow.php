@@ -171,11 +171,11 @@ class LoginFlow
 
         // Check if we only have 1 configuration and its enforced
         // https://codeberg.org/QuinQuies/glpisaml/issues/61
-        if($state->getPhase() == LoginState::PHASE_INITIAL ||      // Make sure we only do this if state is initial
-           $state->getPhase() == LoginState::PHASE_LOGOFF  &&      // Make sure we only do this if state is logoff
-           Config::getIsOnlyOneConfig()                    &&      // Only perform this login type with only one samlConfig entry
-           Config::getIsEnforced()                         ){      // Only perform this login type if samlLogin is enforced.
-            $_POST[LoginFlow::POSTFIELD] = Config::getIsOnlyOneConfig();
+        if(($state->getPhase() == LoginState::PHASE_INITIAL ||      // Make sure we only do this if state is initial
+            $state->getPhase() == LoginState::PHASE_LOGOFF) &&      // Make sure we only do this if state is logoff
+            Config::getIsOnlyOneConfig()                    &&      // Only perform this login type with only one samlConfig entry
+            Config::getIsEnforced()                         ){      // Only perform this login type if samlLogin is enforced.
+             $_POST[LoginFlow::POSTFIELD] = Config::getIsOnlyOneConfig();
         }
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
