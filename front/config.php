@@ -39,9 +39,10 @@
  * ------------------------------------------------------------------------
  **/
 
-use Html;
-use Search;
-use Plugin;
+// https://codeberg.org/QuinQuies/glpisaml/issues/73
+// use Html;
+// use Search;
+// use Plugin;
 use GlpiPlugin\Glpisaml\Config as samlConfig;
 
 include_once '../../../inc/includes.php';               //NOSONAR - Cannot be included with USE keyword

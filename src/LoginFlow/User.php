@@ -54,9 +54,6 @@ use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
-use Phone;
-use PHPUnit\TextUI\XmlConfiguration\Groups;
-use PHPUnit\TextUI\XmlConfiguration\Logging\TeamCity;
 
 /**
  * This class is responsible to make sure a corresponding
@@ -106,11 +103,11 @@ class User
      * @see https://learn.microsoft.com/en-us/entra/identity-platform/reference-saml-tokens
      */
     public const USERDATA                    = 'userData';
-    public const SCHEMA_NAMEID               = 'NameId';                                                                // Used as primary if it contains valid email.
+    public const SCHEMA_NAMEID               = 'NameId';                                                                // Used to match users in GLPI.
     public const SCHEMA_SURNAME              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';         // Used in user creation JIT - Optional
     public const SCHEMA_FIRSTNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';       // Used in user creation JIT - Optional
     public const SCHEMA_GIVENNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT - Optional
-    public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used in user creation JIT - Optional
+    public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used in user creation JIT - Required
     public const SCHEMA_MOBILE               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone';     // Used in user creation JIT - Optional
     public const SCHEMA_PHONE                = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber'; // Used in user creation JIT - Optional
     public const SCHEMA_JOBTITLE             = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle';        // Used in user creation JIT - Optional
@@ -136,10 +133,11 @@ class User
     public function getOrCreateUser(array $userFields): glpiUser    //NOSONAR Complexity by design
     {
         // At this point the userFields should be present and validated (textually) by loginFlow.
+        // https://codeberg.org/QuinQuies/glpisaml/issues/71
         // Load GLPI user object
         $user = new glpiUser();
-        $name  = (isset($userFields[User::NAME])) ? $userFields[User::NAME] : '';
-        $email = (isset($userFields[User::EMAIL][0])) ? $userFields[User::EMAIL][0] : '';
+        $name  = (array_key_exists(User::NAME, $userFields) && isset($userFields[User::NAME])) ? $userFields[User::NAME] : '';
+        $email = (array_key_exists(User::EMAIL, $userFields) && isset($userFields[User::EMAIL][0])) ? $userFields[User::EMAIL][0] : '';
 
         
         // Verify if user exists in database.

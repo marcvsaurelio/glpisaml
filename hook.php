@@ -97,22 +97,26 @@ function plugin_glpisaml_displaylogin() : void                                  
  * Performs install of plugin classes in /src.
  *
  * @return boolean
+ * @see https://codeberg.org/QuinQuies/glpisaml/issues/65
  */
 //phpcs:ignore PSR1.Function.CamelCapsMethodName
 function plugin_glpisaml_install() : bool                                           //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
 {
+    // Report the version we are installing
+    Session::addMessageAfterRedirect(__('🆗 Installing version:'.PLUGIN_GLPISAML_VERSION));
+
     // openssl is nice to have!
     if (!function_exists('openssl_x509_parse')){
-        Session::addMessageAfterRedirect(__("⚠️ OpenSSL not available, cant verify provided certificates"));
+        Session::addMessageAfterRedirect(__('⚠️ OpenSSL not available, cant verify provided certificates'));
     }else{
-        Session::addMessageAfterRedirect(__("🆗 OpenSSL found!"));
+        Session::addMessageAfterRedirect(__('🆗 OpenSSL found!'));
     }
 
     // Verify internet connection
     if(!checkInternetConnection()){
-        Session::addMessageAfterRedirect(__("⚠️ No internet connection, cant verify latest versions"));
+        Session::addMessageAfterRedirect(__('⚠️ No internet connection, cant verify latest versions'));
     }else{
-        Session::addMessageAfterRedirect(__("🆗 Internet connection found!"));
+        Session::addMessageAfterRedirect(__('🆗 Internet connection found!'));
     }
 
     if($files = plugin_glpisaml_getSrcClasses())
@@ -135,6 +139,7 @@ function plugin_glpisaml_install() : bool                                       
  * Performs uninstall of plugin classes in /src.
  *
  * @return boolean
+ * @see https://codeberg.org/QuinQuies/glpisaml/issues/65
  */
 function plugin_glpisaml_uninstall() : bool                                         //NOSONAR - phpcs:ignore PSR1.Function.CamelCapsMethodName
 {

@@ -1,0 +1,9 @@
+/vendor/bin
+/vendor/myclabs
+/vendor/nikic
+/vendor/phar-io
+/vendor/phpunit
+/vendor/sebastian
+/vendor/theseer
+/tests
+*.swp

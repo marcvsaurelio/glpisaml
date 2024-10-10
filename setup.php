@@ -49,8 +49,8 @@ use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 
 // Setup constants
-define('PLUGIN_GLPISAML_VERSION', '1.1.6');                                                     // GLPI SAML version
-define('PLUGIN_GLPISAML_MIN_GLPI', '10.0.0');                                                   // Min required GLPI version
+define('PLUGIN_GLPISAML_VERSION', '1.1.9');
+define('PLUGIN_GLPISAML_MIN_GLPI', '10.0.11');                                                  // Min required GLPI version
 define('PLUGIN_GLPISAML_MAX_GLPI', '10.9.99');                                                  // Max GLPI compat version
 define('PLUGIN_NAME', 'glpisaml');                                                              // Plugin name
 // Directories

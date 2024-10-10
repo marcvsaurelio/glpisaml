@@ -14,7 +14,7 @@
     ],
     "require": {
         "php": ">=8.0.0",
-        "onelogin/php-saml": "^4.1"
+        "onelogin/php-saml": "^4.2"
     },
     "extra": {
         "glpi": {
