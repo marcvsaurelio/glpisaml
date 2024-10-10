@@ -1,5 +1,5 @@
-**v1.1.8**
-- test Pre-release in preparation for 1.2.0
+**v1.1.9**
+- In preparation for 1.2.0
 - https://codeberg.org/QuinQuies/glpisaml/issues/61
 - https://codeberg.org/QuinQuies/glpisaml/issues/46
 -  Added logic to automatically enforce saml configuration if there is only one configured with enforce enabled.
