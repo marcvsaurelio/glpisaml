@@ -867,7 +867,7 @@
                     <div class="row g-2">      
                         <!-- enforce SSO -->
                         <div class="col-md p-2">
-                            <h2>Work in progress, logging is by no means complete but still usable</h2>
+                            <h2>Work in progress, logging is by no means complete but still usable. All feedback more than welcome!</h2>
                             <div>Phases: 1 = initial, 2=send_saml_SSO_request, 3=performed_saml_auth, 4=performed_glpi_auth, 5=file_exclude, 6=forced_logoff, 7=timed_out, 8=manual_glpi_logout
                             </div>
                             <table class="table table-striped table-sm">
@@ -879,9 +879,9 @@
                                     <th>glpiAuthed</th>
                                     <th>samlAuthed</th>
                                     <th>Phase</th>
-                                    <th>Location</th>
                                     <th>loginTime</th>
                                     <th>lastClickTime</th>
+                                    <th>Locations</th>
                                     <th>LoginFlowTrace</th>
                                   </tr>
                                 </thead>
@@ -893,10 +893,14 @@
                                     <td>{{ logrow.glpiAuthed }}</td>
                                     <td>{{ logrow.samlAuthed }}</td>
                                     <td>{{ logrow.phase }}</td>
-                                    <td>{{ logrow.location }}</td>
                                     <td>{{ logrow.loginTime }}</td>
                                     <td>{{ logrow.lastClickTime }}</td>
-                                    <td>{{ logrow.loginFlowTrace }}</td>
+                                    <td> <span class="form-help" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true"
+                                        data-bs-content="<pre>{{ logrow.location }}</pre>">?</span></td>
+                                    <td>
+                                    <span class="form-help" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true"
+                                        data-bs-content="<pre>{{ logrow.loginFlowTrace }}</pre>">?</span>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </table>

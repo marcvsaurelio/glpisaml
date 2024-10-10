@@ -227,6 +227,7 @@ class LoginState extends CommonDBTM
                     LoginState::USER_ID           => $sessionState[LoginState::USER_ID],
                     LoginState::SESSION_ID        => $sessionState[LoginState::SESSION_ID],
                     LoginState::SESSION_NAME      => $sessionState[LoginState::SESSION_NAME],
+                    LoginState::LOCATION          => $sessionState[LoginState::LOCATION],
                     LoginState::GLPI_AUTHED       => (bool) $sessionState[LoginState::GLPI_AUTHED],
                     LoginState::SAML_AUTHED       => (bool) $sessionState[LoginState::SAML_AUTHED],
                     LoginState::LOGIN_DATETIME    => $sessionState[LoginState::LOGIN_DATETIME],
@@ -295,6 +296,7 @@ class LoginState extends CommonDBTM
             LoginState::USER_ID           => 0,
             LoginState::SESSION_ID        => session_id(),
             LoginState::SESSION_NAME      => session_name(),
+            LoginState::LOCATION          => [],
             LoginState::SAML_AUTHED       => 0,
             LoginState::ENFORCE_LOGOFF    => 0,
             LoginState::EXCLUDED_PATH     => $this->state[LoginState::EXCLUDED_PATH],
@@ -341,8 +343,14 @@ class LoginState extends CommonDBTM
      */
     private function getLastActivity(): void
     {
+        // TODO: Make configurable full_path or last_path.
         // https://codeberg.org/QuinQuies/glpisaml/issues/18
-        $this->state[LoginState::LOCATION] = (isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI';
+        if(is_array($location = unserialize($this->state[LoginState::LOCATION]))){
+            array_push($location, (isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI');
+        }else{
+            $location = array((isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI');
+        }
+        $this->state[LoginState::LOCATION] = serialize($location);
         $this->state[LoginState::LAST_ACTIVITY] = date('Y-m-d H:i:s');
     }
 
@@ -602,11 +610,50 @@ class LoginState extends CommonDBTM
             foreach($DB->request(['FROM' => LoginState::getTable(),
                                   'WHERE' => [LoginState::IDP_ID => $idpId],
                                   'ORDER' => [LoginState::LOGIN_DATETIME.' DESC']]) as $id => $row ){
+                
+                // Unserialize the loginTrace, format it and export it;
+                if(!empty($row[LoginState::LOGIN_FLOW_TRACE])){
+                    $i = 1;
+                    $trace = '';
+                    foreach(unserialize($row[LoginState::LOGIN_FLOW_TRACE]) as $key => $value){
+                        $trace .= "$i : $key => $value\n\n";
+                        $i++;
+                    }
+                }else{
+                    $trace = '';
+                }
+                
+                $row[LoginState::LOGIN_FLOW_TRACE] = $trace;
                 $logging[$id] = $row;
             }
         }
         return $logging;
     }
+
+    /**
+     * Gets the logging entries from the loginState database for given identity provider
+     * for presentation in the logging tab.
+     *
+     * @param   int      $idpId - identity of the IDP for which we are fetching the logging
+     * @return  array    Array with logging entries (if any) else empty array;
+     * @since   1.2.0
+     */
+    public static function getLocationEntries(array $logging): array
+    {
+        // Traverse through the logging array.
+        foreach($logging as $id => $row ){
+            if(!empty($row[LoginState::LOCATION])){
+                $location = '';
+                foreach(unserialize($row[LoginState::LOCATION]) as $key => $value){
+                    $location .= "$key => $value\n";
+                }
+                //Rewrite the location field
+                $logging[$id][LoginState::LOCATION] = $location;
+            }
+        }
+        return $logging;
+    }
+
 
     /**
      * Determin if the state was loaded from the LoginState database or if you are dealing with

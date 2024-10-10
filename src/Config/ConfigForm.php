@@ -308,6 +308,12 @@ class ConfigForm    //NOSONAR complexity by design.
         }else{
             $logging = [];
         }
+
+        // get the location entries, but only if the object already exists
+        // https://codeberg.org/QuinQuies/glpisaml/issues/15#issuecomment-1785284
+        if(is_array($logging)){
+            $logging = LoginState::getLocationEntries($logging);
+        }
        
         // Define static field translations
         $tplVars = array_merge($tplVars, [
