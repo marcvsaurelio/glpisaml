@@ -319,8 +319,6 @@ class LoginState extends CommonDBTM
      */
     private function writeStateToDb(): bool   //NOSONAR - WIP
     {
-        echo "<pre>";
-        var_dump($this->state);
         // Register state in database;
         if(!$this->state[LoginState::DATABASE]){
             if(!$id = $this->add($this->state)){
