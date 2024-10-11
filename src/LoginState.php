@@ -345,8 +345,14 @@ class LoginState extends CommonDBTM
     {
         // TODO: Make configurable full_path or last_path.
         // https://codeberg.org/QuinQuies/glpisaml/issues/18
-        if(is_array($location = unserialize($this->state[LoginState::LOCATION]))){
-            array_push($location, (isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI');
+        // https://codeberg.org/QuinQuies/glpisaml/issues/91
+        if(!empty($this->state[LoginState::LOCATION])){
+            $location = @unserialize($this->state[LoginState::LOCATION]);
+            if(is_array($location)){
+                array_push($location, (isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI');
+            }else{
+                $location = array((isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI');
+            }
         }else{
             $location = array((isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : 'CLI');
         }
