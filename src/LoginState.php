@@ -296,7 +296,7 @@ class LoginState extends CommonDBTM
             LoginState::USER_ID           => 0,
             LoginState::SESSION_ID        => session_id(),
             LoginState::SESSION_NAME      => session_name(),
-            LoginState::LOCATION          => [],
+            LoginState::LOCATION          => serialize([]),
             LoginState::SAML_AUTHED       => 0,
             LoginState::ENFORCE_LOGOFF    => 0,
             LoginState::EXCLUDED_PATH     => $this->state[LoginState::EXCLUDED_PATH],
@@ -319,6 +319,8 @@ class LoginState extends CommonDBTM
      */
     private function writeStateToDb(): bool   //NOSONAR - WIP
     {
+        echo "<pre>";
+        var_dump($this->state);
         // Register state in database;
         if(!$this->state[LoginState::DATABASE]){
             if(!$id = $this->add($this->state)){
