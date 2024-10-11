@@ -304,7 +304,7 @@ class LoginState extends CommonDBTM
             LoginState::SAML_REQUEST_ID   => null,
             LoginState::DATABASE          => false,
             LoginState::PHASE             => LoginState::PHASE_INITIAL,
-            LoginState::LOGIN_FLOW_TRACE  => '',
+            LoginState::LOGIN_FLOW_TRACE  => serialize([]),
         ]);
 
         return true;
