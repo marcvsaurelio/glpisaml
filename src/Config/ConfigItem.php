@@ -152,7 +152,7 @@ class ConfigItem    //NOSONAR
 
             $e = __('⭕ Provided certificate does not like look a valid (base64 encoded) certificate', PLUGIN_NAME);
         }
-        return [ConfigItem::FORMEXPLAIN => __('The base62 encoded x509 service provider certificate. Used to sign and encrypt
+        return [ConfigItem::FORMEXPLAIN => __('The base64 encoded x509 service provider certificate. Used to sign and encrypt
                                          messages send by the service provider to the identity provider. Required for most
                                          of the security options', PLUGIN_NAME),
                 ConfigItem::FORMTITLE => __('SP CERTIFICATE', PLUGIN_NAME),
@@ -170,7 +170,7 @@ class ConfigItem    //NOSONAR
     {
         // Private is not required, if missing or invalid the ConfigEntity will toggle
         // depending security options to false.
-        return [ConfigItem::FORMEXPLAIN => __('The base62 encoded x509 service providers private key. Should match the modulus of the
+        return [ConfigItem::FORMEXPLAIN => __('The base64 encoded x509 service providers private key. Should match the modulus of the
                                          provided X509 service provider certificate', PLUGIN_NAME),
                 ConfigItem::FORMTITLE => __('SP PRIVATE KEY', PLUGIN_NAME),
                 ConfigItem::EVAL      => ConfigItem::VALID,
