@@ -62,7 +62,6 @@ use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
 use GlpiPlugin\Glpisaml\LoginFlow\User;
 use GlpiPlugin\Glpisaml\LoginFlow\Auth as glpiAuth;
-use Sabre\CardDAV\IDirectory;
 
 /**
  * This object brings it all together. It is responsible to handle the
@@ -71,22 +70,6 @@ use Sabre\CardDAV\IDirectory;
  */
 class LoginFlow
 {
-    // Database fields
-    public const ID                 =   'id';
-    public const DEBUG              =   'debug';
-    public const ENFORCED           =   'enforced';
-    public const ENFORCED_IDP       =   'forcedIdp';
-    public const EN_GETTER_LOGIN    =   'enableGetterLogin';
-    public const EN_GLPI_LOGIN      =   'enableGlpiLogin';
-    public const EN_SAML_BUTTONS    =   'enableSamlButtons';
-    public const EN_USERNAME_LOGIN  =   'enableUsername';
-    public const CUSTOM_LOGIN_TPL   =   'useCustomLoginTemplate';
-    public const BYPASS_VAR         =   'byPassVar';
-    public const BYPASS_STR         =   'byPassString';
-    public const EN_IDP_LOGOUT      =   'enableIdpLogout';
-    public const ENF_AUTH_AFTER     =   'enforceReAuthAfterIdle';       // Time in minutes that session is allowed to idle before forcing reAuth
-    public const BLK_AFTER_LOGOUT   =   'blockAfterEnfocedLogout';      // Time to block user after he/she was forcefully logged out.
-
     // https://codeberg.org/QuinQuies/glpisaml/issues/37
     public const POSTFIELD   = 'samlIdpId';
     public const GETFIELD    = 'samlIdpId';
@@ -108,100 +91,84 @@ class LoginFlow
         // Get current state
         if(!$state = new Loginstate()){
             $this->printError(__('Could not load loginState', PLUGIN_NAME));
+        }else{
+            // Do we need to skip because of exclusion?
+            if($state->isExcluded()){
+                //return $state->getExcludeAction();
+                // Return false seems to break GLPI in all kind of ways.
+                return;
+            }
         }
 
-        // FILE EXCLUDED
-        // Do we need to skip because of exclusion?
-        if($state->isExcluded()){
-            //return $state->getExcludeAction();
-            // Return false seems to break GLPI in all kind of ways.
-            $state->addLoginFlowTrace(['isExcluded' => 'Path:'.$state->isExcluded()]);
-            return;
-        }
-
-        // LOGOUT PRESSED?
+        // Check if the logout button was pressed and handle request!
         // https://codeberg.org/QuinQuies/glpisaml/issues/18
         if ( isset($_SERVER['REQUEST_URI']) && ( strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) ){
             // Stop GLPI from processing cookie based auto login.
             $_SESSION['noAUTO'] = 1;
-            $state->addLoginFlowTrace(['logoutPressed' => true]);
             $this->performLogOff();
         }
 
-        // BYPASS SAML ENFORCE OPTION
+        // Do we want to or need to break our SSO enforcement?
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
-        /* //NOSONAR
         if(isset($_GET[LoginFlow::SAMLBYPASS])                  &&  // Is ?bypass=1 set in our uri
            strpos($_SERVER['REQUEST_URI'], '/front/') !== false &&  // We are not on the login page
            $_GET[LoginFlow::SAMLBYPASS] == 1                    ){  // bypass is set to 1 (can be replaced with secret key)
             ConfigEntity::unsetIsEnforced();                        // Unset the enforce cookie
-            $state->addLoginFlowTrace(['bypassUsed' => true]);     // Register the bypass was used
             $this->performLogOff();                                 // Perform logoff
             $this->doMetaRefresh($CFG_GLPI['url_base'].'/');        // Redirect user to the login page
         }
 
-        // SAML ENFORCED BY COOKIE?
         // https://codeberg.org/QuinQuies/glpisaml/issues/35
         // Do enforced login if we found a previous cookie
         // And the phase is initial, and the escape string
         // was not found.
-        if(($state->getPhase() == LoginState::PHASE_INITIAL ||                      // Login should not be enforced after initial login phase
-            $state->getPhase() == LoginState::PHASE_LOGOFF) &&
-            Config::getIsEnforced()                         &&                      // Login should not be enforced before logout phase
-            $idpId = ConfigEntity::getEnforced()            ){                      // Fetch the idpId from the enforced cookie
-            $state->addLoginFlowTrace(['loginEnforcedByCookie' => 'idpId:'.$idpId]);   // Register the login was enforced by cookie
-            $_POST[LoginFlow::POSTFIELD] = $idpId;                                  // Set the id to trigger an SSO using the set IdP.
+        if(($state->getPhase() == LoginState::PHASE_INITIAL ||      // Login should not be enforced after initial login phase
+            $state->getPhase() == LoginState::PHASE_LOGOFF) &&      // Login should not be enforced before logout phase
+            $idpId = ConfigEntity::getEnforced()            ){      // Fetch the idpId from the enforced cookie
+            $_POST[LoginFlow::POSTFIELD] = $idpId;                  // Set the id to trigger an SSO using the set IdP.
         }
-        */
 
-        // CAPTURE LOGIN FIELD
         // https://codeberg.org/QuinQuies/glpisaml/issues/3
         // Capture the post of regular login and verify if the provided domain is SSO enabled.
         // by evaluating the domain portion against the configured user domains.
         // we need to iterate through the keys because of the added csrf token i.e.
         // [fielda[csrf_token]] = value.
         foreach($_POST as $key => $value){
-            if(strstr($key, 'fielda')                               &&                                      // Test keys if fielda[token] is present in the POST.
-               !empty($_POST[$key])                                 &&                                      // Test if fielda actually has a value we can process
-               $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){                                      // If all is true try to find an matching idp id.
-                $state->addLoginFlowTrace(['loginViaUserfield' => 'user:'.$_POST[$key].',idpId:'.$id]);     // Register the userfield was used with user
-                $_POST[LoginFlow::POSTFIELD] = $id;                                                         // If we found an ID Set the POST phpsaml to our found ID this will trigger
+            if(strstr($key, 'fielda')                               &&    // Test keys if fielda[token] is present in the POST.
+               !empty($_POST[$key])                                 &&    // Test if fielda actually has a value we can process
+               $id = Config::getConfigIdByEmailDomain($_POST[$key]) ){    // If all is true try to find an matching idp id.
+                    $_POST[LoginFlow::POSTFIELD] = $id;                   // If we found an ID Set the POST phpsaml to our found ID this will trigger
             }
         }
 
-        // MANUAL IDP ID VIA GETTER
         // Check if the user manually provided the correct idp to use
         // this to provision Idp Initiated SAML flows.
-        if(isset($_GET[LoginFlow::GETFIELD])        &&                                                      // If correct SAML config ID was provided manually, use that
-           is_numeric($_GET[LoginFlow::GETFIELD])   ){                                                      // Make sure its a numeric value and not a string
-            $state->addLoginFlowTrace(['loginViaGetter' => 'getValue:'.$_GET[LoginFlow::GETFIELD]]);
+        if(isset($_GET[LoginFlow::GETFIELD])        &&
+           is_numeric($_GET[LoginFlow::GETFIELD])   ){
             $_POST[LoginFlow::POSTFIELD] = $_GET[LoginFlow::GETFIELD];
         }
-
-        // Check if we only have 1 configuration and its enforced
-        // https://codeberg.org/QuinQuies/glpisaml/issues/61
-        if(($state->getPhase() == LoginState::PHASE_INITIAL ||      // Make sure we only do this if state is initial
-            $state->getPhase() == LoginState::PHASE_LOGOFF) &&      // Make sure we only do this if state is logoff
-            Config::getIsOnlyOneConfig()                    &&      // Only perform this login type with only one samlConfig entry
-            Config::getIsEnforced()                         ){      // Only perform this login type if samlLogin is enforced.
-             $state->addLoginFlowTrace(['OnlyOneIdpEnforced' => 'idpId:'.Config::getIsOnlyOneConfig()]);
-             $_POST[LoginFlow::POSTFIELD] = Config::getIsOnlyOneConfig();
-        }
-
 
         // Check if a SAML button was pressed and handle the corresponding logon request!
         if (isset($_POST[LoginFlow::POSTFIELD])         &&      // Must be set
             is_numeric($_POST[LoginFlow::POSTFIELD])    &&      // Value must be numeric
             strlen($_POST[LoginFlow::POSTFIELD]) < 3    ){      // Should not exceed 999
-            $state->addLoginFlowTrace(['finalIdp' => 'idpId:'.$_POST[LoginFlow::POSTFIELD]]);
+
             // If we know the idp we register it in the login State
             $state->setIdpId(filter_var($_POST[LoginFlow::POSTFIELD], FILTER_SANITIZE_NUMBER_INT));
+
+            // Update the current phase in database. The state is verified by the Acs
+            // while handling the received SamlResponse. Any other state will force Acs
+            // into an error state. This is to prevent unexpected (possibly replayed)
+            // samlResponses from being processed. to prevent playback attacks.
+            if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
+                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[LoginFlow::POSTFIELD] , PLUGIN_NAME));
+            }
 
             // Actually perform SSO
             $this->performSamlSSO($state);
         }
-        // Do nothing and return nothing.
-        // Returning an value like false breaks glpi in all kinds of nasty ways.
+        // Do nothing will return nothing.
+        // Return false breaks glpi in all kinds of nasty ways.
     }
 
     /**
@@ -226,6 +193,7 @@ class LoginFlow
         // Validate if the IDP configuration is enabled
         // https://codeberg.org/QuinQuies/glpisaml/issues/4
         if($configEntity->isActive()){                            // Validate the IdP config is activated
+            $configEntity->setIsEnforced();                       // Validate if the configuration is enforced and set cookie.
 
             // Initialize the OneLogin phpSaml auth object
             // using the requested phpSaml configuration from
@@ -234,30 +202,12 @@ class LoginFlow
             try { $auth = new samlAuth($samlConfig); } catch (Throwable $e) {
                 $this->printError($e->getMessage(), 'Saml::Auth->init', var_export($auth->getErrors(), true));
             }
-
-            // Added version 1.2.0
-            // Capture and register requestId in database
-            // before performing the redirect so we don't need Cookies
-            // https://codeberg.org/QuinQuies/glpisaml/issues/45
-            $ssoBuiltUrl = $auth->login($CFG_GLPI["url_base"], array(), false, false, true);
             
-            // Register the requestId in the database and $_SESSION var;
-            $state->setRequestId($auth->getLastRequestID());
-
-            // Update the current phase in database. The state is verified by the Acs
-            // while handling the received SamlResponse. Any other state will force Acs
-            // into an error state. This is to prevent unexpected (possibly replayed)
-            // samlResponses from being processed. to prevent playback attacks.
-            if(!$state->setPhase(LoginState::PHASE_SAML_ACS) ){
-                $this->printError(__('Could not update the loginState and therefor stopped the loginFlow for:'.$_POST[LoginFlow::POSTFIELD] , PLUGIN_NAME));
+            // Perform a login request with the loaded glpiSaml
+            // configuration. Catch all throwable errors and exceptions
+            try { $auth->login($CFG_GLPI["url_base"]); } catch (Throwable $e) {
+                $this->printError($e->getMessage(), 'Saml::Auth->login', var_export($auth->getErrors(), true));
             }
-
-            // Perform redirect using HTTP-GET
-            header('Pragma: no-cache');
-            header('Cache-Control: no-cache, must-revalidate');
-            header('Location: ' . $ssoBuiltUrl);
-            exit();
-
         } // Do nothing, ignore the samlSSORequest.
     }
 
@@ -277,7 +227,7 @@ class LoginFlow
         // Validate samlResponse and returns provided Saml attributes (claims).
         // validation will print and exit on errors because user information is required.
         $userFields = User::getUserInputFieldsFromSamlClaim($response);
-       
+
         // Try to populate GLPI Auth using provided attributes;
         try {
             $auth = (new GlpiAuth())->loadUser($userFields);
@@ -285,17 +235,12 @@ class LoginFlow
             $this->printError($e->getMessage(), 'doSamlLogin');
         }
 
-        // Update the current state
-        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
-        $state->setPhase(LoginState::PHASE_GLPI_AUTH);
-
         // Populate Glpi session with Auth.
         Session::init($auth);
 
-        // Update the sessionID (thats reset by Session::init)
-        // So we can find it after the redirect! Else we will
-        // end up in a login loop. Very anoying!
-        $state->setSessionId();
+        // Update the current state
+        if(!$state = new Loginstate()){ $this->printError(__('Could not load loginState from database!', PLUGIN_NAME)); }
+        $state->setPhase(LoginState::PHASE_GLPI_AUTH);
 
         // Redirect back to main page
         // We should fix added .'/' to prevent (string|int) type issue.
@@ -458,68 +403,4 @@ class LoginFlow
         exit;
     }
 
-    
-    /**
-     * Install the LoginFlow DB table
-     * @param   Migration $obj
-     * @return  void
-     * @since   1.0.0
-     */
-
-    /*  //NOSONAR - This is in preparation of version 1.2.0 but should not YET be processed by
-        //          the hook.php install
-    public static function install(Migration $migration) : void
-    {
-        global $DB;
-        $default_charset = DBConnection::getDefaultCharset();
-        $default_collation = DBConnection::getDefaultCollation();
-        $default_key_sign = DBConnection::getDefaultPrimaryKeySignOption();
-
-        $table = LoginState::getTable();
-
-        // Create the base table if it does not yet exist;
-        // Do not update this table for later versions, use the migration class;
-        if (!$DB->tableExists($table)) {
-            // Create table
-            $query = <<<SQL
-            CREATE TABLE IF NOT EXISTS `$table` (
-                `id`                        int {$default_key_sign} NOT NULL AUTO_INCREMENT,
-                `debug`                     tinyint NOT NULL DEFAULT 0,
-                `enforced`                  tinyint NOT NULL DEFAULT 0,
-                `forcedIdp`                 int DEFAULT -1,
-                `enableGetterLogin`         tinyint NOT NULL DEFAULT 0,
-                `hideGlpiLogin`             tinyint NOT NULL DEFAULT 0,
-                `hideSamlButtons`           tinyint NOT NULL DEFAULT 0,
-                `hideUsername`              tinyint NOT NULL DEFAULT 0,
-                `useCustomLoginTemplate`    varchar(255) NULL,
-                `byPassString`              varchar(255) DEFAULT '1',
-                `byPassVar`                 varchar(255) DEFAULT 'bypass',
-                `enableIdpLogout`           tinyint NOT NULL DEFAULT 0,
-                `enforceReAuthAfterIdle`    int NOT NULL DEFAULT -1,                        // Time in minutes that session is allowed to idle before forcing reAuth
-                `blockAfterEnfocedLogout`   int NOT NULL DEFAULT -1,                        // Time to block user after he/she was forcefully logged out.
-                PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=COMPRESSED;
-            SQL;
-            $DB->doQuery($query) or die($DB->error());
-            Session::addMessageAfterRedirect("🆗 Installed: $table.");
-        }
-    }
-    */
-
-    /**
-     * Uninstall the LoginState DB table
-     * @param   Migration $obj
-     * @return  void
-     * @since   1.0.0
-     */
-
-    /*  //NOSONAR - This is in preparation of version 1.2.0 but should not YET be processed by
-        //          the hook.php install
-    public static function uninstall(Migration $migration) : void
-    {
-        $table = LoginState::getTable();
-        $migration->dropTable($table);
-        Session::addMessageAfterRedirect("🆗 Removed: $table.");
-    }
-    */
 }

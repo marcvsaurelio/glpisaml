@@ -1,29 +1,3 @@
-**v1.1.9**
-- In preparation for 1.2.0
-- https://codeberg.org/QuinQuies/glpisaml/issues/61
-- https://codeberg.org/QuinQuies/glpisaml/issues/46
--  Added logic to automatically enforce saml configuration if there is only one configured with enforce enabled.
-- Update template with compression enabled
-- Added message with 'version' after install for saas validation purposes
-- Upped minimal version: https://codeberg.org/QuinQuies/glpisaml/issues/65#issuecomment-2066465
-- Upped the minimal required version in `setup.php` to GLPI 10.0.11 because plugin does not use deprecated `query()` but newer `doQuery()` instead.
-- fixed warning in User.php file https://codeberg.org/QuinQuies/glpisaml/issues/71
-- Removed unused 'use' inclusion in front/config.php https://codeberg.org/QuinQuies/glpisaml/issues/73
-- Added gitignore to stop phpunit and deps from being send to the repository
-- Updated `onelogin/php-saml` to latest version 4.2.0 @see https://github.com/SAML-Toolkits/php-saml/releases
-- Changed `ConfigEntity.php:508` to add `?idpId=` to the ACS service URL send to the Idp for capture at ACS.
-- Added wiki reference `https://codeberg.org/QuinQuies/glpisaml/wiki/ACS.php` in the acs error page to provide more information.
-- Fully refactored `LoginFlow/Acs.php` and `/front/acs.php` to work arround the login cookie requirement.
-- Fully refactored `src/LoginState.php` object to store and process additional fields samlRequestId, samlResponseId (InResponseTo), requestUnsolicited fields
-- Refactored method LoginFlow::doAuth() for https://codeberg.org/QuinQuies/glpisaml/issues/45
-- Refactored method LoginFlow::performSamlSSO for https://codeberg.org/QuinQuies/glpisaml/issues/45
-- Added `tests/createPot.sh` to create a POT file from the php source using xgettext
-- Added `locals/glpiSaml.pot` to allow users to translate and create localization files (PO/PM)
-- Added https://app.transifex.com/quinquies/glpisaml/ project for public translations
-- Started refactoring LoginFlow.php to include a LoginFlow configuration page.
-- Fixed always enforced bug with only one idp configured and enforce off.
-- Added loginFlow trace to the log idp page
-
 **v1.1.5**
 - We found that the return value bool:false on the POST_INIT hook might break cron functionality in very nasty ways (removing user profiles after succesfull mail import for instance!) as a quick fix we now return null, making sure other components are not influenced by anything we did 'not' return to the calling plugin function. 
 

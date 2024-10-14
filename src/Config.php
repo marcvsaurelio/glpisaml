@@ -263,7 +263,6 @@ class Config extends CommonDBTM
      * Returns true if any of the configured IdPs is set to enforced.
      * this will hide the password and database fields from the login
      * page.
-     * @todo make the function filter out deleted rows.
      * @return  bool
      * @see                             - src/LoginFlow/showLoginScreen()
      * @since 1.0.0
@@ -272,26 +271,6 @@ class Config extends CommonDBTM
     {
         global $DB;
         return (count($DB->request(['FROM' => Config::getTable(), 'WHERE' => [ConfigEntity::ENFORCE_SSO  => 1]])) > 0) ? true : false;
-    }
-
-    /**
-     * Returns the configId if there is only 1 configuration present.
-     * @return  bool
-     * @see                             - src/LoginFlow/doAuth()
-     * @see                             - https://codeberg.org/QuinQuies/glpisaml/issues/61
-     * @since 1.1.5
-     */
-    public static function getIsOnlyOneConfig(): int
-    {
-        global $DB;
-        $res = $DB->request(['FROM' => Config::getTable(), 'WHERE' => [ConfigEntity::IS_DELETED  => 0, ConfigEntity::IS_ACTIVE => 1]]);
-        if (count($res) == 1       &&   // If we only get one row, return the ID
-            $row = $res->current() ){   // Assign the result to a var
-            $r = (is_numeric($row[ConfigEntity::ID])) ? $row[ConfigEntity::ID] : 0;
-        }else{
-            $r = 0;                     // If we get no, or multiple, return 0;
-        }
-        return $r;
     }
 
     /**

@@ -2,13 +2,15 @@
 /**
  * This file is part of php-saml.
  *
+ * (c) OneLogin Inc
+ *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
  * @package OneLogin
- * @author  Sixto Martin <sixto.martin.garcia@gmail.com>
- * @license MIT https://github.com/SAML-Toolkits/php-saml/blob/master/LICENSE
- * @link    https://github.com/SAML-Toolkits/php-saml
+ * @author  OneLogin Inc <saml-info@onelogin.com>
+ * @license MIT https://github.com/onelogin/php-saml/blob/master/LICENSE
+ * @link    https://github.com/onelogin/php-saml
  */
 
 namespace OneLogin\Saml2;
@@ -20,7 +22,7 @@ use DOMDocument;
 use Exception;
 
 /**
- * Metadata lib of SAML PHP Toolkit
+ * Metadata lib of OneLogin PHP Toolkit
  */
 class Metadata
 {
@@ -38,11 +40,10 @@ class Metadata
      * @param array         $contacts      Contacts info
      * @param array         $organization  Organization ingo
      * @param array         $attributes
-     * @param bool          $ignoreValidUntil exclude the validUntil tag from metadata
      *
      * @return string SAML Metadata XML
      */
-    public static function builder($sp, $authnsign = false, $wsign = false, $validUntil = null, $cacheDuration = null, $contacts = array(), $organization = array(), $attributes = array(), $ignoreValidUntil = false)
+    public static function builder($sp, $authnsign = false, $wsign = false, $validUntil = null, $cacheDuration = null, $contacts = array(), $organization = array(), $attributes = array())
     {
 
         if (!isset($validUntil)) {
@@ -162,23 +163,11 @@ ATTRIBUTEVALUE;
 
             $requestedAttributeStr = implode(PHP_EOL, $requestedAttributeData);
             $strAttributeConsumingService = <<<METADATA_TEMPLATE
-
-        <md:AttributeConsumingService index="1">
+<md:AttributeConsumingService index="1">
             <md:ServiceName xml:lang="en">{$sp['attributeConsumingService']['serviceName']}</md:ServiceName>
 {$attrCsDesc}{$requestedAttributeStr}
         </md:AttributeConsumingService>
 METADATA_TEMPLATE;
-        }
-
-        if ($ignoreValidUntil) {
-            $timeStr = <<<TIME_TEMPLATE
-cacheDuration="PT{$cacheDuration}S";
-TIME_TEMPLATE;
-        } else {
-            $timeStr = <<<TIME_TEMPLATE
-validUntil="{$validUntilTime}"
-                     cacheDuration="PT{$cacheDuration}S"
-TIME_TEMPLATE;
         }
 
         $spEntityId = htmlspecialchars($sp['entityId'], ENT_QUOTES);
@@ -186,13 +175,15 @@ TIME_TEMPLATE;
         $metadata = <<<METADATA_TEMPLATE
 <?xml version="1.0"?>
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
-                     {$timeStr}
+                     validUntil="{$validUntilTime}"
+                     cacheDuration="PT{$cacheDuration}S"
                      entityID="{$spEntityId}">
     <md:SPSSODescriptor AuthnRequestsSigned="{$strAuthnsign}" WantAssertionsSigned="{$strWsign}" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
 {$sls}        <md:NameIDFormat>{$sp['NameIDFormat']}</md:NameIDFormat>
         <md:AssertionConsumerService Binding="{$sp['assertionConsumerService']['binding']}"
                                      Location="{$acsUrl}"
-                                     index="1" />{$strAttributeConsumingService}
+                                     index="1" />
+        {$strAttributeConsumingService}
     </md:SPSSODescriptor>{$strOrganization}{$strContacts}
 </md:EntityDescriptor>
 METADATA_TEMPLATE;
