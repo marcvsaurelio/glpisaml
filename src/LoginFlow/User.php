@@ -54,7 +54,6 @@ use GlpiPlugin\Glpisaml\LoginFlow;
 use GlpiPlugin\Glpisaml\LoginState;
 use GlpiPlugin\Glpisaml\RuleSamlCollection;
 use GlpiPlugin\Glpisaml\Config\ConfigEntity;
-use Phone;
 use PHPUnit\TextUI\XmlConfiguration\Groups;
 use PHPUnit\TextUI\XmlConfiguration\Logging\TeamCity;
 
@@ -76,6 +75,7 @@ class User
     public const MOBILE             = 'mobile';
     public const PHONE              = 'phone';
     public const PHONE2             = 'phone2';
+    public const REGISTRATION_NUMBER = 'registration_number';
     public const COMMENT            = 'comment';
     public const PASSWORD           = 'password';
     public const PASSWORDN          = 'password2';
@@ -87,11 +87,14 @@ class User
     public const GROUP_DEFAULT      = 'specific_groups_id';
     public const IS_DYNAMIC         = 'is_dynamic';
     public const PROFILESID         = 'profiles_id';
+    public const TITLEID            = 'usertitles_id';
+    public const LOCATIONID         = 'locations_id';
     public const PROFILE_DEFAULT    = '_profiles_id_default';
     public const PROFILE_RECURSIVE  = 'is_recursive';
     public const ENTITY_ID          = 'entities_id';
     public const ENTITY_DEFAULT     = '_entities_id_default';
     public const AUTHTYPE           = 'authtype';
+    public const CREATIONDATE       = 'date_creation';  //Y-m-d H:i:s
     public const SYNCDATE           = 'date_sync';  //Y-m-d H:i:s
     public const SAMLGROUPS         = 'samlClaimedGroups';
     public const SAMLJOBTITLE       = 'samlClaimedJobTitle';
@@ -105,26 +108,29 @@ class User
      * @see https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
      * @see https://learn.microsoft.com/en-us/entra/identity-platform/reference-saml-tokens
      */
-    public const USERDATA                    = 'userData';
-    public const SCHEMA_NAMEID               = 'NameId';                                                                // Used as primary if it contains valid email.
-    public const SCHEMA_SURNAME              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';         // Used in user creation JIT - Optional
-    public const SCHEMA_FIRSTNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';       // Used in user creation JIT - Optional
-    public const SCHEMA_GIVENNAME            = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT - Optional
-    public const SCHEMA_EMAILADDRESS         = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used in user creation JIT - Optional
-    public const SCHEMA_MOBILE               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone';     // Used in user creation JIT - Optional
-    public const SCHEMA_PHONE                = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber'; // Used in user creation JIT - Optional
-    public const SCHEMA_JOBTITLE             = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle';        // Used in user creation JIT - Optional
-    public const SCHEMA_COUNTRY              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country';         //
-    public const SCHEMA_CITY                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/city';            //
-    public const SCHEMA_STREET               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress';   //
-    public const SCHEMA_GROUPS               = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups';        // Used in assignment rules - Optional
-    public const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Entra claim not used
-    public const SCHEMA_TENANTID             = 'http://schemas.microsoft.com/identity/claims/tenantid';                 // Entra claim not used
-    public const SCHEMA_OBJECTID             = 'http://schemas.microsoft.com/identity/claims/objectidentifier';         // Entra claim not used
-    public const SCHEMA_DISPLAYNAME          = 'http://schemas.microsoft.com/identity/claims/displayname';              // Entra claim not used
-    public const SCHEMA_IDP                  = 'http://schemas.microsoft.com/identity/claims/identityprovider';         // Entra claim not used
-    public const SCHEMA_AUTHMETHODSREF       = 'http://schemas.microsoft.com/claims/authnmethodsreferences';            // Entra claim not used
-    public const SCHEMA_WIDS                 = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/wids';          // Entra claim not used
+    public const USERDATA                        = 'userData';
+    public const SCHEMA_NAMEID                   = 'NameId';                                                                // Used as primary if it contains valid email.
+    public const SCHEMA_SURNAME                  = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';         // Used in user creation JIT - Optional
+    public const SCHEMA_FIRSTNAME                = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';       // Used in user creation JIT - Optional
+    public const SCHEMA_GIVENNAME                = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';       // Used in user creation JIT - Optional
+    public const SCHEMA_EMAILADDRESS             = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';    // Used in user creation JIT - Optional
+    public const SCHEMA_MOBILE                   = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone';     // Used in user creation JIT - Optional
+    public const SCHEMA_PHONE                    = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber'; // Used in user creation JIT - Optional
+    public const SCHEMA_JOBTITLE                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle';        // Used in user creation JIT - Optional
+    public const SCHEMA_DEPARTMENT               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/department';      // Used in user creation JIT - Optional
+    public const SCHEMA_EMPLOYEEID               = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/employeeid';      // Used in user creation JIT - Optional
+    public const SCHEMA_FACSIMILETELEPHONENUMBER = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/facsimiletelephonenumber';      // Used in user creation JIT - Optional
+    public const SCHEMA_COUNTRY                  = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country';         //
+    public const SCHEMA_CITY                     = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/city';            //
+    public const SCHEMA_STREET                   = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress';   //
+    public const SCHEMA_GROUPS                   = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups';        // Used in assignment rules - Optional
+    public const SCHEMA_NAME                     = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';            // Entra claim not used
+    public const SCHEMA_TENANTID                 = 'http://schemas.microsoft.com/identity/claims/tenantid';                 // Entra claim not used
+    public const SCHEMA_OBJECTID                 = 'http://schemas.microsoft.com/identity/claims/objectidentifier';         // Entra claim not used
+    public const SCHEMA_DISPLAYNAME              = 'http://schemas.microsoft.com/identity/claims/displayname';              // Entra claim not used
+    public const SCHEMA_IDP                      = 'http://schemas.microsoft.com/identity/claims/identityprovider';         // Entra claim not used
+    public const SCHEMA_AUTHMETHODSREF           = 'http://schemas.microsoft.com/claims/authnmethodsreferences';            // Entra claim not used
+    public const SCHEMA_WIDS                     = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/wids';          // Entra claim not used
 
     /**
      * Gets or creates (if JIT is enabled for IDP) the GLPI user.
@@ -141,7 +147,7 @@ class User
         $name  = (isset($userFields[User::NAME])) ? $userFields[User::NAME] : '';
         $email = (isset($userFields[User::EMAIL][0])) ? $userFields[User::EMAIL][0] : '';
 
-        
+
         // Verify if user exists in database.
         // https://codeberg.org/QuinQuies/glpisaml/issues/48
         if(!$user->getFromDBbyName($name)       &&      // Try to locate by name->NameId, continue on ! fail.
@@ -156,7 +162,7 @@ class User
                                               the loginState from the database and could not continue to log
                                               you into GLPI.", PLUGIN_NAME));
             }
-   
+
             // Are we allowed to perform JIT user creation?
             if($configEntity->getField(ConfigEntity::USER_JIT)){
 
@@ -304,7 +310,7 @@ class User
      */
     public static function getUserInputFieldsFromSamlClaim(Response $response): array     //NOSONAR - Complexity by design.
     {
-        
+
         // https://codeberg.org/QuinQuies/glpisaml/issues/28
         // https://codeberg.org/QuinQuies/glpisaml/issues/39
         // https://codeberg.org/QuinQuies/glpisaml/issues/40
@@ -334,36 +340,37 @@ class User
             LoginFlow::printError(__('NameId attribute is missing in samlResponse', PLUGIN_NAME),
                                 'getUserInputFieldsFromSamlClaim',
                                 var_export($response, true));
+        } else {
+            // Remove domain from email (everything after '@')
+            $user[User::NAME] = explode('@', $user[User::NAME])[0];
         }
-            
-        // If the string #EXT# is found, a guest account is used thats not
+
+        // If the string #EXT# is found, a guest account is used that's not
         // owned by the Entra IdP handling this request. This is not supported.
-        // https://github.com/derricksmith/phpsaml/issues/135
         if(strstr($user[User::NAME], '#EXT#@')){
             LoginFlow::printError(__('Detected a default guest user in samlResponse, this is not supported<br>
                                       by glpiSAML. Please create a dedicated account for this user owned by your
                                       tenant/identity provider.<br>
                                       Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization', PLUGIN_NAME),
-                                     'getUserInputFieldsFromSamlClaim',
+                                      'getUserInputFieldsFromSamlClaim',
                                       var_export($response, true));
         }
 
         // Fetch additional claims from the samlResponse.
         if($claims = $response->getAttributes()){
-            // Assign the available claims. Treat every provided claim as strictly
-            // required. Issues with any of the provided claim will result in a
-            // critical error.
+            // Other processing logic as in the original function
+            // ...
 
             // EmailAddress, if it is provided it should be a valid emailaddress.
             if(filter_var($claims[User::SCHEMA_EMAILADDRESS][0], FILTER_VALIDATE_EMAIL)){
                 $user[User::EMAIL]  = [$claims[User::SCHEMA_EMAILADDRESS][0]];
             }else{
-                LoginFlow::printError(__('SamlResponse should have at least 1 valid email address for GLPI  to find
+                LoginFlow::printError(__('SamlResponse should have at least 1 valid email address for GLPI to find
                                           the corresponding GLPI user or create it (with JIT enabled). For this purpose make
                                           sure either the IDP provided NameId property is populated with the email address format,
                                           or configure the IDP to add the users email address in the samlResponse claims using
                                           the designated schema property key:'.User::SCHEMA_EMAILADDRESS, PLUGIN_NAME),
-                                         'getUserInputFieldsFromSamlClaim',
+                                          'getUserInputFieldsFromSamlClaim',
                                           var_export($response, true));
             }
 
@@ -397,8 +404,13 @@ class User
 
             // jobTitle
             if(isset($claims[User::SCHEMA_JOBTITLE][0])){
-                if(strlen($claims[User::SCHEMA_JOBTITLE][0]) <= 255){
+                if(strlen($claims[User::SCHEMA_JOBTITLE][0]) <= 510){
                     $user[User::SAMLJOBTITLE] = $claims[User::SCHEMA_JOBTITLE][0];
+                    $user[User::COMMENT] = $user[User::SAMLJOBTITLE]. ' - ' . $claims[User::SCHEMA_DEPARTMENT][0];
+
+                     // Adding _usertitles to store job title in array
+                     // $user['_usertitles'] = [-1 => $claims[User::SCHEMA_JOBTITLE][0]];
+
                 }else{
                     LoginFlow::printError(__('Provided job title claim exceeded 255 characters. This claim should not be longer than 255 characters',
                                              'getUserInputFieldsFromSamlClaim',
@@ -406,12 +418,12 @@ class User
                 }
             }
 
-            // Mobile Phone
-            if(isset($claims[User::SCHEMA_MOBILE][0])){
-                if(strlen($claims[User::SCHEMA_MOBILE][0]) <= 255){
-                    $user[User::MOBILE] = $claims[User::SCHEMA_MOBILE][0];
+                        // Registration Number
+            if(isset($claims[User::SCHEMA_EMPLOYEEID][0])){
+                if(strlen($claims[User::SCHEMA_EMPLOYEEID][0]) <= 255){
+                    $user[User::REGISTRATION_NUMBER] = $claims[User::SCHEMA_EMPLOYEEID][0];
                 }else{
-                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                    LoginFlow::printError(__('Provided Registration Number claim exceeded 255 characters. This claim should not be longer than 255 characters',
                                              'getUserInputFieldsFromSamlClaim',
                                               var_export($response, true)));
                 }
@@ -428,6 +440,48 @@ class User
                 }
             }
 
+
+            //  Location_ID
+            if (isset($claims[User::SCHEMA_FACSIMILETELEPHONENUMBER][0])) {
+                 if (strlen($claims[User::SCHEMA_FACSIMILETELEPHONENUMBER][0]) <= 255) {
+                   // Dividir o valor usando o hífen como delimitador e pegar apenas a primeira parte
+                   $facsimileNumber = explode('-', $claims[User::SCHEMA_FACSIMILETELEPHONENUMBER][0])[0];
+
+                   // Atribuir o primeiro valor ao campo PHONE2
+                   $user[User::LOCATIONID] = trim($facsimileNumber);
+             } else {
+                     LoginFlow::printError(__('Provided telephone phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                              'getUserInputFieldsFromSamlClaim',
+                                               var_export($response, true)));
+                 }
+             }
+
+            //  Title_ID
+            if (isset($claims[User::SCHEMA_FACSIMILETELEPHONENUMBER][0])) {
+                 if (strlen($claims[User::SCHEMA_FACSIMILETELEPHONENUMBER][0]) <= 255) {
+                   // Dividir o valor usando o hífen como delimitador e pegar apenas a primeira parte
+                   $facsimileNumber = explode('-', $claims[User::SCHEMA_FACSIMILETELEPHONENUMBER][0])[1];
+
+                   // Atribuir o primeiro valor ao campo PHONE2
+                   $user[User::TITLEID] = trim($facsimileNumber);
+             } else {
+                     LoginFlow::printError(__('Provided telephone phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                              'getUserInputFieldsFromSamlClaim',
+                                               var_export($response, true)));
+                 }
+             }
+
+            // Mobile Phone
+            if(isset($claims[User::SCHEMA_MOBILE][0])){
+                if(strlen($claims[User::SCHEMA_MOBILE][0]) <= 255){
+                    $user[User::MOBILE] = $claims[User::SCHEMA_MOBILE][0];
+                }else{
+                    LoginFlow::printError(__('Provided mobile phone number claim exceeded 255 characters. This claim should not be longer than 255 characters',
+                                             'getUserInputFieldsFromSamlClaim',
+                                              var_export($response, true)));
+                }
+            }
+
             // Country
             if(isset($claims[User::SCHEMA_COUNTRY][0])){
                 if(strlen($claims[User::SCHEMA_COUNTRY][0]) <= 255){
@@ -438,7 +492,7 @@ class User
                                                 var_export($response, true)));
                 }
             }
-
+            // City
             if(isset($claims[User::SCHEMA_CITY][0])){
                 if(strlen($claims[User::SCHEMA_CITY][0]) <= 255){
                     $user[User::SAMLCITY] = $claims[User::SCHEMA_CITY][0];
@@ -448,7 +502,7 @@ class User
                                                 var_export($response, true)));
                 }
             }
-
+             // Streetaddress
             if(isset($claims[User::SCHEMA_STREET][0])){
                 if(strlen($claims[User::SCHEMA_STREET][0]) <= 255){
                     $user[User::SAMLSTREET] = $claims[User::SCHEMA_STREET][0];
@@ -462,7 +516,7 @@ class User
 
         // Set additional user fields for user creation (if needed)
         // These fields are used for user->add($input);
-        $user[User::COMMENT]    = __('Created by phpSaml Just-In-Time user creation on:'.date('Y-m-d H:i:s'));
+        $user[User::CREATIONDATE] =  date('Y-m-d H:i:s');         //__('Created by phpSaml Just-In-Time user creation on:'.date('Y-m-d H:i:s'));
         $password = bin2hex(random_bytes(20));
         $user[User::PASSWORD]   = $password;
         $user[User::PASSWORDN]  = $password;
@@ -472,4 +526,3 @@ class User
         // Return the userArray.
         return $user;
    }
-}
